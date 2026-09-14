@@ -1,0 +1,1617 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>SEORALINK - Executive Presentation Deck (Fast Lite)</title>
+    <style>
+    
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+}
+
+@page {
+    size: 210mm 297mm;
+    margin: 0;
+}
+
+body {
+    background-color: #0b0f19;
+    color: #94a3b8;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    font-size: 10px;
+    line-height: 1.4;
+    margin: 0;
+    padding: 0;
+}
+
+.page {
+    width: 210mm;
+    height: 297mm;
+    max-height: 297mm;
+    min-height: 297mm;
+    margin: 0 auto;
+    position: relative;
+    page-break-after: always;
+    page-break-inside: avoid;
+    overflow: hidden;
+    background: #0b0f19;
+    padding: 12mm 15mm 10mm 15mm;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.page-header {
+    height: 9mm;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid #1e293b;
+    padding-bottom: 3px;
+    margin-bottom: 5px;
+    flex-shrink: 0;
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+}
+
+.brand-badge {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 800;
+    font-size: 11px;
+    letter-spacing: 1.2px;
+    color: #ffffff;
+}
+
+.header-sep {
+    color: #475569;
+    font-size: 10px;
+}
+
+.breadcrumb {
+    font-size: 8.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: #38bdf8;
+}
+
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+}
+
+.domain-tag {
+    font-family: Consolas, monospace;
+    font-size: 8px;
+    color: #00f2fe;
+    background: #0f172a;
+    border: 1px solid #0284c7;
+    padding: 1px 6px;
+    border-radius: 3px;
+    font-weight: 600;
+}
+
+.doc-badge {
+    font-size: 7.5px;
+    font-weight: 700;
+    letter-spacing: 0.6px;
+    color: #94a3b8;
+    background: #1e293b;
+    padding: 1px 5px;
+    border-radius: 3px;
+    text-transform: uppercase;
+}
+
+.page-footer {
+    height: 7.5mm;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-top: 1px solid #1e293b;
+    padding-top: 3px;
+    font-size: 7.5px;
+    color: #64748b;
+    flex-shrink: 0;
+}
+
+.footer-left {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.footer-left .tagline {
+    font-weight: 700;
+    color: #38bdf8;
+}
+
+.footer-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.page-num {
+    font-family: Consolas, monospace;
+    font-weight: 700;
+    color: #ffffff;
+    background: #1e293b;
+    padding: 1px 5px;
+    border-radius: 3px;
+}
+
+.page-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    gap: 7px;
+    overflow: hidden;
+}
+
+.title-block {
+    margin-bottom: 2px;
+}
+
+.section-tag {
+    display: inline-block;
+    font-size: 7.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #00f2fe;
+    background: #0f172a;
+    border: 1px solid #0284c7;
+    padding: 1px 6px;
+    border-radius: 8px;
+    margin-bottom: 2px;
+}
+
+h1.page-title {
+    font-size: 17px;
+    font-weight: 800;
+    color: #ffffff;
+    letter-spacing: -0.3px;
+    line-height: 1.2;
+    margin-bottom: 1px;
+}
+
+h1.page-title span.accent {
+    color: #00f2fe;
+}
+
+p.page-subtitle {
+    font-size: 9.5px;
+    color: #94a3b8;
+    line-height: 1.35;
+}
+
+.grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+}
+
+.grid-3 {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+}
+
+.grid-4 {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 5px;
+}
+
+.card {
+    background: #0f172a;
+    border: 1px solid #1e293b;
+    border-radius: 6px;
+    padding: 7px 9px;
+    position: relative;
+}
+
+.card.highlight {
+    border-color: #0284c7;
+    background: #0c1a2e;
+}
+
+.card.purple {
+    border-color: #6d28d9;
+    background: #141126;
+}
+
+.card.emerald {
+    border-color: #047857;
+    background: #0b1f1a;
+}
+
+.card.amber {
+    border-color: #b45309;
+    background: #1e170c;
+}
+
+.card-title {
+    font-size: 10.5px;
+    font-weight: 700;
+    color: #ffffff;
+    margin-bottom: 3px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.table-container {
+    background: #0f172a;
+    border: 1px solid #1e293b;
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+table.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 8.5px;
+    text-align: left;
+}
+
+table.data-table th {
+    background: #1e293b;
+    color: #38bdf8;
+    font-weight: 700;
+    padding: 4px 6px;
+    text-transform: uppercase;
+    font-size: 7.5px;
+    letter-spacing: 0.5px;
+    border-bottom: 1px solid #334155;
+}
+
+table.data-table td {
+    padding: 3.5px 6px;
+    border-bottom: 1px solid #1e293b;
+    color: #cbd5e1;
+}
+
+table.data-table tr:nth-child(even) td {
+    background: #090e1a;
+}
+
+table.data-table tr.highlight td {
+    background: #0c213b;
+    color: #ffffff;
+    font-weight: 600;
+}
+
+.badge {
+    display: inline-block;
+    padding: 1px 4px;
+    border-radius: 3px;
+    font-size: 7.5px;
+    font-weight: 700;
+    font-family: Consolas, monospace;
+}
+
+.badge-cyan {
+    background: #082f49;
+    color: #38bdf8;
+    border: 1px solid #0284c7;
+}
+
+.badge-purple {
+    background: #2e1065;
+    color: #c084fc;
+    border: 1px solid #7c3aed;
+}
+
+.badge-emerald {
+    background: #022c22;
+    color: #34d399;
+    border: 1px solid #059669;
+}
+
+.badge-amber {
+    background: #451a03;
+    color: #fbbf24;
+    border: 1px solid #d97706;
+}
+
+.callout {
+    background: #0f172a;
+    border-left: 3px solid #0284c7;
+    padding: 5px 8px;
+    border-radius: 0 4px 4px 0;
+    font-size: 8.5px;
+    line-height: 1.35;
+}
+
+.callout.warning {
+    border-left-color: #d97706;
+    background: #1c1409;
+}
+
+.callout.legal {
+    border-left-color: #dc2626;
+    background: #1c0b0b;
+}
+
+.callout-title {
+    font-weight: 700;
+    color: #ffffff;
+    margin-bottom: 2px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 9px;
+}
+
+.metric-box {
+    text-align: center;
+    padding: 5px 4px;
+    background: #0f172a;
+    border: 1px solid #1e293b;
+    border-radius: 5px;
+}
+
+.metric-val {
+    font-size: 13px;
+    font-weight: 800;
+    font-family: Consolas, monospace;
+    color: #ffffff;
+    margin-bottom: 1px;
+}
+
+.metric-val.cyan { color: #00f2fe; }
+.metric-val.purple { color: #c084fc; }
+.metric-val.emerald { color: #34d399; }
+.metric-val.amber { color: #fbbf24; }
+
+.metric-label {
+    font-size: 7.5px;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.flow-step {
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+    background: #0f172a;
+    border: 1px solid #1e293b;
+    border-radius: 5px;
+    padding: 5px 7px;
+}
+
+.step-num {
+    background: #0284c7;
+    color: #ffffff;
+    font-weight: 800;
+    font-size: 8.5px;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.step-content h4 {
+    font-size: 9.5px;
+    font-weight: 700;
+    color: #ffffff;
+    margin-bottom: 1px;
+}
+
+.step-content p {
+    font-size: 8px;
+    color: #94a3b8;
+    line-height: 1.25;
+}
+
+    </style>
+</head>
+<body>
+
+    <div class="page" id="page-1" style="justify-content: space-between; text-align: center; padding: 20mm 18mm 16mm 18mm;">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(148, 163, 184, 0.15); padding-bottom: 10px;">
+            <div style="display: flex; align-items: center; gap: 8px; font-weight: 800; font-size: 14px; letter-spacing: 2px; color: #fff;">
+                <div style="width: 22px; height: 22px;"><svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="seoraGrad1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00f2fe" />
+      <stop offset="50%" stop-color="#38bdf8" />
+      <stop offset="100%" stop-color="#7928ca" />
+    </linearGradient>
+  </defs>
+  <polygon points="50,8 86,28 86,72 50,92 14,72 14,28" stroke="url(#seoraGrad1)" stroke-width="4.5" fill="#0f172a" />
+  <polygon points="50,22 74,36 74,64 50,78 26,64 26,36" stroke="#38bdf8" stroke-width="2" fill="none" />
+  <circle cx="50" cy="50" r="9" fill="#00f2fe" />
+  <circle cx="50" cy="22" r="4" fill="#00f2fe" />
+  <circle cx="74" cy="36" r="4" fill="#38bdf8" />
+  <circle cx="74" cy="64" r="4" fill="#818cf8" />
+  <circle cx="50" cy="78" r="4" fill="#7928ca" />
+  <circle cx="26" cy="64" r="4" fill="#a855f7" />
+  <circle cx="26" cy="36" r="4" fill="#00f2fe" />
+  <line x1="50" y1="50" x2="50" y2="22" stroke="#00f2fe" stroke-width="1.8" />
+  <line x1="50" y1="50" x2="74" y2="36" stroke="#38bdf8" stroke-width="1.8" />
+  <line x1="50" y1="50" x2="74" y2="64" stroke="#818cf8" stroke-width="1.8" />
+  <line x1="50" y1="50" x2="50" y2="78" stroke="#7928ca" stroke-width="1.8" />
+  <line x1="50" y1="50" x2="26" y2="64" stroke="#a855f7" stroke-width="1.8" />
+  <line x1="50" y1="50" x2="26" y2="36" stroke="#00f2fe" stroke-width="1.8" />
+</svg></div>
+                <span>SEORALINK</span>
+            </div>
+            <div style="font-family: 'JetBrains Mono', monospace; font-size: 9.5px; color: #00f2fe; background: rgba(0, 242, 254, 0.1); border: 1px solid rgba(0, 242, 254, 0.3); padding: 3px 10px; border-radius: 20px;">
+                seoralink.com &middot; OFFICIAL SPECIFICATION
+            </div>
+        </div>
+
+        <div style="margin: auto 0; display: flex; flex-direction: column; align-items: center;">
+            <div style="width: 90px; height: 90px; margin-bottom: 16px; filter: drop-shadow(0 0 30px rgba(0, 242, 254, 0.35));">
+                <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="seoraGrad1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00f2fe" />
+      <stop offset="50%" stop-color="#38bdf8" />
+      <stop offset="100%" stop-color="#7928ca" />
+    </linearGradient>
+  </defs>
+  <polygon points="50,8 86,28 86,72 50,92 14,72 14,28" stroke="url(#seoraGrad1)" stroke-width="4.5" fill="#0f172a" />
+  <polygon points="50,22 74,36 74,64 50,78 26,64 26,36" stroke="#38bdf8" stroke-width="2" fill="none" />
+  <circle cx="50" cy="50" r="9" fill="#00f2fe" />
+  <circle cx="50" cy="22" r="4" fill="#00f2fe" />
+  <circle cx="74" cy="36" r="4" fill="#38bdf8" />
+  <circle cx="74" cy="64" r="4" fill="#818cf8" />
+  <circle cx="50" cy="78" r="4" fill="#7928ca" />
+  <circle cx="26" cy="64" r="4" fill="#a855f7" />
+  <circle cx="26" cy="36" r="4" fill="#00f2fe" />
+  <line x1="50" y1="50" x2="50" y2="22" stroke="#00f2fe" stroke-width="1.8" />
+  <line x1="50" y1="50" x2="74" y2="36" stroke="#38bdf8" stroke-width="1.8" />
+  <line x1="50" y1="50" x2="74" y2="64" stroke="#818cf8" stroke-width="1.8" />
+  <line x1="50" y1="50" x2="50" y2="78" stroke="#7928ca" stroke-width="1.8" />
+  <line x1="50" y1="50" x2="26" y2="64" stroke="#a855f7" stroke-width="1.8" />
+  <line x1="50" y1="50" x2="26" y2="36" stroke="#00f2fe" stroke-width="1.8" />
+</svg>
+            </div>
+
+            <div style="display: inline-flex; align-items: center; gap: 6px; font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; color: #00f2fe; background: rgba(0, 242, 254, 0.08); border: 1px solid rgba(0, 242, 254, 0.3); padding: 4px 14px; border-radius: 20px; margin-bottom: 12px;">
+                INVESTOR-GRADE ECOSYSTEM WHITEPAPER &amp; BUSINESS PLAN
+            </div>
+
+            <h1 style="font-size: 40px; font-weight: 800; letter-spacing: -1px; color: #ffffff; line-height: 1.1; margin-bottom: 6px;">
+                SEORA<span style="color: #00f2fe;">LINK</span>
+            </h1>
+
+            <div style="font-size: 15px; font-weight: 700; letter-spacing: 3px; color: #38bdf8; text-transform: uppercase; margin-bottom: 4px;">
+                Connect. Grow. Reward.
+            </div>
+
+            <div style="font-size: 11px; color: #94a3b8; letter-spacing: 1px; margin-bottom: 18px;">
+                Building a Borderless Affiliate Economy
+            </div>
+
+            <div style="max-width: 500px; background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(56, 189, 248, 0.2); border-radius: 10px; padding: 12px 18px; margin-bottom: 20px;">
+                <div style="font-size: 11px; font-weight: 700; color: #f8fafc; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 1px;">
+                    Core Positioning
+                </div>
+                <div style="font-size: 11px; color: #38bdf8; font-weight: 600;">
+                    &ldquo;A Decentralized Global Affiliate &amp; Rewards Network&rdquo;
+                </div>
+                <div style="font-size: 9px; color: #94a3b8; margin-top: 4px; line-height: 1.4;">
+                    Engineered with Korean-inspired high-precision technology aesthetics. Designed for autonomous, programmatic smart-contract execution, verifiable on-chain transparency, and borderless micro-entry participation.
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; width: 100%; max-width: 520px;">
+                <div style="background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(148, 163, 184, 0.12); border-radius: 8px; padding: 9px 8px;">
+                    <div style="font-size: 15px; font-weight: 800; color: #00f2fe; font-family: 'JetBrains Mono', monospace;">$10</div>
+                    <div style="font-size: 8px; text-transform: uppercase; color: #94a3b8; font-weight: 600; margin-top: 2px;">Micro-Entry ID</div>
+                </div>
+                <div style="background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(148, 163, 184, 0.12); border-radius: 8px; padding: 9px 8px;">
+                    <div style="font-size: 15px; font-weight: 800; color: #c084fc; font-family: 'JetBrains Mono', monospace;">12 RANKS</div>
+                    <div style="font-size: 8px; text-transform: uppercase; color: #94a3b8; font-weight: 600; margin-top: 2px;">Progression Tiers</div>
+                </div>
+                <div style="background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(148, 163, 184, 0.12); border-radius: 8px; padding: 9px 8px;">
+                    <div style="font-size: 15px; font-weight: 800; color: #34d399; font-family: 'JetBrains Mono', monospace;">SINGLE-LEG</div>
+                    <div style="font-size: 8px; text-transform: uppercase; color: #94a3b8; font-weight: 600; margin-top: 2px;">Global ID Pool</div>
+                </div>
+            </div>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(148, 163, 184, 0.15); padding-top: 10px; font-size: 8px; color: #64748b;">
+            <div>ARCHITECTURAL RELEASE 1.0 &middot; GLOBAL EDITION</div>
+            <div style="display: flex; gap: 12px;">
+                <span>DOMAIN: seoralink.com</span>
+                <span>STATUS: PUBLIC SPECIFICATION</span>
+            </div>
+        </div>
+    </div>
+    
+
+    <div class="page" id="page-4">
+        
+    <div class="page-header">
+        <div class="header-left">
+            <div class="brand-badge">
+                <div style="width:15px;height:15px;"><svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="seoraGrad1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00f2fe" />
+      <stop offset="50%" stop-color="#38bdf8" />
+      <stop offset="100%" stop-color="#7928ca" />
+    </linearGradient>
+  </defs>
+  <polygon points="50,8 86,28 86,72 50,92 14,72 14,28" stroke="url(#seoraGrad1)" stroke-width="4.5" fill="#0f172a" />
+  <polygon points="50,22 74,36 74,64 50,78 26,64 26,36" stroke="#38bdf8" stroke-width="2" fill="none" />
+  <circle cx="50" cy="50" r="9" fill="#00f2fe" />
+  <circle cx="50" cy="22" r="4" fill="#00f2fe" />
+  <circle cx="74" cy="36" r="4" fill="#38bdf8" />
+  <circle cx="74" cy="64" r="4" fill="#818cf8" />
+  <circle cx="50" cy="78" r="4" fill="#7928ca" />
+  <circle cx="26" cy="64" r="4" fill="#a855f7" />
+  <circle cx="26" cy="36" r="4" fill="#00f2fe" />
+  <line x1="50" y1="50" x2="50" y2="22" stroke="#00f2fe" stroke-width="1.8" />
+  <line x1="50" y1="50" x2="74" y2="36" stroke="#38bdf8" stroke-width="1.8" />
+  <line x1="50" y1="50" x2="74" y2="64" stroke="#818cf8" stroke-width="1.8" />
+  <line x1="50" y1="50" x2="50" y2="78" stroke="#7928ca" stroke-width="1.8" />
+  <line x1="50" y1="50" x2="26" y2="64" stroke="#a855f7" stroke-width="1.8" />
+  <line x1="50" y1="50" x2="26" y2="36" stroke="#00f2fe" stroke-width="1.8" />
+</svg></div>
+                <span>SEORALINK</span>
+            </div>
+            <span class="header-sep">/</span>
+            <span class="breadcrumb">SECTION 03 &middot; ECOSYSTEM ARCHITECTURE</span>
+        </div>
+        <div class="header-right">
+            <span class="domain-tag">seoralink.com</span>
+            <span class="doc-badge">EXECUTIVE DECK</span>
+        </div>
+    </div>
+    
+        <div class="page-body">
+            <div class="title-block">
+                <span class="section-tag">Modular Infrastructure</span>
+                <h1 class="page-title">The Four Pillars: <span class="accent">Integrated Ecosystem Suite</span></h1>
+                <p class="page-subtitle">A unified modular stack linking network relationships, wallet interfaces, rewards, and partner portals.</p>
+            </div>
+
+            <div class="grid-2">
+                <div class="card highlight">
+                    <div class="card-title"><svg viewBox="0 0 24 24" fill="none" stroke="#00f2fe" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px;"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg> 1. SEORALINK Network</div>
+                    <div style="font-size: 8px; font-weight: 700; color: #00f2fe; text-transform: uppercase; margin-bottom: 3px;">Core Protocol &amp; Global ID Registry</div>
+                    <p style="font-size: 9px; line-height: 1.4; color: #cbd5e1; margin-bottom: 5px;">
+                        The underlying algorithmic registry connecting participants across jurisdictions. It maintains the on-chain single-leg queue, tracks cumulative direct referrals, and validates eligibility triggers.
+                    </p>
+                    <ul style="font-size: 8px; color: #94a3b8; padding-left: 12px; line-height: 1.4;">
+                        <li>Processes timestamped Global Single-Leg queue placements</li>
+                        <li>Verifies 12-tier rank progression prerequisites</li>
+                        <li>Maintains immutable referral linkages without off-chain custody</li>
+                    </ul>
+                </div>
+
+                <div class="card purple">
+                    <div class="card-title"><svg viewBox="0 0 24 24" fill="none" stroke="#c084fc" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px;"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"></path><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"></path><path d="M18 12a2 2 0 0 0 0 4h4v-4Z"></path></svg> 2. SEORALINK Wallet</div>
+                    <div style="font-size: 8px; font-weight: 700; color: #c084fc; text-transform: uppercase; margin-bottom: 3px;">Non-Custodial Web3 Interaction Layer</div>
+                    <p style="font-size: 9px; line-height: 1.4; color: #cbd5e1; margin-bottom: 5px;">
+                        A streamlined, mobile-responsive Web3 interface facilitating direct connection with EVM-compatible wallets (MetaMask, Trust Wallet, WalletConnect).
+                    </p>
+                    <ul style="font-size: 8px; color: #94a3b8; padding-left: 12px; line-height: 1.4;">
+                        <li>Direct smart contract view for on-chain balances and credits</li>
+                        <li>Self-service reward claiming without intermediary approvals</li>
+                        <li>Real-time visual monitoring of contract state and pool queue</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="grid-2">
+                <div class="card emerald">
+                    <div class="card-title"><svg viewBox="0 0 24 24" fill="none" stroke="#34d399" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px;"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg> 3. SEORALINK Rewards</div>
+                    <div style="font-size: 8px; font-weight: 700; color: #34d399; text-transform: uppercase; margin-bottom: 3px;">Automated Reward Distribution Engine</div>
+                    <p style="font-size: 9px; line-height: 1.4; color: #cbd5e1; margin-bottom: 5px;">
+                        The protocol mechanism responsible for evaluating and releasing program-defined credits according to mathematical contract rules.
+                    </p>
+                    <ul style="font-size: 8px; color: #94a3b8; padding-left: 12px; line-height: 1.4;">
+                        <li>Executes 12-tier doubling rank progression reward payouts</li>
+                        <li>Disburses 5% direct affiliate and 5% rank upgrade commissions</li>
+                        <li>Transparently routes protocol withdrawal fees to sustain pool depth</li>
+                    </ul>
+                </div>
+
+                <div class="card amber">
+                    <div class="card-title"><svg viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px;"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg> 4. SEORALINK Partner</div>
+                    <div style="font-size: 8px; font-weight: 700; color: #fbbf24; text-transform: uppercase; margin-bottom: 3px;">Affiliate Portal &amp; Telemetry Suite</div>
+                    <p style="font-size: 9px; line-height: 1.4; color: #cbd5e1; margin-bottom: 5px;">
+                        A high-performance portal designed for community leaders, creators, and affiliates to measure outreach and optimize network expansion.
+                    </p>
+                    <ul style="font-size: 8px; color: #94a3b8; padding-left: 12px; line-height: 1.4;">
+                        <li>Unique cryptographic referral link generator and QR sharing</li>
+                        <li>Real-time telemetry on direct referrals and rank statuses</li>
+                        <li>Deep team analytics with zero access to private user data</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="card highlight" style="padding: 7px 10px;">
+                <div style="font-size: 10px; font-weight: 700; color: #ffffff; margin-bottom: 3px; display: flex; align-items: center; gap: 5px;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="#00f2fe" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px;"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg> Non-Custodial Architecture Guarantee
+                </div>
+                <p style="font-size: 8.5px; line-height: 1.35; color: #94a3b8;">
+                    <strong>Notice:</strong> None of the SEORALINK ecosystem components hold, manage, or custodialize user private keys. All assets, rewards, and activations interact directly with decentralized smart contracts via the participant&rsquo;s authorized personal Web3 wallet.
+                </p>
+            </div>
+        </div>
+        
+    <div class="page-footer">
+        <div class="footer-left">
+            <span class="tagline">CONNECT. GROW. REWARD.</span>
+            <span class="header-sep">&bull;</span>
+            <span>EXECUTIVE PRESENTATION DECK</span>
+        </div>
+        <div class="footer-right">
+            <span>PUBLIC ECOSYSTEM SPECIFICATION</span>
+            <span class="page-num">04 / 08</span>
+        </div>
+    </div>
+    
+    </div>
+    
+
+    <div class="page" id="page-7">
+        
+    <div class="page-header">
+        <div class="header-left">
+            <div class="brand-badge">
+                <div style="width:15px;height:15px;"><svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="seoraGrad1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00f2fe" />
+      <stop offset="50%" stop-color="#38bdf8" />
+      <stop offset="100%" stop-color="#7928ca" />
+    </linearGradient>
+  </defs>
+  <polygon points="50,8 86,28 86,72 50,92 14,72 14,28" stroke="url(#seoraGrad1)" stroke-width="4.5" fill="#0f172a" />
+  <polygon points="50,22 74,36 74,64 50,78 26,64 26,36" stroke="#38bdf8" stroke-width="2" fill="none" />
+  <circle cx="50" cy="50" r="9" fill="#00f2fe" />
+  <circle cx="50" cy="22" r="4" fill="#00f2fe" />
+  <circle cx="74" cy="36" r="4" fill="#38bdf8" />
+  <circle cx="74" cy="64" r="4" fill="#818cf8" />
+  <circle cx="50" cy="78" r="4" fill="#7928ca" />
+  <circle cx="26" cy="64" r="4" fill="#a855f7" />
+  <circle cx="26" cy="36" r="4" fill="#00f2fe" />
+  <line x1="50" y1="50" x2="50" y2="22" stroke="#00f2fe" stroke-width="1.8" />
+  <line x1="50" y1="50" x2="74" y2="36" stroke="#38bdf8" stroke-width="1.8" />
+  <line x1="50" y1="50" x2="74" y2="64" stroke="#818cf8" stroke-width="1.8" />
+  <line x1="50" y1="50" x2="50" y2="78" stroke="#7928ca" stroke-width="1.8" />
+  <line x1="50" y1="50" x2="26" y2="64" stroke="#a855f7" stroke-width="1.8" />
+  <line x1="50" y1="50" x2="26" y2="36" stroke="#00f2fe" stroke-width="1.8" />
+</svg></div>
+                <span>SEORALINK</span>
+            </div>
+            <span class="header-sep">/</span>
+            <span class="breadcrumb">SECTION 06 &middot; MICRO-ENTRY & INITIAL PROGRESSION</span>
+        </div>
+        <div class="header-right">
+            <span class="domain-tag">seoralink.com</span>
+            <span class="doc-badge">EXECUTIVE DECK</span>
+        </div>
+    </div>
+    
+        <div class="page-body">
+            <div class="title-block">
+                <span class="section-tag">Universal Accessibility</span>
+                <h1 class="page-title">The $10 Micro-Entry: <span class="accent">Junior to Zen Transition</span></h1>
+                <p class="page-subtitle">Democratizing global affiliate participation with an ultra-accessible entry threshold.</p>
+            </div>
+
+            <div class="grid-2">
+                <div class="card highlight">
+                    <div class="card-title"><svg viewBox="0 0 24 24" fill="none" stroke="#00f2fe" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px;"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg> Universal $10 Entry Architecture</div>
+                    <div style="display: flex; align-items: baseline; gap: 8px; margin: 4px 0 6px 0;">
+                        <span style="font-size: 26px; font-weight: 800; color: #00f2fe; font-family: 'JetBrains Mono', monospace;">$10</span>
+                        <span style="font-size: 10px; color: #94a3b8; font-weight: 600;">Qualifying ID Activation Value</span>
+                    </div>
+                    <p style="font-size: 9px; line-height: 1.4; color: #cbd5e1; margin-bottom: 5px;">
+                        Every participant enters the ecosystem as a <strong>Junior (Zero Rank)</strong> ID upon committing a $10 qualifying transaction via supported cryptocurrency or stablecoin.
+                    </p>
+                    <p style="font-size: 9px; line-height: 1.4; color: #94a3b8;">
+                        This low barrier to entry ensures global participation across developing and developed economies alike, removing capital-heavy barriers common in legacy ventures.
+                    </p>
+                </div>
+
+                <div class="card purple">
+                    <div class="card-title"><svg viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px;"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg> Junior &rarr; Zen Progression Rule</div>
+                    <div style="font-size: 9px; color: #cbd5e1; line-height: 1.4; margin-bottom: 6px;">
+                        To progress from <strong>Junior</strong> to the first recognized rank, <strong>Zen</strong>, the participant must fulfill a mandatory direct referral requirement:
+                    </div>
+                    <div style="background: rgba(139, 92, 246, 0.1); border: 1px solid rgba(139, 92, 246, 0.3); border-radius: 6px; padding: 8px 10px; text-align: center; margin-bottom: 6px;">
+                        <div style="font-size: 13px; font-weight: 800; color: #ffffff;">2 DIRECT REFERRALS</div>
+                        <div style="font-size: 8px; color: #a78bfa; text-transform: uppercase;">Active Qualifying $10 IDs Sponsored</div>
+                    </div>
+                    <p style="font-size: 8.5px; color: #94a3b8; line-height: 1.35;">
+                        Once both sponsored IDs are activated and recorded on-chain, the participant's status automatically transitions to <strong>Zen</strong> rank eligibility.
+                    </p>
+                </div>
+            </div>
+
+            <div class="card emerald">
+                <div class="card-title"><svg viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px;"><polyline points="20 6 9 17 4 12"></polyline></svg> Zen Rank Program-Defined Benefit</div>
+                <div class="grid-2-1" style="align-items: center;">
+                    <div>
+                        <div style="font-size: 11px; font-weight: 700; color: #ffffff; margin-bottom: 3px;">Program-Defined Rank Reward: $10 Credit</div>
+                        <p style="font-size: 8.5px; line-height: 1.35; color: #cbd5e1;">
+                            Upon achieving Zen status in accordance with protocol rules, the participant qualifies for a program-defined reward credit of $10.00. This reward is claimable according to protocol withdrawal fee specifications.
+                        </p>
+                    </div>
+                    <div style="text-align: center; background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); padding: 6px; border-radius: 6px;">
+                        <div style="font-size: 18px; font-weight: 800; color: #34d399; font-family: 'JetBrains Mono', monospace;">$10.00</div>
+                        <div style="font-size: 7.5px; color: #94a3b8; text-transform: uppercase;">Zen Reward Credit</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid-3">
+                <div class="flow-step">
+                    <div class="step-num">1</div>
+                    <div class="step-content">
+                        <h4>Junior Entry</h4>
+                        <p>Participant activates ID with $10. Position registered in Global Registry.</p>
+                    </div>
+                </div>
+                <div class="flow-step">
+                    <div class="step-num">2</div>
+                    <div class="step-content">
+                        <h4>2 Direct Referrals</h4>
+                        <p>Participant sponsors 2 direct peers ($10 each) via personal referral link.</p>
+                    </div>
+                </div>
+                <div class="flow-step">
+                    <div class="step-num">3</div>
+                    <div class="step-content">
+                        <h4>Zen Attainment</h4>
+                        <p>System qualifies participant for Zen. $10 program reward credited.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="callout warning">
+                <div class="callout-title">Regulatory &amp; Accounting Clarification</div>
+                The $10 Zen rank benefit is a <strong>program-defined affiliate incentive credit</strong> earned through qualifying peer sponsorship and network activity. It is NOT an interest payment, yield, dividend, or guaranteed return on deposited capital.
+            </div>
+        </div>
+        
+    <div class="page-footer">
+        <div class="footer-left">
+            <span class="tagline">CONNECT. GROW. REWARD.</span>
+            <span class="header-sep">&bull;</span>
+            <span>EXECUTIVE PRESENTATION DECK</span>
+        </div>
+        <div class="footer-right">
+            <span>PUBLIC ECOSYSTEM SPECIFICATION</span>
+            <span class="page-num">07 / 08</span>
+        </div>
+    </div>
+    
+    </div>
+    
+
+    <div class="page" id="page-8">
+        
+    <div class="page-header">
+        <div class="header-left">
+            <div class="brand-badge">
+                <div style="width:15px;height:15px;"><svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="seoraGrad1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00f2fe" />
+      <stop offset="50%" stop-color="#38bdf8" />
+      <stop offset="100%" stop-color="#7928ca" />
+    </linearGradient>
+  </defs>
+  <polygon points="50,8 86,28 86,72 50,92 14,72 14,28" stroke="url(#seoraGrad1)" stroke-width="4.5" fill="#0f172a" />
+  <polygon points="50,22 74,36 74,64 50,78 26,64 26,36" stroke="#38bdf8" stroke-width="2" fill="none" />
+  <circle cx="50" cy="50" r="9" fill="#00f2fe" />
+  <circle cx="50" cy="22" r="4" fill="#00f2fe" />
+  <circle cx="74" cy="36" r="4" fill="#38bdf8" />
+  <circle cx="74" cy="64" r="4" fill="#818cf8" />
+  <circle cx="50" cy="78" r="4" fill="#7928ca" />
+  <circle cx="26" cy="64" r="4" fill="#a855f7" />
+  <circle cx="26" cy="36" r="4" fill="#00f2fe" />
+  <line x1="50" y1="50" x2="50" y2="22" stroke="#00f2fe" stroke-width="1.8" />
+  <line x1="50" y1="50" x2="74" y2="36" stroke="#38bdf8" stroke-width="1.8" />
+  <line x1="50" y1="50" x2="74" y2="64" stroke="#818cf8" stroke-width="1.8" />
+  <line x1="50" y1="50" x2="50" y2="78" stroke="#7928ca" stroke-width="1.8" />
+  <line x1="50" y1="50" x2="26" y2="64" stroke="#a855f7" stroke-width="1.8" />
+  <line x1="50" y1="50" x2="26" y2="36" stroke="#00f2fe" stroke-width="1.8" />
+</svg></div>
+                <span>SEORALINK</span>
+            </div>
+            <span class="header-sep">/</span>
+            <span class="breadcrumb">SECTION 07 &middot; RANK STRUCTURE & DIRECT REQUIREMENTS</span>
+        </div>
+        <div class="header-right">
+            <span class="domain-tag">seoralink.com</span>
+            <span class="doc-badge">EXECUTIVE DECK</span>
+        </div>
+    </div>
+    
+        <div class="page-body">
+            <div class="title-block">
+                <span class="section-tag">Tiered Hierarchy</span>
+                <h1 class="page-title">The 12-Rank Progression: <span class="accent">Cumulative Referral Model</span></h1>
+                <p class="page-subtitle">A mathematically structured ladder where direct referral requirements remain permanent and cumulative.</p>
+            </div>
+
+            <div class="grid-2">
+                <div class="card highlight">
+                    <div class="card-title"><svg viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px;"><polyline points="20 6 9 17 4 12"></polyline></svg> Cumulative Direct Referral Principle</div>
+                    <p style="font-size: 8.5px; line-height: 1.35; color: #cbd5e1;">
+                        In SEORALINK, direct referrals <strong>never reset</strong> upon advancing ranks. Direct referrals are strictly cumulative. The 2 direct referrals completed for Zen continue to count toward Alpha, Nova, and subsequent tiers.
+                    </p>
+                </div>
+                <div class="card purple">
+                    <div class="card-title"><svg viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px;"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg> Doubling Reward Curve</div>
+                    <p style="font-size: 8.5px; line-height: 1.35; color: #cbd5e1;">
+                        Each rank reward doubles the preceding tier: starting from $10 at Zen, advancing to $20 at Alpha, $40 at Nova, and progressing exponentially up to $20,480 at Ultima rank.
+                    </p>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 8%;">Tier</th>
+                            <th style="width: 14%;">Rank Name</th>
+                            <th style="width: 18%;">Total Cumulative Directs</th>
+                            <th style="width: 18%;">Incremental Directs</th>
+                            <th style="width: 22%;">Program Rank Reward</th>
+                            <th style="width: 20%;">Reward Multiple</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><span class="badge badge-cyan">0</span></td>
+                            <td><strong>Junior</strong></td>
+                            <td>0 Directs</td>
+                            <td>Baseline Entry</td>
+                            <td style="font-family: 'JetBrains Mono';">$0.00</td>
+                            <td>Entry Level</td>
+                        </tr>
+                        <tr>
+                            <td><span class="badge badge-cyan">1</span></td>
+                            <td><strong>Zen</strong></td>
+                            <td>2 Directs</td>
+                            <td>+2 Directs</td>
+                            <td style="font-family: 'JetBrains Mono'; font-weight: 700; color: #00f2fe;">$10.00</td>
+                            <td>Base Reward</td>
+                        </tr>
+                        <tr>
+                            <td><span class="badge badge-cyan">2</span></td>
+                            <td><strong>Alpha</strong></td>
+                            <td>2 Directs</td>
+                            <td>+0 (Cumulative)</td>
+                            <td style="font-family: 'JetBrains Mono'; font-weight: 700; color: #00f2fe;">$20.00</td>
+                            <td>2X Zen</td>
+                        </tr>
+                        <tr>
+                            <td><span class="badge badge-cyan">3</span></td>
+                            <td><strong>Nova</strong></td>
+                            <td>3 Directs</td>
+                            <td>+1 New Direct</td>
+                            <td style="font-family: 'JetBrains Mono'; font-weight: 700; color: #00f2fe;">$40.00</td>
+                            <td>2X Alpha</td>
+                        </tr>
+                        <tr>
+                            <td><span class="badge badge-cyan">4</span></td>
+                            <td><strong>Valt</strong></td>
+                            <td>3 Directs</td>
+                            <td>+0 (Cumulative)</td>
+                            <td style="font-family: 'JetBrains Mono'; font-weight: 700; color: #00f2fe;">$80.00</td>
+                            <td>2X Nova</td>
+                        </tr>
+                        <tr>
+                            <td><span class="badge badge-cyan">5</span></td>
+                            <td><strong>Apex</strong></td>
+                            <td>3 Directs</td>
+                            <td>+0 (Cumulative)</td>
+                            <td style="font-family: 'JetBrains Mono'; font-weight: 700; color: #00f2fe;">$160.00</td>
+                            <td>2X Valt</td>
+                        </tr>
+                        <tr>
+                            <td><span class="badge badge-purple">6</span></td>
+                            <td><strong>Orbit</strong></td>
+                            <td>4 Directs</td>
+                            <td>+1 New Direct</td>
+                            <td style="font-family: 'JetBrains Mono'; font-weight: 700; color: #c084fc;">$320.00</td>
+                            <td>2X Apex</td>
+                        </tr>
+                        <tr>
+                            <td><span class="badge badge-purple">7</span></td>
+                            <td><strong>Prime</strong></td>
+                            <td>4 Directs</td>
+                            <td>+0 (Cumulative)</td>
+                            <td style="font-family: 'JetBrains Mono'; font-weight: 700; color: #c084fc;">$640.00</td>
+                            <td>2X Orbit</td>
+                        </tr>
+                        <tr>
+                            <td><span class="badge badge-purple">8</span></td>
+                            <td><strong>Elite</strong></td>
+                            <td>4 Directs</td>
+                            <td>+0 (Cumulative)</td>
+                            <td style="font-family: 'JetBrains Mono'; font-weight: 700; color: #c084fc;">$1,280.00</td>
+                            <td>2X Prime</td>
+                        </tr>
+                        <tr>
+                            <td><span class="badge badge-emerald">9</span></td>
+                            <td><strong>Titan</strong></td>
+                            <td>5 Directs</td>
+                            <td>+1 New Direct</td>
+                            <td style="font-family: 'JetBrains Mono'; font-weight: 700; color: #34d399;">$2,560.00</td>
+                            <td>2X Elite</td>
+                        </tr>
+                        <tr>
+                            <td><span class="badge badge-emerald">10</span></td>
+                            <td><strong>Royal</strong></td>
+                            <td>5 Directs</td>
+                            <td>+0 (Cumulative)</td>
+                            <td style="font-family: 'JetBrains Mono'; font-weight: 700; color: #34d399;">$5,120.00</td>
+                            <td>2X Titan</td>
+                        </tr>
+                        <tr class="highlight">
+                            <td><span class="badge badge-amber">11</span></td>
+                            <td><strong>Legend</strong></td>
+                            <td>6 Directs</td>
+                            <td>+1 New Direct</td>
+                            <td style="font-family: 'JetBrains Mono'; font-weight: 800; color: #fbbf24;">$10,240.00</td>
+                            <td>2X Royal (10% Fee Tier)</td>
+                        </tr>
+                        <tr class="highlight">
+                            <td><span class="badge badge-amber">12</span></td>
+                            <td><strong>Ultima</strong></td>
+                            <td>6 Directs</td>
+                            <td>+0 (Cumulative)</td>
+                            <td style="font-family: 'JetBrains Mono'; font-weight: 800; color: #fbbf24;">$20,480.00</td>
+                            <td>2X Legend (Cycle Exit)</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="callout warning">
+                <div class="callout-title">Crucial Non-Guaranteed Disclaimer</div>
+                These figures represent the current program-defined reward structure and should not be interpreted as guaranteed investment returns, guaranteed income, or guaranteed profit. Attainment of any rank requires meeting both cumulative referral quotas and global single-leg queue conditions.
+            </div>
+        </div>
+        
+    <div class="page-footer">
+        <div class="footer-left">
+            <span class="tagline">CONNECT. GROW. REWARD.</span>
+            <span class="header-sep">&bull;</span>
+            <span>EXECUTIVE PRESENTATION DECK</span>
+        </div>
+        <div class="footer-right">
+            <span>PUBLIC ECOSYSTEM SPECIFICATION</span>
+            <span class="page-num">08 / 08</span>
+        </div>
+    </div>
+    
+    </div>
+    
+
+    <div class="page" id="page-10">
+        
+    <div class="page-header">
+        <div class="header-left">
+            <div class="brand-badge">
+                <div style="width:15px;height:15px;"><svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="seoraGrad1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00f2fe" />
+      <stop offset="50%" stop-color="#38bdf8" />
+      <stop offset="100%" stop-color="#7928ca" />
+    </linearGradient>
+  </defs>
+  <polygon points="50,8 86,28 86,72 50,92 14,72 14,28" stroke="url(#seoraGrad1)" stroke-width="4.5" fill="#0f172a" />
+  <polygon points="50,22 74,36 74,64 50,78 26,64 26,36" stroke="#38bdf8" stroke-width="2" fill="none" />
+  <circle cx="50" cy="50" r="9" fill="#00f2fe" />
+  <circle cx="50" cy="22" r="4" fill="#00f2fe" />
+  <circle cx="74" cy="36" r="4" fill="#38bdf8" />
+  <circle cx="74" cy="64" r="4" fill="#818cf8" />
+  <circle cx="50" cy="78" r="4" fill="#7928ca" />
+  <circle cx="26" cy="64" r="4" fill="#a855f7" />
+  <circle cx="26" cy="36" r="4" fill="#00f2fe" />
+  <line x1="50" y1="50" x2="50" y2="22" stroke="#00f2fe" stroke-width="1.8" />
+  <line x1="50" y1="50" x2="74" y2="36" stroke="#38bdf8" stroke-width="1.8" />
+  <line x1="50" y1="50" x2="74" y2="64" stroke="#818cf8" stroke-width="1.8" />
+  <line x1="50" y1="50" x2="50" y2="78" stroke="#7928ca" stroke-width="1.8" />
+  <line x1="50" y1="50" x2="26" y2="64" stroke="#a855f7" stroke-width="1.8" />
+  <line x1="50" y1="50" x2="26" y2="36" stroke="#00f2fe" stroke-width="1.8" />
+</svg></div>
+                <span>SEORALINK</span>
+            </div>
+            <span class="header-sep">/</span>
+            <span class="breadcrumb">SECTION 09 &middot; VISUAL PROGRESSION FLOWCHART</span>
+        </div>
+        <div class="header-right">
+            <span class="domain-tag">seoralink.com</span>
+            <span class="doc-badge">EXECUTIVE DECK</span>
+        </div>
+    </div>
+    
+        <div class="page-body">
+            <div class="title-block">
+                <span class="section-tag">Visual Pathway</span>
+                <h1 class="page-title">Global Single-Leg: <span class="accent">Complete Visual Flowchart</span></h1>
+                <p class="page-subtitle">The uninterrupted progression pathway from $10 Junior entry to $20,480 Ultima cycle completion.</p>
+            </div>
+
+            <div style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(56, 189, 248, 0.2); border-radius: 8px; padding: 10px 12px; display: flex; flex-direction: column; gap: 5px;">
+                <div style="display: flex; align-items: center; justify-content: space-between; background: rgba(30, 41, 59, 0.6); padding: 4px 8px; border-radius: 4px; border-left: 3px solid #00f2fe;">
+                    <div style="font-weight: 700; color: #ffffff; font-size: 9.5px;">JUNIOR (ENTRY) &middot; $10 Activation</div>
+                    <div style="font-size: 8.5px; color: #00f2fe; font-weight: 600;">Requires 2 Direct Referrals &darr;</div>
+                </div>
+
+                <div style="display: flex; align-items: center; justify-content: space-between; background: rgba(30, 41, 59, 0.6); padding: 4px 8px; border-radius: 4px; border-left: 3px solid #00f2fe;">
+                    <div style="font-weight: 700; color: #ffffff; font-size: 9.5px;">ZEN &middot; $10 Reward</div>
+                    <div style="font-size: 8.5px; color: #38bdf8;">Requires 2 Zen IDs globally below &darr;</div>
+                </div>
+
+                <div style="display: flex; align-items: center; justify-content: space-between; background: rgba(30, 41, 59, 0.6); padding: 4px 8px; border-radius: 4px; border-left: 3px solid #00f2fe;">
+                    <div style="font-weight: 700; color: #ffffff; font-size: 9.5px;">ALPHA &middot; $20 Reward</div>
+                    <div style="font-size: 8.5px; color: #00f2fe; font-weight: 600;">Requires 3 Cumul. Directs + 2 Alpha IDs below &darr;</div>
+                </div>
+
+                <div style="display: flex; align-items: center; justify-content: space-between; background: rgba(30, 41, 59, 0.6); padding: 4px 8px; border-radius: 4px; border-left: 3px solid #00f2fe;">
+                    <div style="font-weight: 700; color: #ffffff; font-size: 9.5px;">NOVA &middot; $40 Reward</div>
+                    <div style="font-size: 8.5px; color: #38bdf8;">Requires 2 Nova IDs globally below &darr;</div>
+                </div>
+
+                <div style="display: flex; align-items: center; justify-content: space-between; background: rgba(30, 41, 59, 0.6); padding: 4px 8px; border-radius: 4px; border-left: 3px solid #00f2fe;">
+                    <div style="font-weight: 700; color: #ffffff; font-size: 9.5px;">VALT &middot; $80 Reward</div>
+                    <div style="font-size: 8.5px; color: #38bdf8;">Requires 2 Valt IDs globally below &darr;</div>
+                </div>
+
+                <div style="display: flex; align-items: center; justify-content: space-between; background: rgba(30, 41, 59, 0.6); padding: 4px 8px; border-radius: 4px; border-left: 3px solid #c084fc;">
+                    <div style="font-weight: 700; color: #ffffff; font-size: 9.5px;">APEX &middot; $160 Reward</div>
+                    <div style="font-size: 8.5px; color: #c084fc; font-weight: 600;">Requires 4 Cumul. Directs + 2 Apex IDs below &darr;</div>
+                </div>
+
+                <div style="display: flex; align-items: center; justify-content: space-between; background: rgba(30, 41, 59, 0.6); padding: 4px 8px; border-radius: 4px; border-left: 3px solid #c084fc;">
+                    <div style="font-weight: 700; color: #ffffff; font-size: 9.5px;">ORBIT &middot; $320 Reward</div>
+                    <div style="font-size: 8.5px; color: #a78bfa;">Requires 2 Orbit IDs globally below &darr;</div>
+                </div>
+
+                <div style="display: flex; align-items: center; justify-content: space-between; background: rgba(30, 41, 59, 0.6); padding: 4px 8px; border-radius: 4px; border-left: 3px solid #c084fc;">
+                    <div style="font-weight: 700; color: #ffffff; font-size: 9.5px;">PRIME &middot; $640 Reward</div>
+                    <div style="font-size: 8.5px; color: #a78bfa;">Requires 2 Prime IDs globally below &darr;</div>
+                </div>
+
+                <div style="display: flex; align-items: center; justify-content: space-between; background: rgba(30, 41, 59, 0.6); padding: 4px 8px; border-radius: 4px; border-left: 3px solid #34d399;">
+                    <div style="font-weight: 700; color: #ffffff; font-size: 9.5px;">ELITE &middot; $1,280 Reward</div>
+                    <div style="font-size: 8.5px; color: #34d399; font-weight: 600;">Requires 5 Cumul. Directs + 2 Elite IDs below &darr;</div>
+                </div>
+
+                <div style="display: flex; align-items: center; justify-content: space-between; background: rgba(30, 41, 59, 0.6); padding: 4px 8px; border-radius: 4px; border-left: 3px solid #34d399;">
+                    <div style="font-weight: 700; color: #ffffff; font-size: 9.5px;">TITAN &middot; $2,560 Reward</div>
+                    <div style="font-size: 8.5px; color: #34d399;">Requires 2 Titan IDs globally below &darr;</div>
+                </div>
+
+                <div style="display: flex; align-items: center; justify-content: space-between; background: rgba(30, 41, 59, 0.6); padding: 4px 8px; border-radius: 4px; border-left: 3px solid #fbbf24;">
+                    <div style="font-weight: 700; color: #ffffff; font-size: 9.5px;">ROYAL &middot; $5,120 Reward</div>
+                    <div style="font-size: 8.5px; color: #fbbf24; font-weight: 600;">Requires 6 Cumul. Directs + 2 Royal IDs below &darr;</div>
+                </div>
+
+                <div style="display: flex; align-items: center; justify-content: space-between; background: rgba(30, 41, 59, 0.6); padding: 4px 8px; border-radius: 4px; border-left: 3px solid #fbbf24;">
+                    <div style="font-weight: 700; color: #ffffff; font-size: 9.5px;">LEGEND &middot; $10,240 Reward (10% Fee)</div>
+                    <div style="font-size: 8.5px; color: #fbbf24;">Requires 2 Legend IDs globally below &darr;</div>
+                </div>
+
+                <div style="display: flex; align-items: center; justify-content: space-between; background: #0f172a; padding: 5px 8px; border-radius: 4px; border-left: 3px solid #10b981; border: 1px solid rgba(16, 185, 129, 0.3);">
+                    <div style="font-weight: 800; color: #34d399; font-size: 10px;">ULTIMA &middot; $20,480 Reward (10% Fee)</div>
+                    <div style="font-size: 9px; color: #34d399; font-weight: 700;">PROTOCOL CYCLE COMPLETE &bull; MAXIMUM EXIT</div>
+                </div>
+            </div>
+
+            <div class="callout">
+                <div class="callout-title"><svg viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px;"><polyline points="20 6 9 17 4 12"></polyline></svg> Mathematical Progression Confirmation</div>
+                Notice that every rank transition strictly demands <strong>2 eligible IDs of current rank</strong> to appear globally underneath. Cumulative direct quotas are checked at key stages: 2 Directs (Zen/Alpha), 3 Directs (Nova/Valt/Apex), 4 Directs (Orbit/Prime/Elite), 5 Directs (Titan/Royal), and 6 Directs (Legend/Ultima).
+            </div>
+        </div>
+        
+    <div class="page-footer">
+        <div class="footer-left">
+            <span class="tagline">CONNECT. GROW. REWARD.</span>
+            <span class="header-sep">&bull;</span>
+            <span>EXECUTIVE PRESENTATION DECK</span>
+        </div>
+        <div class="footer-right">
+            <span>PUBLIC ECOSYSTEM SPECIFICATION</span>
+            <span class="page-num">10 / 08</span>
+        </div>
+    </div>
+    
+    </div>
+    
+
+    <div class="page" id="page-12">
+        
+    <div class="page-header">
+        <div class="header-left">
+            <div class="brand-badge">
+                <div style="width:15px;height:15px;"><svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="seoraGrad1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00f2fe" />
+      <stop offset="50%" stop-color="#38bdf8" />
+      <stop offset="100%" stop-color="#7928ca" />
+    </linearGradient>
+  </defs>
+  <polygon points="50,8 86,28 86,72 50,92 14,72 14,28" stroke="url(#seoraGrad1)" stroke-width="4.5" fill="#0f172a" />
+  <polygon points="50,22 74,36 74,64 50,78 26,64 26,36" stroke="#38bdf8" stroke-width="2" fill="none" />
+  <circle cx="50" cy="50" r="9" fill="#00f2fe" />
+  <circle cx="50" cy="22" r="4" fill="#00f2fe" />
+  <circle cx="74" cy="36" r="4" fill="#38bdf8" />
+  <circle cx="74" cy="64" r="4" fill="#818cf8" />
+  <circle cx="50" cy="78" r="4" fill="#7928ca" />
+  <circle cx="26" cy="64" r="4" fill="#a855f7" />
+  <circle cx="26" cy="36" r="4" fill="#00f2fe" />
+  <line x1="50" y1="50" x2="50" y2="22" stroke="#00f2fe" stroke-width="1.8" />
+  <line x1="50" y1="50" x2="74" y2="36" stroke="#38bdf8" stroke-width="1.8" />
+  <line x1="50" y1="50" x2="74" y2="64" stroke="#818cf8" stroke-width="1.8" />
+  <line x1="50" y1="50" x2="50" y2="78" stroke="#7928ca" stroke-width="1.8" />
+  <line x1="50" y1="50" x2="26" y2="64" stroke="#a855f7" stroke-width="1.8" />
+  <line x1="50" y1="50" x2="26" y2="36" stroke="#00f2fe" stroke-width="1.8" />
+</svg></div>
+                <span>SEORALINK</span>
+            </div>
+            <span class="header-sep">/</span>
+            <span class="breadcrumb">SECTION 11 &middot; DUAL COMMISSION ARCHITECTURE</span>
+        </div>
+        <div class="header-right">
+            <span class="domain-tag">seoralink.com</span>
+            <span class="doc-badge">EXECUTIVE DECK</span>
+        </div>
+    </div>
+    
+        <div class="page-body">
+            <div class="title-block">
+                <span class="section-tag">Affiliate Economics</span>
+                <h1 class="page-title">Dual Commission Model: <span class="accent">Direct &amp; Rank Upgrade</span></h1>
+                <p class="page-subtitle">A sustainable dual-incentive model rewarding both initial referral outreach and leadership advancement.</p>
+            </div>
+
+            <div class="grid-2">
+                <div class="card highlight">
+                    <div class="card-title"><svg viewBox="0 0 24 24" fill="none" stroke="#34d399" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px;"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg> 1. 5% Direct Affiliate Commission</div>
+                    <p style="font-size: 9px; line-height: 1.4; color: #cbd5e1; margin-bottom: 4px;">
+                        When an affiliate sponsors a new peer who activates a $10 qualifying ID, the sponsor receives a <strong>5% Direct Affiliate Commission</strong>:
+                    </p>
+                    <div style="background: rgba(0, 242, 254, 0.08); border: 1px solid rgba(0, 242, 254, 0.25); border-radius: 5px; padding: 6px; text-align: center; margin: 4px 0;">
+                        <span style="font-family: 'JetBrains Mono'; font-size: 13px; font-weight: 800; color: #00f2fe;">$10.00 &times; 5% = $0.50</span>
+                        <div style="font-size: 7.5px; color: #94a3b8; text-transform: uppercase;">Direct Sponsor Commission Per ID</div>
+                    </div>
+                    <p style="font-size: 8px; color: #94a3b8; line-height: 1.35;">
+                        Credited instantly to the sponsor's reward ledger via smart contract upon transaction confirmation.
+                    </p>
+                </div>
+
+                <div class="card purple">
+                    <div class="card-title"><svg viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px;"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg> 2. 5% Rank Upgrade Commission</div>
+                    <p style="font-size: 9px; line-height: 1.4; color: #cbd5e1; margin-bottom: 4px;">
+                        When a direct team member reaches a new rank, the eligible upline sponsor receives an additional <strong>5% commission based on the defined qualifying rank amount</strong>:
+                    </p>
+                    <div style="background: rgba(139, 92, 246, 0.08); border: 1px solid rgba(139, 92, 246, 0.25); border-radius: 5px; padding: 6px; text-align: center; margin: 4px 0;">
+                        <span style="font-family: 'JetBrains Mono'; font-size: 13px; font-weight: 800; color: #c084fc;">Qualifying Rank Base &times; 5%</span>
+                        <div style="font-size: 7.5px; color: #94a3b8; text-transform: uppercase;">Recurring Leadership Reward on Progression</div>
+                    </div>
+                    <p style="font-size: 8px; color: #94a3b8; line-height: 1.35;">
+                        Incentivizes sponsors to assist their direct team in climbing the rank ladder.
+                    </p>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 15%;">Rank Achieved</th>
+                            <th style="width: 25%;">Qualifying Rank Base</th>
+                            <th style="width: 25%;">Calculation Formula</th>
+                            <th style="width: 35%;">Upline 5% Upgrade Commission</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Zen</strong></td>
+                            <td style="font-family: 'JetBrains Mono';">$10.00</td>
+                            <td style="font-family: 'JetBrains Mono';">$10.00 &times; 5%</td>
+                            <td style="font-family: 'JetBrains Mono'; font-weight: 700; color: #00f2fe;">$0.50</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Alpha</strong></td>
+                            <td style="font-family: 'JetBrains Mono';">$20.00</td>
+                            <td style="font-family: 'JetBrains Mono';">$20.00 &times; 5%</td>
+                            <td style="font-family: 'JetBrains Mono'; font-weight: 700; color: #00f2fe;">$1.00</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Nova</strong></td>
+                            <td style="font-family: 'JetBrains Mono';">$40.00</td>
+                            <td style="font-family: 'JetBrains Mono';">$40.00 &times; 5%</td>
+                            <td style="font-family: 'JetBrains Mono'; font-weight: 700; color: #00f2fe;">$2.00</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Valt</strong></td>
+                            <td style="font-family: 'JetBrains Mono';">$80.00</td>
+                            <td style="font-family: 'JetBrains Mono';">$80.00 &times; 5%</td>
+                            <td style="font-family: 'JetBrains Mono'; font-weight: 700; color: #00f2fe;">$4.00</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Apex</strong></td>
+                            <td style="font-family: 'JetBrains Mono';">$160.00</td>
+                            <td style="font-family: 'JetBrains Mono';">$160.00 &times; 5%</td>
+                            <td style="font-family: 'JetBrains Mono'; font-weight: 700; color: #c084fc;">$8.00</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Orbit</strong></td>
+                            <td style="font-family: 'JetBrains Mono';">$320.00</td>
+                            <td style="font-family: 'JetBrains Mono';">$320.00 &times; 5%</td>
+                            <td style="font-family: 'JetBrains Mono'; font-weight: 700; color: #c084fc;">$16.00</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Prime</strong></td>
+                            <td style="font-family: 'JetBrains Mono';">$640.00</td>
+                            <td style="font-family: 'JetBrains Mono';">$640.00 &times; 5%</td>
+                            <td style="font-family: 'JetBrains Mono'; font-weight: 700; color: #c084fc;">$32.00</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Elite</strong></td>
+                            <td style="font-family: 'JetBrains Mono';">$1,280.00</td>
+                            <td style="font-family: 'JetBrains Mono';">$1,280.00 &times; 5%</td>
+                            <td style="font-family: 'JetBrains Mono'; font-weight: 700; color: #34d399;">$64.00</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Titan</strong></td>
+                            <td style="font-family: 'JetBrains Mono';">$2,560.00</td>
+                            <td style="font-family: 'JetBrains Mono';">$2,560.00 &times; 5%</td>
+                            <td style="font-family: 'JetBrains Mono'; font-weight: 700; color: #34d399;">$128.00</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Royal</strong></td>
+                            <td style="font-family: 'JetBrains Mono';">$5,120.00</td>
+                            <td style="font-family: 'JetBrains Mono';">$5,120.00 &times; 5%</td>
+                            <td style="font-family: 'JetBrains Mono'; font-weight: 700; color: #34d399;">$256.00</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Legend</strong></td>
+                            <td style="font-family: 'JetBrains Mono';">$10,240.00</td>
+                            <td style="font-family: 'JetBrains Mono';">$10,240.00 &times; 5%</td>
+                            <td style="font-family: 'JetBrains Mono'; font-weight: 800; color: #fbbf24;">$512.00</td>
+                        </tr>
+                        <tr class="highlight">
+                            <td><strong>Ultima</strong></td>
+                            <td style="font-family: 'JetBrains Mono';">$20,480.00</td>
+                            <td style="font-family: 'JetBrains Mono';">$20,480.00 &times; 5%</td>
+                            <td style="font-family: 'JetBrains Mono'; font-weight: 800; color: #fbbf24;">$1,024.00</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="callout">
+                <div class="callout-title"><svg viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px;"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg> Cumulative Upline Impact</div>
+                Guiding just one active direct partner through the full 12-rank cycle generates an aggregate <strong>$2,047.50</strong> in rank upgrade commissions alone, on top of direct referral and rank reward earnings.
+            </div>
+        </div>
+        
+    <div class="page-footer">
+        <div class="footer-left">
+            <span class="tagline">CONNECT. GROW. REWARD.</span>
+            <span class="header-sep">&bull;</span>
+            <span>EXECUTIVE PRESENTATION DECK</span>
+        </div>
+        <div class="footer-right">
+            <span>PUBLIC ECOSYSTEM SPECIFICATION</span>
+            <span class="page-num">12 / 08</span>
+        </div>
+    </div>
+    
+    </div>
+    
+
+    <div class="page" id="page-14">
+        
+    <div class="page-header">
+        <div class="header-left">
+            <div class="brand-badge">
+                <div style="width:15px;height:15px;"><svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="seoraGrad1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00f2fe" />
+      <stop offset="50%" stop-color="#38bdf8" />
+      <stop offset="100%" stop-color="#7928ca" />
+    </linearGradient>
+  </defs>
+  <polygon points="50,8 86,28 86,72 50,92 14,72 14,28" stroke="url(#seoraGrad1)" stroke-width="4.5" fill="#0f172a" />
+  <polygon points="50,22 74,36 74,64 50,78 26,64 26,36" stroke="#38bdf8" stroke-width="2" fill="none" />
+  <circle cx="50" cy="50" r="9" fill="#00f2fe" />
+  <circle cx="50" cy="22" r="4" fill="#00f2fe" />
+  <circle cx="74" cy="36" r="4" fill="#38bdf8" />
+  <circle cx="74" cy="64" r="4" fill="#818cf8" />
+  <circle cx="50" cy="78" r="4" fill="#7928ca" />
+  <circle cx="26" cy="64" r="4" fill="#a855f7" />
+  <circle cx="26" cy="36" r="4" fill="#00f2fe" />
+  <line x1="50" y1="50" x2="50" y2="22" stroke="#00f2fe" stroke-width="1.8" />
+  <line x1="50" y1="50" x2="74" y2="36" stroke="#38bdf8" stroke-width="1.8" />
+  <line x1="50" y1="50" x2="74" y2="64" stroke="#818cf8" stroke-width="1.8" />
+  <line x1="50" y1="50" x2="50" y2="78" stroke="#7928ca" stroke-width="1.8" />
+  <line x1="50" y1="50" x2="26" y2="64" stroke="#a855f7" stroke-width="1.8" />
+  <line x1="50" y1="50" x2="26" y2="36" stroke="#00f2fe" stroke-width="1.8" />
+</svg></div>
+                <span>SEORALINK</span>
+            </div>
+            <span class="header-sep">/</span>
+            <span class="breadcrumb">SECTION 13 &middot; WITHDRAWAL CHARGES & FEES</span>
+        </div>
+        <div class="header-right">
+            <span class="domain-tag">seoralink.com</span>
+            <span class="doc-badge">EXECUTIVE DECK</span>
+        </div>
+    </div>
+    
+        <div class="page-body">
+            <div class="title-block">
+                <span class="section-tag">Protocol Sustainability</span>
+                <h1 class="page-title">Fee Architecture: <span class="accent">Withdrawal Charges &amp; Platform Fees</span></h1>
+                <p class="page-subtitle">A sustainable treasury mechanism funding protocol liquidity, pool depth, and ongoing network maintenance.</p>
+            </div>
+
+            <div class="card highlight">
+                <div class="card-title"><svg viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px;"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg> Terminology &amp; Legal Characterization</div>
+                <p style="font-size: 8.5px; line-height: 1.35; color: #cbd5e1;">
+                    In full accordance with international legal rigor, protocol deductions are strictly defined as <strong>Withdrawal Charges / Platform Fees</strong>. They are NOT designated as government &ldquo;taxes&rdquo; unless formally levied by a competent sovereign fiscal authority.
+                </p>
+            </div>
+
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 25%;">Rank Span</th>
+                            <th style="width: 25%;">Withdrawal Charge</th>
+                            <th style="width: 25%;">Net Payout Ratio</th>
+                            <th style="width: 25%;">Economic Allocation</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Junior &rarr; Royal</strong><br><span style="font-size: 8px; color: #94a3b8;">Ranks 0 through 10</span></td>
+                            <td style="font-family: 'JetBrains Mono'; font-weight: 700; color: #f87171; font-size: 12px;">30%</td>
+                            <td style="font-family: 'JetBrains Mono'; font-weight: 700; color: #34d399; font-size: 12px;">70%</td>
+                            <td style="font-size: 8.5px;">Fuels single-leg pool reserves, liquidity depth &amp; protocol infrastructure</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Legend</strong><br><span style="font-size: 8px; color: #94a3b8;">Rank 11 (Leadership Tier)</span></td>
+                            <td style="font-family: 'JetBrains Mono'; font-weight: 700; color: #fbbf24; font-size: 12px;">10%</td>
+                            <td style="font-family: 'JetBrains Mono'; font-weight: 700; color: #34d399; font-size: 12px;">90%</td>
+                            <td style="font-size: 8.5px;">Incentivizes top community architects with reduced fee overhead</td>
+                        </tr>
+                        <tr class="highlight">
+                            <td><strong>Ultima</strong><br><span style="font-size: 8px; color: #94a3b8;">Rank 12 (Pinnacle Tier)</span></td>
+                            <td style="font-family: 'JetBrains Mono'; font-weight: 700; color: #fbbf24; font-size: 12px;">10%</td>
+                            <td style="font-family: 'JetBrains Mono'; font-weight: 700; color: #34d399; font-size: 12px;">90%</td>
+                            <td style="font-size: 8.5px;">Maximum net retention upon completing full protocol cycle</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="grid-2">
+                <div class="card purple">
+                    <div class="card-title"><svg viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px;"><polyline points="20 6 9 17 4 12"></polyline></svg> Illustrative Net Withdrawal Breakdown</div>
+                    <div style="font-size: 8.5px; line-height: 1.4; color: #cbd5e1;">
+                        <div>&bull; <strong>Valt ($80 reward @ 30% fee):</strong><br>Fee = $24.00 &nbsp;|&nbsp; <span style="color:#00f2fe; font-weight:700;">Net = $56.00</span></div>
+                        <div style="margin-top: 3px;">&bull; <strong>Royal ($5,120 reward @ 30% fee):</strong><br>Fee = $1,536.00 &nbsp;|&nbsp; <span style="color:#00f2fe; font-weight:700;">Net = $3,584.00</span></div>
+                        <div style="margin-top: 3px;">&bull; <strong>Legend ($10,240 reward @ 10% fee):</strong><br>Fee = $1,024.00 &nbsp;|&nbsp; <span style="color:#34d399; font-weight:700;">Net = $9,216.00</span></div>
+                        <div style="margin-top: 3px;">&bull; <strong>Ultima ($20,480 reward @ 10% fee):</strong><br>Fee = $2,048.00 &nbsp;|&nbsp; <span style="color:#34d399; font-weight:700;">Net = $18,432.00</span></div>
+                    </div>
+                </div>
+
+                <div class="card emerald">
+                    <div class="card-title"><svg viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px;"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg> Smart Contract Fee Routing</div>
+                    <p style="font-size: 8.5px; line-height: 1.35; color: #cbd5e1;">
+                        The applicable withdrawal charge is computed programmatically on-chain at the moment of claim execution and deducted atomically before the net payout token transfer is executed to the user's non-custodial wallet. No manual handling or off-chain escrow is involved.
+                    </p>
+                </div>
+            </div>
+
+            <div class="callout">
+                <div class="callout-title"><svg viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px;"><polyline points="20 6 9 17 4 12"></polyline></svg> Protocol Health Invariant</div>
+                By directing a 30% fee during the initial and intermediate rank cycles, SEORALINK establishes a robust reserve sink that safeguards single-leg pool solvency and maintains long-term structural vitality.
+            </div>
+        </div>
+        
+    <div class="page-footer">
+        <div class="footer-left">
+            <span class="tagline">CONNECT. GROW. REWARD.</span>
+            <span class="header-sep">&bull;</span>
+            <span>EXECUTIVE PRESENTATION DECK</span>
+        </div>
+        <div class="footer-right">
+            <span>PUBLIC ECOSYSTEM SPECIFICATION</span>
+            <span class="page-num">14 / 08</span>
+        </div>
+    </div>
+    
+    </div>
+    
+
+    <div class="page" id="page-20">
+        
+    <div class="page-header">
+        <div class="header-left">
+            <div class="brand-badge">
+                <div style="width:15px;height:15px;"><svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="seoraGrad1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00f2fe" />
+      <stop offset="50%" stop-color="#38bdf8" />
+      <stop offset="100%" stop-color="#7928ca" />
+    </linearGradient>
+  </defs>
+  <polygon points="50,8 86,28 86,72 50,92 14,72 14,28" stroke="url(#seoraGrad1)" stroke-width="4.5" fill="#0f172a" />
+  <polygon points="50,22 74,36 74,64 50,78 26,64 26,36" stroke="#38bdf8" stroke-width="2" fill="none" />
+  <circle cx="50" cy="50" r="9" fill="#00f2fe" />
+  <circle cx="50" cy="22" r="4" fill="#00f2fe" />
+  <circle cx="74" cy="36" r="4" fill="#38bdf8" />
+  <circle cx="74" cy="64" r="4" fill="#818cf8" />
+  <circle cx="50" cy="78" r="4" fill="#7928ca" />
+  <circle cx="26" cy="64" r="4" fill="#a855f7" />
+  <circle cx="26" cy="36" r="4" fill="#00f2fe" />
+  <line x1="50" y1="50" x2="50" y2="22" stroke="#00f2fe" stroke-width="1.8" />
+  <line x1="50" y1="50" x2="74" y2="36" stroke="#38bdf8" stroke-width="1.8" />
+  <line x1="50" y1="50" x2="74" y2="64" stroke="#818cf8" stroke-width="1.8" />
+  <line x1="50" y1="50" x2="50" y2="78" stroke="#7928ca" stroke-width="1.8" />
+  <line x1="50" y1="50" x2="26" y2="64" stroke="#a855f7" stroke-width="1.8" />
+  <line x1="50" y1="50" x2="26" y2="36" stroke="#00f2fe" stroke-width="1.8" />
+</svg></div>
+                <span>SEORALINK</span>
+            </div>
+            <span class="header-sep">/</span>
+            <span class="breadcrumb">SECTION 19 &middot; LEGAL DISCLAIMERS & MASTER SUMMARY</span>
+        </div>
+        <div class="header-right">
+            <span class="domain-tag">seoralink.com</span>
+            <span class="doc-badge">EXECUTIVE DECK</span>
+        </div>
+    </div>
+    
+        <div class="page-body">
+            <div class="title-block">
+                <span class="section-tag">Executive Summary &amp; Compliance</span>
+                <h1 class="page-title">Master Model Summary &amp; <span class="accent">Legal Disclaimers</span></h1>
+                <p class="page-subtitle">A comprehensive one-page operational summary accompanied by formal regulatory and risk disclosures.</p>
+            </div>
+
+            <div class="card highlight" style="padding: 7px 10px;">
+                <div class="card-title"><svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="seoraGrad1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00f2fe" />
+      <stop offset="50%" stop-color="#38bdf8" />
+      <stop offset="100%" stop-color="#7928ca" />
+    </linearGradient>
+  </defs>
+  <polygon points="50,8 86,28 86,72 50,92 14,72 14,28" stroke="url(#seoraGrad1)" stroke-width="4.5" fill="#0f172a" />
+  <polygon points="50,22 74,36 74,64 50,78 26,64 26,36" stroke="#38bdf8" stroke-width="2" fill="none" />
+  <circle cx="50" cy="50" r="9" fill="#00f2fe" />
+  <circle cx="50" cy="22" r="4" fill="#00f2fe" />
+  <circle cx="74" cy="36" r="4" fill="#38bdf8" />
+  <circle cx="74" cy="64" r="4" fill="#818cf8" />
+  <circle cx="50" cy="78" r="4" fill="#7928ca" />
+  <circle cx="26" cy="64" r="4" fill="#a855f7" />
+  <circle cx="26" cy="36" r="4" fill="#00f2fe" />
+  <line x1="50" y1="50" x2="50" y2="22" stroke="#00f2fe" stroke-width="1.8" />
+  <line x1="50" y1="50" x2="74" y2="36" stroke="#38bdf8" stroke-width="1.8" />
+  <line x1="50" y1="50" x2="74" y2="64" stroke="#818cf8" stroke-width="1.8" />
+  <line x1="50" y1="50" x2="50" y2="78" stroke="#7928ca" stroke-width="1.8" />
+  <line x1="50" y1="50" x2="26" y2="64" stroke="#a855f7" stroke-width="1.8" />
+  <line x1="50" y1="50" x2="26" y2="36" stroke="#00f2fe" stroke-width="1.8" />
+</svg> One-Page Business Model Summary</div>
+                <div style="display: flex; flex-wrap: wrap; gap: 4px 6px; font-size: 8px; font-family: 'JetBrains Mono'; margin-top: 3px;">
+                    <span class="badge badge-cyan">$10 Entry ID</span> &rarr;
+                    <span class="badge badge-cyan">2 Direct Referrals</span> &rarr;
+                    <span class="badge badge-cyan">ZEN ($10 Reward)</span> &rarr;
+                    <span class="badge badge-purple">2 Current-Rank IDs Globally Below</span> &rarr;
+                    <span class="badge badge-purple">Next Higher Rank</span> &rarr;
+                    <span class="badge badge-emerald">5% Direct Affiliate</span> &rarr;
+                    <span class="badge badge-emerald">5% Rank Upgrade Commission</span> &rarr;
+                    <span class="badge badge-amber">12 Progressive Tiers</span> &rarr;
+                    <span class="badge badge-amber">Ultima ($20,480 Exit)</span>
+                </div>
+            </div>
+
+            <div class="card legal" style="background: rgba(239, 68, 68, 0.04); border-color: rgba(239, 68, 68, 0.25); padding: 7px 10px;">
+                <div class="card-title" style="color: #f87171; font-size: 10px;"><svg viewBox="0 0 24 24" fill="none" stroke="#00f2fe" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px;"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg> Formal Legal &amp; Regulatory Disclaimers</div>
+                <div style="font-size: 7.5px; line-height: 1.35; color: #cbd5e1; display: flex; flex-direction: column; gap: 3px;">
+                    <p>
+                        <strong>1. Non-Financial / Non-Investment Notice:</strong> Nothing contained within this document or on seoralink.com constitutes financial, investment, legal, tax, or professional accounting advice. SEORALINK is a decentralized software protocol and affiliate rewards utility, not an investment fund, security, or collective investment scheme.
+                    </p>
+                    <p>
+                        <strong>2. Non-Guaranteed Program Credits:</strong> All rewards, credits, and commission figures referenced represent conditional program-defined incentives based upon specific qualifying peer referral activity and queue states. SEORALINK offers zero guaranteed returns, zero fixed income, and zero assurance of financial gain.
+                    </p>
+                    <p>
+                        <strong>3. Jurisdictional Compliance:</strong> Participation may be restricted or prohibited by law in certain jurisdictions. Users are solely responsible for ensuring full compliance with their local digital asset regulations, tax reporting obligations, and consumer protection laws.
+                    </p>
+                    <p>
+                        <strong>4. Non-Custodial &amp; Blockchain Risk:</strong> Participants maintain sole responsibility for their private keys and digital wallet security. Blockchain transactions are immutable and irreversible. The protocol operates &ldquo;as is&rdquo; without warranties of any kind.
+                    </p>
+                </div>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(56, 189, 248, 0.2); border-radius: 6px; padding: 7px 12px; margin-top: 2px;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <div style="width: 22px; height: 22px;"><svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="seoraGrad1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00f2fe" />
+      <stop offset="50%" stop-color="#38bdf8" />
+      <stop offset="100%" stop-color="#7928ca" />
+    </linearGradient>
+  </defs>
+  <polygon points="50,8 86,28 86,72 50,92 14,72 14,28" stroke="url(#seoraGrad1)" stroke-width="4.5" fill="#0f172a" />
+  <polygon points="50,22 74,36 74,64 50,78 26,64 26,36" stroke="#38bdf8" stroke-width="2" fill="none" />
+  <circle cx="50" cy="50" r="9" fill="#00f2fe" />
+  <circle cx="50" cy="22" r="4" fill="#00f2fe" />
+  <circle cx="74" cy="36" r="4" fill="#38bdf8" />
+  <circle cx="74" cy="64" r="4" fill="#818cf8" />
+  <circle cx="50" cy="78" r="4" fill="#7928ca" />
+  <circle cx="26" cy="64" r="4" fill="#a855f7" />
+  <circle cx="26" cy="36" r="4" fill="#00f2fe" />
+  <line x1="50" y1="50" x2="50" y2="22" stroke="#00f2fe" stroke-width="1.8" />
+  <line x1="50" y1="50" x2="74" y2="36" stroke="#38bdf8" stroke-width="1.8" />
+  <line x1="50" y1="50" x2="74" y2="64" stroke="#818cf8" stroke-width="1.8" />
+  <line x1="50" y1="50" x2="50" y2="78" stroke="#7928ca" stroke-width="1.8" />
+  <line x1="50" y1="50" x2="26" y2="64" stroke="#a855f7" stroke-width="1.8" />
+  <line x1="50" y1="50" x2="26" y2="36" stroke="#00f2fe" stroke-width="1.8" />
+</svg></div>
+                    <div>
+                        <div style="font-size: 11px; font-weight: 800; color: #ffffff;">SEORALINK</div>
+                        <div style="font-size: 7.5px; color: #38bdf8; text-transform: uppercase;">Connect. Grow. Reward.</div>
+                    </div>
+                </div>
+                <div style="text-align: right; font-family: 'JetBrains Mono', monospace; font-size: 8.5px;">
+                    <div style="color: #00f2fe; font-weight: 700;">seoralink.com</div>
+                    <div style="font-size: 7.5px; color: #94a3b8;">Building a Borderless Affiliate Economy</div>
+                </div>
+            </div>
+        </div>
+        
+    <div class="page-footer">
+        <div class="footer-left">
+            <span class="tagline">CONNECT. GROW. REWARD.</span>
+            <span class="header-sep">&bull;</span>
+            <span>EXECUTIVE PRESENTATION DECK</span>
+        </div>
+        <div class="footer-right">
+            <span>PUBLIC ECOSYSTEM SPECIFICATION</span>
+            <span class="page-num">20 / 08</span>
+        </div>
+    </div>
+    
+    </div>
+    
+</body>
+</html>

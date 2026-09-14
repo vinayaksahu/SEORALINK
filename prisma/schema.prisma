@@ -1,0 +1,185 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum UserRole {
+  SUPER_ADMIN
+  ADMIN
+  USER
+}
+
+enum AccountStatus {
+  INACTIVE
+  ACTIVE
+  SUSPENDED
+  BLOCKED
+}
+
+enum QueueStatus {
+  WAITING
+  COMPLETED
+}
+
+enum RequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum TransactionType {
+  DEPOSIT
+  ACTIVATION
+  DIRECT_COMMISSION
+  UPLINE_OVERRIDE
+  RANK_REWARD
+  PROTOCOL_RESERVE_DEDUCTION
+  WITHDRAWAL
+  WITHDRAWAL_REFUND
+  ADMIN_ADJUSTMENT
+}
+
+model User {
+  id                 String              @id @default(cuid())
+  customId           String              @unique // e.g. "SL839102"
+  fullName           String
+  email              String              @unique
+  phone              String?
+  passwordHash       String
+  transactionPin     String?
+  role               UserRole            @default(USER)
+  status             AccountStatus       @default(INACTIVE)
+
+  referralCode       String              @unique // matches customId
+  sponsorId          String?
+  sponsor            User?               @relation("ReferralTree", fields: [sponsorId], references: [id])
+  directs            User[]              @relation("ReferralTree")
+
+  usdtAddress        String?
+  usdtNetwork        String?             @default("USDT_BEP20")
+
+  currentTier        Int                 @default(0) // 0=Junior, 1=Zen ... 12=Ultima
+  directCount        Int                 @default(0) // Active direct referrals
+
+  fundBalance        Decimal             @default(0.0) @db.Decimal(20, 8)
+  incomeBalance      Decimal             @default(0.0) @db.Decimal(20, 8)
+  totalEarned        Decimal             @default(0.0) @db.Decimal(20, 8)
+  totalWithdrawn     Decimal             @default(0.0) @db.Decimal(20, 8)
+
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+
+  queueEntries       QueueEntry[]
+  ledgers            LedgerEntry[]
+  deposits           DepositRequest[]
+  withdrawals        WithdrawalRequest[]
+  tickets            SupportTicket[]
+
+  @@index([customId])
+  @@index([email])
+  @@index([sponsorId])
+  @@index([currentTier])
+  @@index([status])
+}
+
+model QueueEntry {
+  id               String       @id @default(cuid())
+  userId           String
+  user             User         @relation(fields: [userId], references: [id])
+  tier             Int          // 0 to 12
+  queueIndex       Int          // Sequential index in tier queue
+  childrenPlaced   Int          @default(0) // 0, 1, or 2 (Tripod matching)
+  status           QueueStatus  @default(WAITING)
+
+  matchedAt        DateTime?
+  upgradedAt       DateTime?
+  createdAt        DateTime     @default(now())
+
+  @@unique([tier, queueIndex])
+  @@index([userId, tier])
+  @@index([tier, status])
+}
+
+model LedgerEntry {
+  id               String          @id @default(cuid())
+  userId           String
+  user             User            @relation(fields: [userId], references: [id])
+  type             TransactionType
+  wallet           String          // "FUND" or "INCOME"
+  amount           Decimal         @db.Decimal(20, 8)
+  balanceBefore    Decimal         @db.Decimal(20, 8)
+  balanceAfter     Decimal         @db.Decimal(20, 8)
+  referenceKey     String          @unique
+  description      String
+  sourceUserId     String?
+  tierNumber       Int?
+  createdAt        DateTime        @default(now())
+
+  @@index([userId, createdAt])
+  @@index([referenceKey])
+}
+
+model DepositRequest {
+  id               String        @id @default(cuid())
+  userId           String
+  user             User          @relation(fields: [userId], references: [id])
+  amount           Decimal       @db.Decimal(20, 8)
+  txHash           String        @unique
+  network          String        @default("USDT_BEP20")
+  screenshotUrl    String?
+  adminNote        String?
+  status           RequestStatus @default(PENDING)
+  approvedAt       DateTime?
+  approvedById     String?
+  createdAt        DateTime      @default(now())
+
+  @@index([userId])
+  @@index([status])
+}
+
+model WithdrawalRequest {
+  id               String        @id @default(cuid())
+  userId           String
+  user             User          @relation(fields: [userId], references: [id])
+  amount           Decimal       @db.Decimal(20, 8)
+  feePercent       Decimal       @db.Decimal(5, 2)
+  feeAmount        Decimal       @db.Decimal(20, 8)
+  netAmount        Decimal       @db.Decimal(20, 8)
+  toAddress        String
+  network          String        @default("USDT_BEP20")
+  txHash           String?
+  adminNote        String?
+  status           RequestStatus @default(PENDING)
+  processedAt      DateTime?
+  processedById    String?
+  createdAt        DateTime      @default(now())
+
+  @@index([userId])
+  @@index([status])
+}
+
+model SystemConfig {
+  id               String        @id @default(cuid())
+  key              String        @unique
+  value            String
+  description      String?
+  updatedAt        DateTime      @updatedAt
+}
+
+model SupportTicket {
+  id               String        @id @default(cuid())
+  userId           String
+  user             User          @relation(fields: [userId], references: [id])
+  subject          String
+  category         String
+  message          String
+  status           String        @default("OPEN") // OPEN, RESOLVED, CLOSED
+  adminReply       String?
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  @@index([userId])
+}
