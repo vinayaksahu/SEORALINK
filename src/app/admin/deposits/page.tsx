@@ -5,6 +5,9 @@ import { redirect } from "next/navigation";
 import DepositsTableClient from "./DepositsTableClient";
 import { Wallet } from "lucide-react";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export default async function AdminDepositsPage() {
   const session = await getSession();
   if (!session || (session.role !== "ADMIN" && session.role !== "SUPER_ADMIN")) {

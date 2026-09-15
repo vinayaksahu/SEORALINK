@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { CheckCircle2, XCircle, Clock, ExternalLink } from "lucide-react";
 
@@ -24,6 +24,10 @@ export default function DepositsTableClient({ initialDeposits }: { initialDeposi
   const [loadingId, setLoadingId] = useState<string | null>(null);
   const [filter, setFilter] = useState<"ALL" | "PENDING" | "APPROVED" | "REJECTED">("ALL");
 
+  useEffect(() => {
+    setDeposits(initialDeposits);
+  }, [initialDeposits]);
+
   const filteredDeposits = deposits.filter((d) => {
     if (filter === "ALL") return true;
     return d.status === filter;
@@ -35,7 +39,17 @@ export default function DepositsTableClient({ initialDeposits }: { initialDeposi
     try {
       const res = await fetch(`/api/admin/deposits/${id}/approve`, { method: "POST" });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
+      if (!res.ok) {
+        if (data.error && data.error.includes("already been approved")) {
+          setDeposits((prev) =>
+            prev.map((d) => (d.id === id ? { ...d, status: "APPROVED" } : d))
+          );
+        }
+        throw new Error(data.error);
+      }
+      setDeposits((prev) =>
+        prev.map((d) => (d.id === id ? { ...d, status: "APPROVED" } : d))
+      );
       alert(data.message);
       router.refresh();
     } catch (err: any) {
@@ -56,7 +70,17 @@ export default function DepositsTableClient({ initialDeposits }: { initialDeposi
         body: JSON.stringify({ adminNote: reason }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
+      if (!res.ok) {
+        if (data.error && data.error.includes("already been")) {
+          setDeposits((prev) =>
+            prev.map((d) => (d.id === id ? { ...d, status: "REJECTED" } : d))
+          );
+        }
+        throw new Error(data.error);
+      }
+      setDeposits((prev) =>
+        prev.map((d) => (d.id === id ? { ...d, status: "REJECTED" } : d))
+      );
       alert(data.message);
       router.refresh();
     } catch (err: any) {

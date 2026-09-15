@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { CheckCircle2, XCircle, Clock, Copy, Check } from "lucide-react";
+import { CheckCircle2, XCircle, Clock, Copy, ExternalLink, Check } from "lucide-react";
 
 interface WithdrawalItem {
   id: string;
@@ -29,6 +29,10 @@ export default function WithdrawalsTableClient({ initialWithdrawals }: { initial
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [filter, setFilter] = useState<"ALL" | "PENDING" | "APPROVED" | "REJECTED">("ALL");
 
+  useEffect(() => {
+    setWithdrawals(initialWithdrawals);
+  }, [initialWithdrawals]);
+
   const filtered = withdrawals.filter((w) => {
     if (filter === "ALL") return true;
     return w.status === filter;
@@ -51,7 +55,17 @@ export default function WithdrawalsTableClient({ initialWithdrawals }: { initial
         body: JSON.stringify({ txHash: txHash.trim() }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
+      if (!res.ok) {
+        if (data.error && data.error.includes("already been")) {
+          setWithdrawals((prev) =>
+            prev.map((w) => (w.id === id ? { ...w, status: "APPROVED" } : w))
+          );
+        }
+        throw new Error(data.error);
+      }
+      setWithdrawals((prev) =>
+        prev.map((w) => (w.id === id ? { ...w, status: "APPROVED" } : w))
+      );
       alert(data.message);
       router.refresh();
     } catch (err: any) {
@@ -72,7 +86,17 @@ export default function WithdrawalsTableClient({ initialWithdrawals }: { initial
         body: JSON.stringify({ adminNote: reason }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
+      if (!res.ok) {
+        if (data.error && data.error.includes("already been")) {
+          setWithdrawals((prev) =>
+            prev.map((w) => (w.id === id ? { ...w, status: "REJECTED" } : w))
+          );
+        }
+        throw new Error(data.error);
+      }
+      setWithdrawals((prev) =>
+        prev.map((w) => (w.id === id ? { ...w, status: "REJECTED" } : w))
+      );
       alert(data.message);
       router.refresh();
     } catch (err: any) {

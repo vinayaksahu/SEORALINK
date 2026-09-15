@@ -5,6 +5,9 @@ import { redirect } from "next/navigation";
 import WithdrawalsTableClient from "./WithdrawalsTableClient";
 import { ArrowUpRight } from "lucide-react";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export default async function AdminWithdrawalsPage() {
   const session = await getSession();
   if (!session || (session.role !== "ADMIN" && session.role !== "SUPER_ADMIN")) {
