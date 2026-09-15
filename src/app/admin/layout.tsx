@@ -94,9 +94,11 @@ export default async function AdminLayout({
 
       {/* Main Container */}
       <div className="flex-1 flex flex-col md:ml-64 min-w-0">
-        <header className="sticky top-0 z-20 backdrop-blur-md bg-[#040711]/85 border-b border-red-500/20 px-4 sm:px-6 py-3.5 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <AdminMobileNav fullName={session.fullName} />
+        <header className="sticky top-0 z-20 backdrop-blur-md bg-[#040711]/85 border-b border-red-500/20 px-4 sm:px-6 py-3.5 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3 shrink-0">
+            <div className="md:hidden shrink-0">
+              <AdminMobileNav fullName={session.fullName} />
+            </div>
             <div className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
               <span className="hidden sm:inline">SEORALINK Enterprise Administrator Console</span>

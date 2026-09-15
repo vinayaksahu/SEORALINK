@@ -134,31 +134,34 @@ export default async function MemberLayout({
       {/* Main Container */}
       <div className="flex-1 flex flex-col md:ml-64 min-w-0">
         {/* Top Header Bar */}
-        <header className="sticky top-0 z-20 backdrop-blur-md bg-[#040711]/85 border-b border-[#d4af37]/20 px-4 sm:px-6 py-3.5 flex items-center justify-between">
-          <div className="flex items-center gap-3 md:hidden">
-            <MemberMobileNav user={serializedUser} />
-            <Link href="/member/dashboard" className="flex items-center">
+        <header className="sticky top-0 z-20 backdrop-blur-md bg-[#040711]/85 border-b border-[#d4af37]/20 px-3 sm:px-6 py-3 flex items-center justify-between gap-2">
+          {/* Left: Mobile menu button + Brand Logo */}
+          <div className="flex items-center gap-2.5 sm:gap-3 shrink-0">
+            <div className="md:hidden shrink-0">
+              <MemberMobileNav user={serializedUser} />
+            </div>
+            <Link href="/member/dashboard" className="flex items-center shrink-0">
               <Logo size={28} showText={false} />
             </Link>
           </div>
 
-          <div className="text-xs text-[#94a3b8] hidden sm:block">
+          <div className="text-xs text-[#94a3b8] hidden lg:block truncate max-w-[220px]">
             Welcome back, <strong className="text-white">{user.fullName}</strong>
           </div>
 
           {/* Live Dual Wallet Counters */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
             {/* Fund Wallet */}
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-[#38bdf8]/30 bg-[#0d1424]">
-              <span className="text-[10px] font-mono-num uppercase text-[#94a3b8]">Fund:</span>
+            <div className="flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg border border-[#38bdf8]/30 bg-[#0d1424]">
+              <span className="text-[9px] sm:text-[10px] font-mono-num uppercase text-[#94a3b8]">Fund:</span>
               <span className="font-mono-num font-bold text-[#38bdf8] text-xs">
                 ${parseFloat(user.fundBalance?.toString() || "0").toFixed(2)}
               </span>
             </div>
 
             {/* Income Wallet */}
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-[#10b981]/30 bg-[#0d1424]">
-              <span className="text-[10px] font-mono-num uppercase text-[#94a3b8]">Income:</span>
+            <div className="flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg border border-[#10b981]/30 bg-[#0d1424]">
+              <span className="text-[9px] sm:text-[10px] font-mono-num uppercase text-[#94a3b8]">Inc:</span>
               <span className="font-mono-num font-bold text-[#10b981] text-xs">
                 ${parseFloat(user.incomeBalance?.toString() || "0").toFixed(2)}
               </span>

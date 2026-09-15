@@ -9,10 +9,10 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-[#040711] text-[#e2e8f0] flex flex-col selection:bg-[#d4af37] selection:text-black">
       {/* Header / Navbar */}
-      <header className="sticky top-0 z-50 backdrop-blur-md bg-[#040711]/85 border-b border-[#d4af37]/20 px-6 py-4">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <Link href="/">
-            <Logo size={38} />
+      <header className="sticky top-0 z-50 backdrop-blur-md bg-[#040711]/85 border-b border-[#d4af37]/20 px-4 sm:px-6 py-3.5">
+        <div className="max-w-7xl mx-auto flex items-center justify-between gap-3">
+          <Link href="/" className="shrink-0">
+            <Logo size={34} />
           </Link>
 
           <nav className="hidden md:flex items-center gap-8 text-xs font-bold uppercase tracking-wider text-[#94a3b8]">
@@ -22,22 +22,26 @@ export default function HomePage() {
             <a href="#rewards" className="hover:text-[#d4af37] transition-colors">Overrides</a>
           </nav>
 
-          <div className="hidden sm:flex items-center gap-3">
-            <Link
-              href="/login"
-              className="px-4 py-2 text-xs font-bold text-white hover:text-[#d4af37] transition-colors border border-transparent hover:border-[#d4af37]/30 rounded-lg"
-            >
-              Sign In
-            </Link>
-            <Link
-              href="/register"
-              className="btn-primary px-5 py-2 text-xs font-bold flex items-center gap-1.5"
-            >
-              Register <ArrowRight size={14} />
-            </Link>
-          </div>
+          <div className="flex items-center gap-3 shrink-0">
+            <div className="hidden sm:flex items-center gap-3">
+              <Link
+                href="/login"
+                className="px-4 py-2 text-xs font-bold text-white hover:text-[#d4af37] transition-colors border border-transparent hover:border-[#d4af37]/30 rounded-lg"
+              >
+                Sign In
+              </Link>
+              <Link
+                href="/register"
+                className="btn-primary px-5 py-2 text-xs font-bold flex items-center gap-1.5"
+              >
+                Register <ArrowRight size={14} />
+              </Link>
+            </div>
 
-          <LandingMobileNav />
+            <div className="md:hidden shrink-0">
+              <LandingMobileNav />
+            </div>
+          </div>
         </div>
       </header>
 

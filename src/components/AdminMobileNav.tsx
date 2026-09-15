@@ -63,7 +63,7 @@ export function AdminMobileNav({ fullName }: AdminMobileNavProps) {
       <button
         type="button"
         onClick={() => setIsOpen(true)}
-        className="md:hidden flex items-center justify-center w-9 h-9 rounded-lg text-red-400 hover:text-white hover:bg-red-950/40 border border-red-500/30 transition-all focus:outline-none focus:ring-2 focus:ring-red-500/50"
+        className="flex items-center justify-center w-10 h-10 rounded-lg text-red-400 bg-red-950/40 border border-red-500/40 shadow-sm transition-all active:scale-95 focus:outline-none focus:ring-2 focus:ring-red-500/50 shrink-0 cursor-pointer"
         aria-label="Open Admin Menu"
         title="Admin Menu"
       >
@@ -73,7 +73,7 @@ export function AdminMobileNav({ fullName }: AdminMobileNavProps) {
       {/* Backdrop */}
       {isOpen && (
         <div
-          className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[60] md:hidden transition-opacity"
+          className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[60] md:hidden transition-opacity duration-300"
           onClick={() => setIsOpen(false)}
           aria-hidden="true"
         />
@@ -81,8 +81,10 @@ export function AdminMobileNav({ fullName }: AdminMobileNavProps) {
 
       {/* Drawer */}
       <div
-        className={`fixed top-0 bottom-0 left-0 w-72 max-w-[85vw] bg-[#070a14] border-r border-red-500/30 z-[70] flex flex-col justify-between shadow-2xl transition-transform duration-300 ease-in-out md:hidden ${
-          isOpen ? "translate-x-0" : "-translate-x-full"
+        className={`fixed top-0 bottom-0 left-0 w-72 max-w-[85vw] bg-[#070a14] border-r border-red-500/30 z-[70] flex flex-col justify-between shadow-2xl transition-all duration-300 ease-in-out md:hidden ${
+          isOpen
+            ? "translate-x-0 opacity-100 pointer-events-auto visible"
+            : "-translate-x-full opacity-0 pointer-events-none invisible"
         }`}
         role="dialog"
         aria-modal="true"

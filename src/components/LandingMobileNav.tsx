@@ -37,7 +37,7 @@ export function LandingMobileNav() {
       <button
         type="button"
         onClick={() => setIsOpen(true)}
-        className="md:hidden flex items-center justify-center w-10 h-10 rounded-lg text-[#d4af37] hover:text-white hover:bg-[#0d1424] border border-[#d4af37]/30 transition-all focus:outline-none"
+        className="flex items-center justify-center w-10 h-10 rounded-lg text-[#d4af37] bg-[#0d1424] border border-[#d4af37]/40 shadow-sm transition-all active:scale-95 focus:outline-none focus:ring-2 focus:ring-[#d4af37]/50 shrink-0 cursor-pointer"
         aria-label="Open Navigation Menu"
         title="Open menu"
       >
@@ -47,7 +47,7 @@ export function LandingMobileNav() {
       {/* Backdrop */}
       {isOpen && (
         <div
-          className="fixed inset-0 bg-black/75 backdrop-blur-sm z-[60] md:hidden transition-opacity"
+          className="fixed inset-0 bg-black/75 backdrop-blur-sm z-[60] md:hidden transition-opacity duration-300"
           onClick={() => setIsOpen(false)}
           aria-hidden="true"
         />
@@ -55,8 +55,10 @@ export function LandingMobileNav() {
 
       {/* Drawer */}
       <div
-        className={`fixed top-0 bottom-0 right-0 w-72 max-w-[85vw] bg-[#070a14] border-l border-[#d4af37]/30 z-[70] flex flex-col justify-between shadow-2xl transition-transform duration-300 ease-in-out md:hidden ${
-          isOpen ? "translate-x-0" : "translate-x-full"
+        className={`fixed top-0 bottom-0 right-0 w-72 max-w-[85vw] bg-[#070a14] border-l border-[#d4af37]/30 z-[70] flex flex-col justify-between shadow-2xl transition-all duration-300 ease-in-out md:hidden ${
+          isOpen
+            ? "translate-x-0 opacity-100 pointer-events-auto visible"
+            : "translate-x-full opacity-0 pointer-events-none invisible"
         }`}
         role="dialog"
         aria-modal="true"
