@@ -90,83 +90,85 @@ export function AdminMobileNav({ fullName }: AdminMobileNavProps) {
         aria-modal="true"
         aria-label="Admin Navigation"
       >
-        <div className="flex-1 min-h-0 overflow-y-auto">
-          {/* Header */}
-          <div className="shrink-0 p-4 border-b border-red-500/20 flex items-center justify-between bg-[#040711]">
-            <Link href="/admin" onClick={() => setIsOpen(false)}>
-              <Logo size={28} />
-            </Link>
-            <button
-              type="button"
-              onClick={() => setIsOpen(false)}
-              className="p-1.5 rounded-lg text-[#94a3b8] hover:text-white hover:bg-[#1e293b]/60 border border-transparent transition-colors"
-              aria-label="Close menu"
-            >
-              <X size={20} />
-            </button>
-          </div>
-
-          {/* Admin badge */}
-          <div className="px-5 py-3 border-b border-[#1e293b]/60 bg-red-950/25 flex items-center gap-2">
-            <ShieldAlert size={16} className="text-red-400" />
-            <div className="flex flex-col">
-              <span className="text-[10px] font-bold text-red-400 uppercase tracking-widest">
-                Master Admin Mode
-              </span>
-              {fullName && (
-                <span className="text-xs text-white font-semibold">{fullName}</span>
-              )}
-            </div>
-          </div>
-
-          {/* Nav items */}
-          <nav className="p-3 space-y-1">
-            <div className="px-2 py-1 text-[10px] font-bold text-[#94a3b8] uppercase tracking-wider">
-              Management
-            </div>
-            {adminNav.map(({ href, label, icon: Icon }) => {
-              const isActive = pathname === href;
-              return (
-                <Link
-                  key={href}
-                  href={href}
-                  onClick={() => setIsOpen(false)}
-                  className={`flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-xs font-bold transition-all ${
-                    isActive
-                      ? "text-white bg-[#0d1424] border border-red-500/60 shadow-[0_0_10px_rgba(239,68,68,0.2)]"
-                      : "text-[#94a3b8] hover:text-white hover:bg-[#0d1424] border border-transparent hover:border-red-500/30"
-                  }`}
-                >
-                  <Icon size={17} className="text-red-400" />
-                  <span>{label}</span>
-                </Link>
-              );
-            })}
-
-            <div className="pt-4">
-              <Link
-                href="/member/dashboard"
-                onClick={() => setIsOpen(false)}
-                className="flex items-center justify-between px-3.5 py-2.5 rounded-lg text-xs font-bold text-[#38bdf8] bg-[#38bdf8]/10 hover:bg-[#38bdf8]/20 border border-[#38bdf8]/30 transition-all"
-              >
-                <span>Switch to User Portal</span>
-                <ChevronRight size={14} />
+        <div className="flex-1 min-h-0 overflow-y-auto flex flex-col justify-between">
+          <div>
+            {/* Header */}
+            <div className="shrink-0 p-4 border-b border-red-500/20 flex items-center justify-between bg-[#040711]">
+              <Link href="/admin" onClick={() => setIsOpen(false)}>
+                <Logo size={28} />
               </Link>
+              <button
+                type="button"
+                onClick={() => setIsOpen(false)}
+                className="p-1.5 rounded-lg text-[#94a3b8] hover:text-white hover:bg-[#1e293b]/60 border border-transparent transition-colors"
+                aria-label="Close menu"
+              >
+                <X size={20} />
+              </button>
             </div>
-          </nav>
-        </div>
 
-        {/* Logout */}
-        <div className="shrink-0 p-3 border-t border-[#1e293b]/60 bg-[#040711]">
-          <form action="/api/auth/logout" method="POST">
-            <button
-              type="submit"
-              className="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg text-xs font-bold text-red-400 bg-red-500/5 hover:bg-red-500/15 border border-red-500/20 hover:border-red-500/40 transition-colors"
-            >
-              <LogOut size={16} />
-              <span>Sign Out Admin</span>
-            </button>
-          </form>
+            {/* Admin badge */}
+            <div className="px-5 py-3 border-b border-[#1e293b]/60 bg-red-950/25 flex items-center gap-2">
+              <ShieldAlert size={16} className="text-red-400" />
+              <div className="flex flex-col">
+                <span className="text-[10px] font-bold text-red-400 uppercase tracking-widest">
+                  Master Admin Mode
+                </span>
+                {fullName && (
+                  <span className="text-xs text-white font-semibold">{fullName}</span>
+                )}
+              </div>
+            </div>
+
+            {/* Nav items */}
+            <nav className="p-3 space-y-1">
+              <div className="px-2 py-1 text-[10px] font-bold text-[#94a3b8] uppercase tracking-wider">
+                Management
+              </div>
+              {adminNav.map(({ href, label, icon: Icon }) => {
+                const isActive = pathname === href;
+                return (
+                  <Link
+                    key={href}
+                    href={href}
+                    onClick={() => setIsOpen(false)}
+                    className={`flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-xs font-bold transition-all ${
+                      isActive
+                        ? "text-white bg-[#0d1424] border border-red-500/60 shadow-[0_0_10px_rgba(239,68,68,0.2)]"
+                        : "text-[#94a3b8] hover:text-white hover:bg-[#0d1424] border border-transparent hover:border-red-500/30"
+                    }`}
+                  >
+                    <Icon size={17} className="text-red-400" />
+                    <span>{label}</span>
+                  </Link>
+                );
+              })}
+
+              <div className="pt-4">
+                <Link
+                  href="/member/dashboard"
+                  onClick={() => setIsOpen(false)}
+                  className="flex items-center justify-between px-3.5 py-2.5 rounded-lg text-xs font-bold text-[#38bdf8] bg-[#38bdf8]/10 hover:bg-[#38bdf8]/20 border border-[#38bdf8]/30 transition-all"
+                >
+                  <span>Switch to User Portal</span>
+                  <ChevronRight size={14} />
+                </Link>
+              </div>
+            </nav>
+          </div>
+
+          {/* Logout */}
+          <div className="p-4 border-t border-[#1e293b]/60 bg-[#040711] mt-4 pb-12">
+            <form action="/api/auth/logout" method="POST">
+              <button
+                type="submit"
+                className="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg text-xs font-bold text-red-400 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 hover:border-red-500/50 transition-colors cursor-pointer active:scale-98"
+              >
+                <LogOut size={16} />
+                <span>Sign Out Admin</span>
+              </button>
+            </form>
+          </div>
         </div>
       </div>
     </>
