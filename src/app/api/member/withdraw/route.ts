@@ -83,7 +83,7 @@ export async function POST(req: Request) {
         message: `Withdrawal request for $${netAmount.toFixed(2)} USDT submitted successfully.`,
         withdrawal,
       });
-    });
+    }, { timeout: 30000, maxWait: 10000 });
   } catch (error: any) {
     console.error("[Withdrawal Request Error]", error);
     return NextResponse.json(

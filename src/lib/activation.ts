@@ -111,5 +111,5 @@ export async function activateUserAccount(userId: string): Promise<ActivationRes
       message: `Account activated successfully! Placed at Tier 0 (Junior) queue position #${tier0Index}.`,
       queueIndex: tier0Index,
     };
-  });
+  }, { timeout: 45000, maxWait: 15000 });
 }

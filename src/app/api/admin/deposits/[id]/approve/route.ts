@@ -58,7 +58,7 @@ export async function POST(
         success: true,
         message: `Deposit of $${parseFloat(deposit.amount.toString()).toFixed(2)} USDT approved and credited to ${deposit.user.fullName}.`,
       });
-    });
+    }, { timeout: 30000, maxWait: 10000 });
   } catch (error: any) {
     console.error("[Approve Deposit Error]", error);
     return NextResponse.json(

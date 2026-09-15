@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Logo } from "@/components/Logo";
 import { TIER_NAMES, TIER_VALUES, REQUIRED_DIRECTS, CUMULATIVE_REWARDS } from "@/lib/constants";
 import { ArrowRight, ShieldCheck, Zap, Users, Trophy, ChevronRight, CheckCircle2 } from "lucide-react";
+import { LandingMobileNav } from "@/components/LandingMobileNav";
 
 export default function HomePage() {
   return (
@@ -21,7 +22,7 @@ export default function HomePage() {
             <a href="#rewards" className="hover:text-[#d4af37] transition-colors">Overrides</a>
           </nav>
 
-          <div className="flex items-center gap-3">
+          <div className="hidden sm:flex items-center gap-3">
             <Link
               href="/login"
               className="px-4 py-2 text-xs font-bold text-white hover:text-[#d4af37] transition-colors border border-transparent hover:border-[#d4af37]/30 rounded-lg"
@@ -35,6 +36,8 @@ export default function HomePage() {
               Register <ArrowRight size={14} />
             </Link>
           </div>
+
+          <LandingMobileNav />
         </div>
       </header>
 

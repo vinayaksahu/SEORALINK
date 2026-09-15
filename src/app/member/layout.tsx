@@ -15,6 +15,7 @@ import {
   LogOut,
   ShieldCheck,
 } from "lucide-react";
+import { MemberMobileNav } from "@/components/MemberMobileNav";
 
 export default async function MemberLayout({
   children,
@@ -53,6 +54,15 @@ export default async function MemberLayout({
     { href: "/member/team", label: "Team Network", icon: Users },
     { href: "/member/ledger", label: "Ledger History", icon: FileText },
   ];
+
+  const serializedUser = {
+    customId: user.customId,
+    fullName: user.fullName,
+    fundBalance: user.fundBalance ? Number(user.fundBalance) : 0,
+    incomeBalance: user.incomeBalance ? Number(user.incomeBalance) : 0,
+    status: user.status,
+    role: user.role,
+  };
 
   return (
     <div className="min-h-screen bg-[#040711] text-[#e2e8f0] flex selection:bg-[#d4af37] selection:text-black">
@@ -124,9 +134,12 @@ export default async function MemberLayout({
       {/* Main Container */}
       <div className="flex-1 flex flex-col md:ml-64 min-w-0">
         {/* Top Header Bar */}
-        <header className="sticky top-0 z-20 backdrop-blur-md bg-[#040711]/85 border-b border-[#d4af37]/20 px-6 py-3.5 flex items-center justify-between">
-          <div className="md:hidden">
-            <Logo size={28} showText={false} />
+        <header className="sticky top-0 z-20 backdrop-blur-md bg-[#040711]/85 border-b border-[#d4af37]/20 px-4 sm:px-6 py-3.5 flex items-center justify-between">
+          <div className="flex items-center gap-3 md:hidden">
+            <MemberMobileNav user={serializedUser} />
+            <Link href="/member/dashboard" className="flex items-center">
+              <Logo size={28} showText={false} />
+            </Link>
           </div>
 
           <div className="text-xs text-[#94a3b8] hidden sm:block">
