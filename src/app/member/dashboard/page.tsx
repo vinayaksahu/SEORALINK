@@ -4,13 +4,13 @@ import { getSession } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { redirect } from "next/navigation";
 import { TIER_NAMES, TIER_VALUES, REQUIRED_DIRECTS, CUMULATIVE_REWARDS } from "@/lib/constants";
+import { ReferralShareCard } from "@/components/ReferralShareCard";
 import {
   Wallet,
   ArrowUpRight,
   Users,
   Zap,
   CheckCircle2,
-  Copy,
   AlertTriangle,
   ChevronRight,
   TrendingUp,
@@ -132,37 +132,7 @@ export default async function MemberDashboardPage() {
       </div>
 
       {/* Referral Link Quick Share Card */}
-      <div className="card-seoralink p-5 bg-[#0d1424] border-[#d4af37]/30 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-        <div className="space-y-1">
-          <div className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-[#10b981]"></span>
-            Your Personal Sponsorship Referral Link
-          </div>
-          <p className="text-xs text-[#94a3b8]">
-            Share with partners to earn 5% ($0.50) instant direct cash and recurring 5% overrides on every mentee rank upgrade.
-          </p>
-        </div>
-
-        <div className="flex items-center gap-2 w-full md:w-auto">
-          <input
-            type="text"
-            readOnly
-            value={referralLink}
-            className="bg-[#0b1120] border border-[#d4af37]/30 text-white font-mono-num text-xs px-3.5 py-2 rounded-lg w-full md:w-72 focus:outline-none"
-          />
-          <button
-            onClick={() => {
-              if (typeof navigator !== "undefined") {
-                navigator.clipboard.writeText(referralLink);
-                alert("Referral link copied to clipboard!");
-              }
-            }}
-            className="btn-primary px-3.5 py-2 text-xs font-bold flex items-center gap-1.5 whitespace-nowrap"
-          >
-            <Copy size={14} /> Copy
-          </button>
-        </div>
-      </div>
+      <ReferralShareCard referralLink={referralLink} />
 
       {/* 12-Tier Ladder Grid */}
       <div className="space-y-4">
