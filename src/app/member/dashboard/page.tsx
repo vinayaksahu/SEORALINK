@@ -32,10 +32,10 @@ export default async function MemberDashboardPage() {
 
   if (!user) redirect("/login");
 
-  const fundBal = parseFloat(user.fundBalance.toString());
-  const incomeBal = parseFloat(user.incomeBalance.toString());
-  const totalEarned = parseFloat(user.totalEarned.toString());
-  const totalWithdrawn = parseFloat(user.totalWithdrawn.toString());
+  const fundBal = parseFloat(user.fundBalance?.toString() || "0");
+  const incomeBal = parseFloat(user.incomeBalance?.toString() || "0");
+  const totalEarned = parseFloat(user.totalEarned?.toString() || "0");
+  const totalWithdrawn = parseFloat(user.totalWithdrawn?.toString() || "0");
 
   // Current queue status
   const activeQueueEntry = user.queueEntries.find((q) => q.status === "WAITING");

@@ -139,7 +139,7 @@ export default async function MemberLayout({
             <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-[#38bdf8]/30 bg-[#0d1424]">
               <span className="text-[10px] font-mono-num uppercase text-[#94a3b8]">Fund:</span>
               <span className="font-mono-num font-bold text-[#38bdf8] text-xs">
-                ${parseFloat(user.fundBalance.toString()).toFixed(2)}
+                ${parseFloat(user.fundBalance?.toString() || "0").toFixed(2)}
               </span>
             </div>
 
@@ -147,7 +147,7 @@ export default async function MemberLayout({
             <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-[#10b981]/30 bg-[#0d1424]">
               <span className="text-[10px] font-mono-num uppercase text-[#94a3b8]">Income:</span>
               <span className="font-mono-num font-bold text-[#10b981] text-xs">
-                ${parseFloat(user.incomeBalance.toString()).toFixed(2)}
+                ${parseFloat(user.incomeBalance?.toString() || "0").toFixed(2)}
               </span>
             </div>
 
