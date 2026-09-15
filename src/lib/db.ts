@@ -6,12 +6,10 @@ import { Pool } from "pg";
 const globalForPrisma = globalThis as unknown as { prisma: PrismaClient | undefined };
 
 function createPrismaClient(): PrismaClient {
-  const connectionString = process.env.DATABASE_URL;
-
-  // If no DB connection is configured yet, fall back gracefully
-  if (!connectionString) {
-    return new PrismaClient();
-  }
+  const connectionString =
+    process.env.DATABASE_URL ||
+    process.env.DIRECT_URL ||
+    "postgresql://postgres:postgres@localhost:5432/seoralink?sslmode=disable";
 
   const isSSL = Boolean(
     connectionString.includes("sslmode=") ||
