@@ -55,7 +55,7 @@ export function LandingMobileNav() {
 
       {/* Drawer */}
       <div
-        className={`fixed top-0 bottom-0 right-0 w-72 max-w-[85vw] bg-[#070a14] border-l border-[#d4af37]/30 z-[70] flex flex-col justify-between shadow-2xl transition-all duration-300 ease-in-out md:hidden ${
+        className={`fixed inset-y-0 right-0 w-72 max-w-[85vw] h-full h-screen h-[100dvh] bg-[#070a14] border-l border-[#d4af37]/30 z-[70] flex flex-col justify-between shadow-2xl transition-all duration-300 ease-in-out md:hidden ${
           isOpen
             ? "translate-x-0 opacity-100 pointer-events-auto visible"
             : "translate-x-full opacity-0 pointer-events-none invisible"
@@ -64,9 +64,9 @@ export function LandingMobileNav() {
         aria-modal="true"
         aria-label="Site Navigation"
       >
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 min-h-0 overflow-y-auto">
           {/* Header */}
-          <div className="p-4 border-b border-[#d4af37]/20 flex items-center justify-between bg-[#040711]">
+          <div className="shrink-0 p-4 border-b border-[#d4af37]/20 flex items-center justify-between bg-[#040711]">
             <Link href="/" onClick={() => setIsOpen(false)}>
               <Logo size={28} />
             </Link>
@@ -99,7 +99,7 @@ export function LandingMobileNav() {
         </div>
 
         {/* Action Buttons */}
-        <div className="p-4 border-t border-[#1e293b]/60 bg-[#040711] space-y-2">
+        <div className="shrink-0 p-4 border-t border-[#1e293b]/60 bg-[#040711] space-y-2">
           <Link
             href="/login"
             onClick={() => setIsOpen(false)}
