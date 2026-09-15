@@ -4,6 +4,7 @@ import { getSession } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { redirect } from "next/navigation";
 import { Logo } from "@/components/Logo";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import {
   LayoutDashboard,
   GitCommit,
@@ -117,12 +118,20 @@ export default async function MemberLayout({
           </nav>
         </div>
 
+        {/* Theme Switcher Sidebar */}
+        <div className="p-4 border-t border-slate-200 dark:border-[#1e293b]/60">
+          <div className="text-[10px] uppercase font-bold text-slate-500 dark:text-[#94a3b8] tracking-wider mb-2">
+            Theme Mode
+          </div>
+          <ThemeToggle variant="segmented" size="xs" className="w-full justify-between" />
+        </div>
+
         {/* Logout Bottom */}
-        <div className="p-4 border-t border-[#1e293b]/60">
+        <div className="p-4 border-t border-slate-200 dark:border-[#1e293b]/60">
           <form action="/api/auth/logout" method="POST">
             <button
               type="submit"
-              className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-xs font-bold text-[#94a3b8] hover:text-red-400 hover:bg-red-500/10 transition-colors"
+              className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-xs font-bold text-slate-500 dark:text-[#94a3b8] hover:text-red-500 dark:hover:text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer"
             >
               <LogOut size={15} />
               <span>Log Out</span>
@@ -134,7 +143,7 @@ export default async function MemberLayout({
       {/* Main Container */}
       <div className="flex-1 flex flex-col md:ml-64 min-w-0">
         {/* Top Header Bar */}
-        <header className="sticky top-0 z-20 backdrop-blur-md bg-[#040711]/85 border-b border-[#d4af37]/20 px-3 sm:px-6 py-3 flex items-center justify-between gap-2">
+        <header className="sticky top-0 z-20 backdrop-blur-md bg-white/85 dark:bg-[#040711]/85 border-b border-slate-200 dark:border-[#d4af37]/20 px-3 sm:px-6 py-3 flex items-center justify-between gap-2">
           {/* Left: Mobile menu button + Brand Logo */}
           <div className="flex items-center gap-2.5 sm:gap-3 shrink-0">
             <div className="md:hidden shrink-0">
@@ -145,24 +154,27 @@ export default async function MemberLayout({
             </Link>
           </div>
 
-          <div className="text-xs text-[#94a3b8] hidden lg:block truncate max-w-[220px]">
-            Welcome back, <strong className="text-white">{user.fullName}</strong>
+          <div className="text-xs text-slate-600 dark:text-[#94a3b8] hidden lg:block truncate max-w-[220px]">
+            Welcome back, <strong className="text-slate-900 dark:text-white">{user.fullName}</strong>
           </div>
 
-          {/* Live Dual Wallet Counters */}
+          {/* Live Dual Wallet Counters & Theme Switcher */}
           <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
+            {/* Header Theme Switcher */}
+            <ThemeToggle variant="compact" size="sm" showLabels={false} />
+
             {/* Fund Wallet */}
-            <div className="flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg border border-[#38bdf8]/30 bg-[#0d1424]">
-              <span className="text-[9px] sm:text-[10px] font-mono-num uppercase text-[#94a3b8]">Fund:</span>
-              <span className="font-mono-num font-bold text-[#38bdf8] text-xs">
+            <div className="flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg border border-[#38bdf8]/30 bg-white dark:bg-[#0d1424]">
+              <span className="text-[9px] sm:text-[10px] font-mono-num uppercase text-slate-500 dark:text-[#94a3b8]">Fund:</span>
+              <span className="font-mono-num font-bold text-[#0284c7] dark:text-[#38bdf8] text-xs">
                 ${parseFloat(user.fundBalance?.toString() || "0").toFixed(2)}
               </span>
             </div>
 
             {/* Income Wallet */}
-            <div className="flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg border border-[#10b981]/30 bg-[#0d1424]">
-              <span className="text-[9px] sm:text-[10px] font-mono-num uppercase text-[#94a3b8]">Inc:</span>
-              <span className="font-mono-num font-bold text-[#10b981] text-xs">
+            <div className="flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg border border-[#10b981]/30 bg-white dark:bg-[#0d1424]">
+              <span className="text-[9px] sm:text-[10px] font-mono-num uppercase text-slate-500 dark:text-[#94a3b8]">Inc:</span>
+              <span className="font-mono-num font-bold text-[#059669] dark:text-[#10b981] text-xs">
                 ${parseFloat(user.incomeBalance?.toString() || "0").toFixed(2)}
               </span>
             </div>

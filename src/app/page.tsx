@@ -1,21 +1,22 @@
 import React from "react";
 import Link from "next/link";
 import { Logo } from "@/components/Logo";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { TIER_NAMES, TIER_VALUES, REQUIRED_DIRECTS, CUMULATIVE_REWARDS } from "@/lib/constants";
 import { ArrowRight, ShieldCheck, Zap, Users, Trophy, ChevronRight, CheckCircle2 } from "lucide-react";
 import { LandingMobileNav } from "@/components/LandingMobileNav";
 
 export default function HomePage() {
   return (
-    <div className="min-h-screen bg-[#040711] text-[#e2e8f0] flex flex-col selection:bg-[#d4af37] selection:text-black">
+    <div className="min-h-screen bg-slate-50 dark:bg-[#040711] text-slate-900 dark:text-[#e2e8f0] flex flex-col selection:bg-[#d4af37] selection:text-black">
       {/* Header / Navbar */}
-      <header className="sticky top-0 z-50 backdrop-blur-md bg-[#040711]/85 border-b border-[#d4af37]/20 px-4 sm:px-6 py-3.5">
+      <header className="sticky top-0 z-50 backdrop-blur-md bg-white/85 dark:bg-[#040711]/85 border-b border-slate-200 dark:border-[#d4af37]/20 px-4 sm:px-6 py-3.5">
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-3">
           <Link href="/" className="shrink-0">
             <Logo size={34} />
           </Link>
 
-          <nav className="hidden md:flex items-center gap-8 text-xs font-bold uppercase tracking-wider text-[#94a3b8]">
+          <nav className="hidden md:flex items-center gap-8 text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-[#94a3b8]">
             <a href="#about" className="hover:text-[#d4af37] transition-colors">Enterprise</a>
             <a href="#ladder" className="hover:text-[#d4af37] transition-colors">12 Tiers</a>
             <a href="#queue" className="hover:text-[#d4af37] transition-colors">Tripod Queue</a>
@@ -23,10 +24,12 @@ export default function HomePage() {
           </nav>
 
           <div className="flex items-center gap-3 shrink-0">
+            {/* Desktop Theme Switcher + Auth CTAs */}
             <div className="hidden sm:flex items-center gap-3">
+              <ThemeToggle variant="segmented" size="xs" />
               <Link
                 href="/login"
-                className="px-4 py-2 text-xs font-bold text-white hover:text-[#d4af37] transition-colors border border-transparent hover:border-[#d4af37]/30 rounded-lg"
+                className="px-4 py-2 text-xs font-bold text-slate-800 dark:text-white hover:text-[#d4af37] transition-colors border border-transparent hover:border-[#d4af37]/30 rounded-lg"
               >
                 Sign In
               </Link>
@@ -38,7 +41,12 @@ export default function HomePage() {
               </Link>
             </div>
 
-            <div className="md:hidden shrink-0">
+            {/* Mobile Actions: Compact Theme Switcher + Mobile Drawer */}
+            <div className="sm:hidden flex items-center gap-2 shrink-0">
+              <ThemeToggle variant="compact" size="sm" showLabels={false} />
+              <LandingMobileNav />
+            </div>
+            <div className="hidden sm:max-md:block md:hidden shrink-0">
               <LandingMobileNav />
             </div>
           </div>

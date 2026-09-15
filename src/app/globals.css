@@ -1,9 +1,41 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
+  /* Light mode palette (Default when not dark) */
+  --bg-main: #f8fafc;
+  --bg-card: #ffffff;
+  --bg-surface: #f1f5f9;
+  --bg-sidebar: #ffffff;
+  --text-main: #0f172a;
+  --text-heading: #020617;
+  --text-muted: #64748b;
+  --text-subtle: #94a3b8;
+  --gold: #b8860b;
+  --gold-glow: rgba(184, 134, 11, 0.15);
+  --cyan: #0284c7;
+  --green: #059669;
+  --purple: #9333ea;
+  --border-gold: rgba(184, 134, 11, 0.35);
+  --border-subtle: #e2e8f0;
+  --border-card: rgba(203, 213, 225, 0.7);
+  --input-bg: #ffffff;
+  --input-border: #cbd5e1;
+  --input-text: #0f172a;
+  --shadow-card: 0 4px 20px -2px rgba(0, 0, 0, 0.05), 0 2px 6px -1px rgba(0, 0, 0, 0.02);
+}
+
+.dark {
+  /* Dark mode palette (Signature Korean cyber gold) */
   --bg-main: #040711;
   --bg-card: #0d1424;
   --bg-surface: #0b1120;
+  --bg-sidebar: #070a14;
+  --text-main: #e2e8f0;
+  --text-heading: #ffffff;
+  --text-muted: #94a3b8;
+  --text-subtle: #64748b;
   --gold: #d4af37;
   --gold-glow: rgba(212, 175, 55, 0.2);
   --cyan: #38bdf8;
@@ -11,28 +43,35 @@
   --purple: #a855f7;
   --border-gold: rgba(212, 175, 55, 0.35);
   --border-subtle: rgba(148, 163, 184, 0.15);
+  --border-card: rgba(212, 175, 55, 0.25);
+  --input-bg: #0b1120;
+  --input-border: rgba(212, 175, 55, 0.3);
+  --input-text: #ffffff;
+  --shadow-card: 0 4px 24px -2px rgba(0, 0, 0, 0.4);
 }
 
 body {
   background-color: var(--bg-main);
-  color: #e2e8f0;
+  color: var(--text-main);
   font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
   margin: 0;
   padding: 0;
   min-height: 100vh;
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 /* Custom UI Utility Classes */
 .card-seoralink {
-  background: #0d1424;
-  border: 1px solid rgba(212, 175, 55, 0.25);
+  background: var(--bg-card);
+  border: 1px solid var(--border-card);
   border-radius: 12px;
   position: relative;
   transition: all 0.2s ease;
+  box-shadow: var(--shadow-card);
 }
 
 .card-seoralink:hover {
-  border-color: rgba(212, 175, 55, 0.45);
+  border-color: var(--border-gold);
 }
 
 .badge-gold {
@@ -40,9 +79,9 @@ body {
   align-items: center;
   padding: 2.5px 10px;
   border-radius: 9999px;
-  border: 1px solid rgba(212, 175, 55, 0.6);
-  background: rgba(212, 175, 55, 0.1);
-  color: #d4af37;
+  border: 1px solid var(--border-gold);
+  background: rgba(212, 175, 55, 0.12);
+  color: var(--gold);
   font-size: 11px;
   font-weight: 700;
   text-transform: uppercase;
@@ -54,9 +93,9 @@ body {
   align-items: center;
   padding: 2.5px 10px;
   border-radius: 9999px;
-  border: 1px solid rgba(56, 189, 248, 0.6);
-  background: rgba(56, 189, 248, 0.1);
-  color: #38bdf8;
+  border: 1px solid rgba(56, 189, 248, 0.5);
+  background: rgba(56, 189, 248, 0.12);
+  color: var(--cyan);
   font-size: 11px;
   font-weight: 700;
   text-transform: uppercase;
@@ -68,9 +107,9 @@ body {
   align-items: center;
   padding: 2.5px 10px;
   border-radius: 9999px;
-  border: 1px solid rgba(16, 185, 129, 0.6);
-  background: rgba(16, 185, 129, 0.1);
-  color: #10b981;
+  border: 1px solid rgba(16, 185, 129, 0.5);
+  background: rgba(16, 185, 129, 0.12);
+  color: var(--green);
   font-size: 11px;
   font-weight: 700;
   text-transform: uppercase;
@@ -93,8 +132,8 @@ body {
 
 .btn-secondary {
   background-color: transparent;
-  border: 1px solid rgba(212, 175, 55, 0.4);
-  color: #d4af37;
+  border: 1px solid var(--border-gold);
+  color: var(--gold);
   font-weight: 700;
   border-radius: 8px;
   transition: all 0.2s ease;
@@ -102,9 +141,109 @@ body {
 
 .btn-secondary:hover {
   background-color: rgba(212, 175, 55, 0.1);
-  border-color: #d4af37;
+  border-color: var(--gold);
 }
 
 .font-mono-num {
   font-family: 'JetBrains Mono', monospace;
+}
+
+/* =========================================================
+   LIGHT MODE ADAPTATION FOR EXISTING UTILITIES
+   Ensures seamless contrast across all pages when not dark
+   ========================================================= */
+
+html:not(.dark) body {
+  background-color: #f8fafc !important;
+  color: #0f172a !important;
+}
+
+html:not(.dark) .bg-\[\#040711\] {
+  background-color: #f8fafc !important;
+}
+
+html:not(.dark) .bg-\[\#040711\]\/85 {
+  background-color: rgba(248, 250, 252, 0.88) !important;
+}
+
+html:not(.dark) .bg-\[\#070a14\] {
+  background-color: #ffffff !important;
+}
+
+html:not(.dark) .bg-\[\#0d1424\] {
+  background-color: #ffffff !important;
+}
+
+html:not(.dark) .bg-\[\#0d1424\]\/95 {
+  background-color: rgba(255, 255, 255, 0.96) !important;
+}
+
+html:not(.dark) .bg-\[\#0b1120\] {
+  background-color: #f1f5f9 !important;
+}
+
+html:not(.dark) .bg-\[\#0b1120\]\/60 {
+  background-color: rgba(241, 245, 249, 0.7) !important;
+}
+
+html:not(.dark) .border-\[\#1e293b\] {
+  border-color: #e2e8f0 !important;
+}
+
+html:not(.dark) .border-\[\#1e293b\]\/60,
+html:not(.dark) .border-\[\#1e293b\]\/50 {
+  border-color: #e2e8f0 !important;
+}
+
+html:not(.dark) .divide-\[\#1e293b\]\/50 > :not([hidden]) ~ :not([hidden]) {
+  border-color: #e2e8f0 !important;
+}
+
+html:not(.dark) .text-\[\#e2e8f0\] {
+  color: #0f172a !important;
+}
+
+html:not(.dark) .text-\[\#cbd5e1\] {
+  color: #334155 !important;
+}
+
+html:not(.dark) .text-\[\#94a3b8\] {
+  color: #64748b !important;
+}
+
+/* Light mode text contrast for general headers and titles */
+html:not(.dark) .text-white:not(.btn-primary):not([class*="bg-red-"]):not([class*="bg-emerald-"]):not([class*="bg-green-"]):not([class*="bg-amber-"]):not([class*="bg-blue-"]):not([class*="bg-purple-"]):not([class*="badge-"]):not(.badge-gold):not(.badge-cyan):not(.badge-green) {
+  color: #0f172a !important;
+}
+
+/* Form input adaptations in light mode */
+html:not(.dark) input:not([type="checkbox"]):not([type="radio"]),
+html:not(.dark) select,
+html:not(.dark) textarea {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+  border-color: #cbd5e1 !important;
+}
+
+html:not(.dark) input::placeholder,
+html:not(.dark) textarea::placeholder {
+  color: #94a3b8 !important;
+}
+
+html:not(.dark) input:focus,
+html:not(.dark) select:focus,
+html:not(.dark) textarea:focus {
+  border-color: #d4af37 !important;
+  outline: none;
+}
+
+/* Table row hover in light mode */
+html:not(.dark) tr:hover {
+  background-color: rgba(241, 245, 249, 0.7) !important;
+}
+
+/* Subtle glow effects adapted for light mode */
+html:not(.dark) .blur-\[140px\],
+html:not(.dark) .blur-\[120px\] {
+  opacity: 0.15;
 }

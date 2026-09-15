@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Logo } from "@/components/Logo";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { Lock, Mail, User as UserIcon, Phone, Users, ArrowRight, AlertCircle, CheckCircle } from "lucide-react";
 
 function RegisterForm() {
@@ -82,23 +83,28 @@ function RegisterForm() {
   };
 
   return (
-    <div className="min-h-screen bg-[#040711] flex items-center justify-center p-6 selection:bg-[#d4af37] selection:text-black">
+    <div className="min-h-screen bg-slate-50 dark:bg-[#040711] text-slate-900 dark:text-[#e2e8f0] flex items-center justify-center p-6 selection:bg-[#d4af37] selection:text-black relative">
+      {/* Top Header Controls */}
+      <div className="absolute top-4 right-4 sm:top-6 sm:right-6">
+        <ThemeToggle variant="segmented" size="xs" />
+      </div>
+
       <div className="w-full max-w-lg space-y-8 my-8">
         <div className="text-center flex flex-col items-center space-y-2">
           <Link href="/">
             <Logo size={44} />
           </Link>
-          <h2 className="text-2xl font-black text-white tracking-wide pt-4">
+          <h2 className="text-2xl font-black text-slate-900 dark:text-white tracking-wide pt-4">
             Join the SEORALINK Network
           </h2>
-          <p className="text-xs text-[#94a3b8]">
+          <p className="text-xs text-slate-600 dark:text-[#94a3b8]">
             Create your account to unlock the 12-tier doubling ladder and universal queue progression.
           </p>
         </div>
 
-        <div className="card-seoralink p-8 space-y-6 bg-[#0d1424]/95 border-[#d4af37]/35 shadow-2xl">
+        <div className="card-seoralink p-8 space-y-6 bg-white dark:bg-[#0d1424]/95 border-slate-200 dark:border-[#d4af37]/35 shadow-2xl">
           {error && (
-            <div className="p-3.5 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-xs flex items-center gap-2">
+            <div className="p-3.5 rounded-lg bg-red-500/10 border border-red-500/30 text-red-500 dark:text-red-400 text-xs flex items-center gap-2">
               <AlertCircle size={16} className="flex-shrink-0" />
               <span>{error}</span>
             </div>
