@@ -64,59 +64,61 @@ export function LandingMobileNav() {
         aria-modal="true"
         aria-label="Site Navigation"
       >
-        <div className="flex-1 min-h-0 overflow-y-auto">
-          {/* Header */}
-          <div className="shrink-0 p-4 border-b border-[#d4af37]/20 flex items-center justify-between bg-[#040711]">
-            <Link href="/" onClick={() => setIsOpen(false)}>
-              <Logo size={28} />
-            </Link>
-            <button
-              type="button"
-              onClick={() => setIsOpen(false)}
-              className="p-1.5 rounded-lg text-[#94a3b8] hover:text-white hover:bg-[#1e293b]/60 transition-colors"
-              aria-label="Close menu"
-            >
-              <X size={20} />
-            </button>
+        <div className="flex-1 min-h-0 overflow-y-auto flex flex-col justify-between">
+          <div>
+            {/* Header */}
+            <div className="shrink-0 p-4 border-b border-[#d4af37]/20 flex items-center justify-between bg-[#040711]">
+              <Link href="/" onClick={() => setIsOpen(false)}>
+                <Logo size={28} />
+              </Link>
+              <button
+                type="button"
+                onClick={() => setIsOpen(false)}
+                className="p-1.5 rounded-lg text-[#94a3b8] hover:text-white hover:bg-[#1e293b]/60 transition-colors"
+                aria-label="Close menu"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            {/* Links */}
+            <nav className="p-4 space-y-2">
+              <div className="px-2 py-1 text-[10px] font-bold text-[#94a3b8] uppercase tracking-wider">
+                Explore
+              </div>
+              {navLinks.map(({ href, label }) => (
+                <a
+                  key={href}
+                  href={href}
+                  onClick={() => setIsOpen(false)}
+                  className="flex items-center px-3 py-2.5 rounded-lg text-xs font-bold uppercase tracking-wider text-[#94a3b8] hover:text-[#d4af37] hover:bg-[#0d1424] transition-colors"
+                >
+                  {label}
+                </a>
+              ))}
+            </nav>
           </div>
 
-          {/* Links */}
-          <nav className="p-4 space-y-2">
-            <div className="px-2 py-1 text-[10px] font-bold text-[#94a3b8] uppercase tracking-wider">
-              Explore
-            </div>
-            {navLinks.map(({ href, label }) => (
-              <a
-                key={href}
-                href={href}
-                onClick={() => setIsOpen(false)}
-                className="flex items-center px-3 py-2.5 rounded-lg text-xs font-bold uppercase tracking-wider text-[#94a3b8] hover:text-[#d4af37] hover:bg-[#0d1424] transition-colors"
-              >
-                {label}
-              </a>
-            ))}
-          </nav>
-        </div>
-
-        {/* Action Buttons */}
-        <div className="shrink-0 p-4 border-t border-[#1e293b]/60 bg-[#040711] space-y-2">
-          <Link
-            href="/login"
-            onClick={() => setIsOpen(false)}
-            className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg text-xs font-bold text-white border border-[#d4af37]/40 hover:bg-[#d4af37]/10 transition-colors"
-          >
-            <LogIn size={15} />
-            <span>Sign In</span>
-          </Link>
-          <Link
-            href="/register"
-            onClick={() => setIsOpen(false)}
-            className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg text-xs font-extrabold btn-primary"
-          >
-            <UserPlus size={15} />
-            <span>Register Account</span>
-            <ArrowRight size={14} />
-          </Link>
+          {/* Action Buttons */}
+          <div className="p-4 border-t border-[#1e293b]/60 bg-[#040711] space-y-2 mt-4 pb-12">
+            <Link
+              href="/login"
+              onClick={() => setIsOpen(false)}
+              className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg text-xs font-bold text-white border border-[#d4af37]/40 hover:bg-[#d4af37]/10 transition-colors"
+            >
+              <LogIn size={15} />
+              <span>Sign In</span>
+            </Link>
+            <Link
+              href="/register"
+              onClick={() => setIsOpen(false)}
+              className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg text-xs font-extrabold btn-primary"
+            >
+              <UserPlus size={15} />
+              <span>Register Account</span>
+              <ArrowRight size={14} />
+            </Link>
+          </div>
         </div>
       </div>
     </>
