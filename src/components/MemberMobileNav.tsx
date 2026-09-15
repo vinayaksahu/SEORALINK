@@ -87,7 +87,7 @@ export function MemberMobileNav({ user }: MemberMobileNavProps) {
       {/* Slide-out Backdrop Overlay */}
       {isOpen && (
         <div
-          className="fixed inset-0 bg-black/75 backdrop-blur-sm z-40 md:hidden transition-opacity duration-300"
+          className="fixed inset-0 bg-black/75 backdrop-blur-sm z-[60] md:hidden transition-opacity duration-300"
           onClick={() => setIsOpen(false)}
           aria-hidden="true"
         />
@@ -95,7 +95,7 @@ export function MemberMobileNav({ user }: MemberMobileNavProps) {
 
       {/* Side Menu Drawer Panel */}
       <div
-        className={`fixed top-0 bottom-0 left-0 w-72 max-w-[85vw] bg-[#070a14] border-r border-[#d4af37]/30 z-50 flex flex-col justify-between shadow-2xl transition-transform duration-300 ease-in-out md:hidden ${
+        className={`fixed top-0 bottom-0 left-0 w-72 max-w-[85vw] bg-[#070a14] border-r border-[#d4af37]/30 z-[70] flex flex-col justify-between shadow-2xl transition-transform duration-300 ease-in-out md:hidden ${
           isOpen ? "translate-x-0" : "-translate-x-full"
         }`}
         role="dialog"

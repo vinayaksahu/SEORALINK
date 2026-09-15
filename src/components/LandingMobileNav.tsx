@@ -47,7 +47,7 @@ export function LandingMobileNav() {
       {/* Backdrop */}
       {isOpen && (
         <div
-          className="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 md:hidden transition-opacity"
+          className="fixed inset-0 bg-black/75 backdrop-blur-sm z-[60] md:hidden transition-opacity"
           onClick={() => setIsOpen(false)}
           aria-hidden="true"
         />
@@ -55,7 +55,7 @@ export function LandingMobileNav() {
 
       {/* Drawer */}
       <div
-        className={`fixed top-0 bottom-0 right-0 w-72 max-w-[85vw] bg-[#070a14] border-l border-[#d4af37]/30 z-50 flex flex-col justify-between shadow-2xl transition-transform duration-300 ease-in-out md:hidden ${
+        className={`fixed top-0 bottom-0 right-0 w-72 max-w-[85vw] bg-[#070a14] border-l border-[#d4af37]/30 z-[70] flex flex-col justify-between shadow-2xl transition-transform duration-300 ease-in-out md:hidden ${
           isOpen ? "translate-x-0" : "translate-x-full"
         }`}
         role="dialog"
