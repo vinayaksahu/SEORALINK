@@ -38,6 +38,10 @@
   "exclude": [
     "node_modules",
     "archive",
-    "scripts"
+    "archive/**",
+    "archive/blockchain-prototype/**",
+    "scripts",
+    "PDF",
+    "docs"
   ]
 }
