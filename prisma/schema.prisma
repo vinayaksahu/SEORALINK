@@ -65,7 +65,7 @@ model User {
   directCount        Int                 @default(0) // Active direct referrals
 
   fundBalance        Decimal             @default(0.0) @db.Decimal(20, 8)
-  incomeBalance      Decimal             @default(0.0) @db.Decimal(20, 8)
+  incomeBalance      Decimal             @default(0.0) @db.Decimal(20, 8) // Commission Wallet
   totalEarned        Decimal             @default(0.0) @db.Decimal(20, 8)
   totalWithdrawn     Decimal             @default(0.0) @db.Decimal(20, 8)
 

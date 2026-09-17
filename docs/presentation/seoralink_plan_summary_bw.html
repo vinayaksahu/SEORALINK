@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>SEORALINK - Executive Plan Summary (Black & White)</title>
+<style>
+    @page {
+        size: A4 portrait;
+        margin: 10mm 14mm;
+    }
+    * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+    }
+    body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        color: #111111;
+        background: #ffffff;
+        font-size: 10.5pt;
+        line-height: 1.4;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+    .page {
+        width: 100%;
+        min-height: 275mm;
+        max-height: 277mm;
+        page-break-after: always;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        position: relative;
+    }
+    .page:last-child {
+        page-break-after: auto;
+    }
+
+    /* Header */
+    .header {
+        border-bottom: 2px solid #000000;
+        padding-bottom: 6px;
+        margin-bottom: 12px;
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+    }
+    .header-left h1 {
+        font-size: 22pt;
+        font-weight: 900;
+        letter-spacing: 1.2px;
+        text-transform: uppercase;
+        color: #000000;
+        line-height: 1;
+    }
+    .header-left p {
+        font-size: 9pt;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.6px;
+        color: #333333;
+        margin-top: 4px;
+    }
+    .header-right {
+        text-align: right;
+        font-size: 8.8pt;
+        color: #222222;
+        font-weight: 600;
+        line-height: 1.3;
+    }
+
+    /* Section styling */
+    .section {
+        margin-bottom: 12px;
+    }
+    .section-title {
+        font-size: 11pt;
+        font-weight: 900;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        border-bottom: 1.2px solid #111111;
+        padding-bottom: 3px;
+        margin-bottom: 7px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .section-title span.badge {
+        font-size: 8pt;
+        font-weight: 800;
+        padding: 1px 7px;
+        border: 1.2px solid #111111;
+        border-radius: 3px;
+    }
+
+    /* Grid & Cards */
+    .grid-2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+    }
+    .grid-3 {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 8px;
+    }
+    .card {
+        border: 1.2px solid #222222;
+        border-radius: 5px;
+        padding: 10px 12px;
+        background: #ffffff;
+    }
+    .card-title {
+        font-size: 10pt;
+        font-weight: 900;
+        text-transform: uppercase;
+        margin-bottom: 5px;
+        border-bottom: 1px dashed #777777;
+        padding-bottom: 2px;
+        color: #000000;
+    }
+    .card p, .card li {
+        font-size: 9pt;
+        color: #222222;
+        line-height: 1.38;
+    }
+    ul {
+        padding-left: 16px;
+    }
+    li {
+        margin-bottom: 3px;
+    }
+
+    /* Important highlight box */
+    .highlight-box {
+        border: 1.2px solid #000000;
+        background: #f8f8f8;
+        padding: 5px 10px;
+        border-radius: 4px;
+        margin: 4px 0;
+    }
+    .highlight-box h3 {
+        font-size: 8.8pt;
+        font-weight: 900;
+        text-transform: uppercase;
+        margin-bottom: 2px;
+        color: #000000;
+    }
+    .highlight-box p {
+        font-size: 8.1pt;
+        line-height: 1.32;
+    }
+
+    /* Tables */
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 8.6pt;
+        margin-top: 4px;
+    }
+    th, td {
+        border: 1px solid #333333;
+        padding: 4px 6px;
+        text-align: left;
+    }
+    th {
+        background: #f0f0f0;
+        font-weight: 900;
+        text-transform: uppercase;
+        font-size: 8pt;
+    }
+    td.num, th.num {
+        text-align: right;
+    }
+    td.center, th.center {
+        text-align: center;
+    }
+    tr.highlight-row {
+        background: #f4f4f4;
+        font-weight: 800;
+    }
+    tr.ultima-row {
+        background: #e5e5e5;
+        font-weight: 900;
+        border: 2px solid #000000;
+    }
+
+    /* Footer */
+    .footer {
+        border-top: 1.2px solid #333333;
+        padding-top: 5px;
+        margin-top: 8px;
+        display: flex;
+        justify-content: space-between;
+        font-size: 8pt;
+        color: #444444;
+        font-weight: 700;
+    }
+</style>
+</head>
+<body>
+
+<!-- ================= PAGE 1 ================= -->
+<div class="page">
+    <div>
+        <!-- HEADER -->
+        <div class="header">
+            <div class="header-left">
+                <h1>SEORALINK</h1>
+                <p>Korean Business Network &bull; Official Plan Specification</p>
+            </div>
+            <div class="header-right">
+                <div><strong>EXECUTIVE SUMMARY</strong></div>
+                <div>Black &amp; White Official Print Edition</div>
+                <div>Package: <strong>$10 USDT (One-Time)</strong></div>
+            </div>
+        </div>
+
+        <!-- 1. CORE SYSTEM FOUNDATION -->
+        <div class="section">
+            <div class="section-title">
+                <span>1. Core Foundation &amp; Entry Architecture</span>
+                <span class="badge">Universal Single-Leg</span>
+            </div>
+            <div class="grid-2">
+                <div class="card">
+                    <div class="card-title">Membership Activation</div>
+                    <ul>
+                        <li><strong>Package Price:</strong> $10 USDT (Junior rank activation).</li>
+                        <li><strong>Single-Leg Model:</strong> 100% Worldwide Single FIFO Queue.</li>
+                        <li><strong>No Leg Balancing:</strong> Zero left/right leg balancing or split matrix rules.</li>
+                        <li><strong>Automated Placement:</strong> Transparent timestamps govern placement globally.</li>
+                    </ul>
+                </div>
+                <div class="card">
+                    <div class="card-title">The 2-ID Tripod Law</div>
+                    <ul>
+                        <li><strong>Completion Engine:</strong> Exactly <strong>2 matching qualified IDs</strong> placed below your tier triggers completion.</li>
+                        <li><strong>Unit 1 Function:</strong> Provides capital liquidity for intermediate exit cashout (80%).</li>
+                        <li><strong>Unit 2 Function:</strong> Provides capital to roll forward (100% auto-upgrade).</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. THE THREE INCOME STREAMS -->
+        <div class="section">
+            <div class="section-title">
+                <span>2. The Three Primary Revenue Engines</span>
+                <span class="badge">Income Streams</span>
+            </div>
+            <div class="grid-3">
+                <div class="card">
+                    <div class="card-title">Stream 01: Direct Sponsor</div>
+                    <p style="font-weight:800; margin-bottom:3px; font-size:8.8pt;">5% Instant Cash Flow</p>
+                    <p>Paid in real time directly to your wallet on every personally sponsored Junior activation ($10).</p>
+                    <div style="margin-top:6px; font-weight:900; font-size:10.5pt; text-align:center; border:1.2px solid #000; padding:4px; background:#f8f8f8;">
+                        $0.50 USDT / Direct
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-title">Stream 02: Upline Override</div>
+                    <p style="font-weight:800; margin-bottom:3px; font-size:8.8pt;">5% Mentorship Scaling</p>
+                    <p>Earn 5% every time a personally referred partner upgrades across all 12 rank tiers.</p>
+                    <div style="margin-top:6px; font-weight:900; font-size:10.5pt; text-align:center; border:1.2px solid #000; padding:4px; background:#f8f8f8;">
+                        Up to $2,047.50 / Mentee
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-title">Stream 03: Rank Rewards</div>
+                    <p style="font-weight:800; margin-bottom:3px; font-size:8.8pt;">Rolling Doubling Ladder</p>
+                    <p>Hold balance to roll 100% into the next doubling tier, or withdraw 80% net and exit.</p>
+                    <div style="margin-top:6px; font-weight:900; font-size:10.5pt; text-align:center; border:1.2px solid #000; padding:4px; background:#f8f8f8;">
+                        $18,432 Net at Ultima
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. THE UPDATED BUSINESS RULES (CRUCIAL) -->
+        <div class="section">
+            <div class="section-title">
+                <span>3. Vital Operating Rules: Rolling Upgrade, Exit &amp; Status</span>
+                <span class="badge">Governance &amp; Status</span>
+            </div>
+
+            <div class="highlight-box">
+                <h3>Rule A: Non-Cumulative Rolling Auto-Upgrade (Doubling Value)</h3>
+                <p>
+                    Rank rewards do <strong>not</strong> accumulate additively ($10 + $20 + $40 &ne; $70). Instead, holding your reward automatically rolls <strong>100% of the active tier balance</strong> into the entry fund of the next higher rank. Active holding value doubles at every level: 
+                    <br><strong>$10 &rarr; $20 &rarr; $40 &rarr; $80 &rarr; $160 &rarr; $320 &rarr; $640 &rarr; $1,280 &rarr; $2,560 &rarr; $5,120 &rarr; $10,240 &rarr; $20,480</strong>.
+                </p>
+            </div>
+
+            <div class="highlight-box">
+                <h3>Rule B: Intermediate Ranks 1 to 11 Withdrawal (20% Reserve &bull; Permanent ID Ban)</h3>
+                <p>
+                    A participant can initiate an exit withdrawal at any intermediate rank (Zen through Legend):
+                    <br>&bull; <strong>80% Net USDT:</strong> Credited immediately to external wallet (20% protocol deduction retained for global queue liquidity).
+                    <br>&bull; <strong>Permanent Account Deactivation / Ban:</strong> Initiating a rank withdrawal between Rank 1 and Rank 11 permanently terminates the ID. The ID is <strong>permanently banned and CANNOT be reactivated in the future</strong>.
+                    <br>&bull; <strong>Strict Forfeiture:</strong> Forfeits all direct sponsor commissions ($0.50), 5% team overrides, and queue upgrades forever.
+                </p>
+            </div>
+
+            <div class="highlight-box">
+                <h3>Rule C: Pinnacle Ultima (Rank 12) Privilege (10% Fee &bull; Lifetime Active ID)</h3>
+                <p>
+                    Members holding through all 12 ranks achieve <strong>Apex Cycle Completion</strong> at Rank 12 (Ultima):
+                    <br>&bull; <strong>10% Protocol Fee (90% Net):</strong> Pays out <strong>$18,432.00 USDT Net</strong> on the $20,480.00 gross rank valuation.
+                    <br>&bull; <strong>Rank Queue Concludes:</strong> The rank queue progression ends for this ID (no further rank pools).
+                    <br>&bull; <strong>Lifetime Active Status (Exclusive):</strong> Unlike R1–R11, an Ultima ID <strong>remains permanently ACTIVE for life</strong>. The member can continue personally sponsoring new direct members ($0.50 direct bonus) AND continuously receives the <strong>5% team mentorship overrides</strong> as team members upgrade ranks!
+                    <br>&bull; <strong>Strict Exclusivity:</strong> This lifetime active earning privilege is valid <strong>ONLY for Ultima (Rank 12) IDs</strong>.
+                </p>
+            </div>
+
+            <div class="highlight-box" style="background:#f0f0f0;">
+                <h3>Rule D: Commission Withdrawal Policy (Flat 10% Deduction)</h3>
+                <p>
+                    All affiliate commission withdrawals (Direct Sponsor 5% [$0.50] and Upline Mentorship 5% Overrides) carry a flat <strong>10% protocol deduction</strong> across all ranks.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- FOOTER PAGE 1 -->
+    <div class="footer">
+        <div>SEORALINK &bull; Korean Business Network &bull; Official Web: seoralink.com</div>
+        <div>Page 1 of 2</div>
+    </div>
+</div>
+
+<!-- ================= PAGE 2 ================= -->
+<div class="page">
+    <div>
+        <!-- HEADER -->
+        <div class="header">
+            <div class="header-left">
+                <h1>SEORALINK</h1>
+                <p>Master Progression Matrix &amp; Mentorship Overrides</p>
+            </div>
+            <div class="header-right">
+                <div><strong>NUMERICAL SPECIFICATION</strong></div>
+                <div>12 Progressive Ranks Matrix</div>
+                <div>Settlement: USDT (TRC-20 / BEP-20)</div>
+            </div>
+        </div>
+
+        <!-- 4. MASTER PROGRESSION MATRIX TABLE -->
+        <div class="section">
+            <div class="section-title">
+                <span>4. Complete 12-Rank Progression &amp; Payout Matrix</span>
+                <span class="badge">Master Matrix</span>
+            </div>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width:17%;">Rank Tier</th>
+                        <th class="center" style="width:13%;">Total Directs</th>
+                        <th class="num" style="width:14%;">Rank Value</th>
+                        <th class="num" style="width:17%;">Net Cashout (Exit)</th>
+                        <th style="width:23%;">If Held (Auto-Upgrade)</th>
+                        <th class="num" style="width:16%;">Upline 5%</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Junior (Entry)</strong></td>
+                        <td class="center">0 Directs</td>
+                        <td class="num">$10 Entry</td>
+                        <td class="num">&mdash;</td>
+                        <td>Enters Zen ($10 queue)</td>
+                        <td class="num">$0.50 (Direct)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Zen (Tier 1)</strong></td>
+                        <td class="center">2 Directs</td>
+                        <td class="num">$10.00</td>
+                        <td class="num"><strong>$8.00</strong> (80%)</td>
+                        <td>Rolls 100% to Alpha ($20)</td>
+                        <td class="num">$0.50</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Alpha (Tier 2)</strong></td>
+                        <td class="center">2 Directs</td>
+                        <td class="num">$20.00</td>
+                        <td class="num"><strong>$16.00</strong> (80%)</td>
+                        <td>Rolls 100% to Nova ($40)</td>
+                        <td class="num">$1.00</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Nova (Tier 3)</strong></td>
+                        <td class="center">3 Directs</td>
+                        <td class="num">$40.00</td>
+                        <td class="num"><strong>$32.00</strong> (80%)</td>
+                        <td>Rolls 100% to Valt ($80)</td>
+                        <td class="num">$2.00</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Valt (Tier 4)</strong></td>
+                        <td class="center">3 Directs</td>
+                        <td class="num">$80.00</td>
+                        <td class="num"><strong>$64.00</strong> (80%)</td>
+                        <td>Rolls 100% to Apex ($160)</td>
+                        <td class="num">$4.00</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Apex (Tier 5)</strong></td>
+                        <td class="center">3 Directs</td>
+                        <td class="num">$160.00</td>
+                        <td class="num"><strong>$128.00</strong> (80%)</td>
+                        <td>Rolls 100% to Orbit ($320)</td>
+                        <td class="num">$8.00</td>
+                    </tr>
+                    <tr class="highlight-row">
+                        <td><strong>Orbit (Tier 6)</strong></td>
+                        <td class="center">4 Directs</td>
+                        <td class="num">$320.00</td>
+                        <td class="num"><strong>$256.00</strong> (80%)</td>
+                        <td>Rolls 100% to Prime ($640)</td>
+                        <td class="num">$16.00</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Prime (Tier 7)</strong></td>
+                        <td class="center">4 Directs</td>
+                        <td class="num">$640.00</td>
+                        <td class="num"><strong>$512.00</strong> (80%)</td>
+                        <td>Rolls 100% to Elite ($1,280)</td>
+                        <td class="num">$32.00</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Elite (Tier 8)</strong></td>
+                        <td class="center">4 Directs</td>
+                        <td class="num">$1,280.00</td>
+                        <td class="num"><strong>$1,024.00</strong> (80%)</td>
+                        <td>Rolls 100% to Titan ($2,560)</td>
+                        <td class="num">$64.00</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Titan (Tier 9)</strong></td>
+                        <td class="center">5 Directs</td>
+                        <td class="num">$2,560.00</td>
+                        <td class="num"><strong>$2,048.00</strong> (80%)</td>
+                        <td>Rolls 100% to Royal ($5,120)</td>
+                        <td class="num">$128.00</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Royal (Tier 10)</strong></td>
+                        <td class="center">5 Directs</td>
+                        <td class="num">$5,120.00</td>
+                        <td class="num"><strong>$4,096.00</strong> (80%)</td>
+                        <td>Rolls 100% to Legend ($10,240)</td>
+                        <td class="num">$256.00</td>
+                    </tr>
+                    <tr class="highlight-row">
+                        <td><strong>Legend (Tier 11)</strong></td>
+                        <td class="center">6 Directs</td>
+                        <td class="num">$10,240.00</td>
+                        <td class="num"><strong>$8,192.00</strong> (80%)</td>
+                        <td>Rolls 100% to Ultima ($20,480)</td>
+                        <td class="num">$512.00</td>
+                    </tr>
+                    <tr class="ultima-row">
+                        <td><strong>Ultima (Tier 12)</strong></td>
+                        <td class="center"><strong>6 Directs</strong></td>
+                        <td class="num"><strong>$20,480.00</strong></td>
+                        <td class="num"><strong>$18,432.00</strong> (90%)</td>
+                        <td><strong>CYCLE COMPLETE (PINNACLE EXIT)</strong></td>
+                        <td class="num"><strong>$1,024.00</strong></td>
+                    </tr>
+                </tbody>
+            </table>
+            <p style="font-size:7.4pt; color:#222; margin-top:3px; line-height:1.3;">
+                <strong>*Withdrawal &amp; ID Governance:</strong> Cashout at Ranks 1–11 incurs a <strong>20% deduction</strong> and <strong>Permanently Bans/Deactivates the ID</strong> (never reactivated; all future commissions &amp; upgrades forfeited). Ultima (Rank 12) cashout incurs only a <strong>10% fee ($18,432.00 Net)</strong>; rank queue ends, but the ID <strong>remains permanently ACTIVE for life</strong> to sponsor directs and earn 5% team mentorship overrides forever (<strong>exclusive to Ultima</strong>). All Commission withdrawals incur a flat <strong>10% deduction</strong>.
+            </p>
+        </div>
+
+        <!-- 5. UPLINE MENTORSHIP MULTIPLIER & QUALIFICATION SUMMARY -->
+        <div class="section" style="margin-top:8px;">
+            <div class="section-title">
+                <span>5. Upline Mentorship Leverage &amp; Direct Rules</span>
+                <span class="badge">Team Multiplier</span>
+            </div>
+
+            <div class="grid-2">
+                <!-- Mentorship table -->
+                <div class="card" style="padding: 8px 10px;">
+                    <div class="card-title" style="font-size:9.2pt; margin-bottom:4px;">Mentorship Leverage (5% Override)</div>
+                    <table style="font-size:8pt; margin-top:2px;">
+                        <thead>
+                            <tr>
+                                <th>Direct Team Size</th>
+                                <th class="num">Tiers 1–6 (Orbit)</th>
+                                <th class="num">Full 12 Tiers (Ultima)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>1 Direct Mentee</strong></td>
+                                <td class="num">$31.50</td>
+                                <td class="num"><strong>$2,047.50</strong></td>
+                            </tr>
+                            <tr>
+                                <td><strong>5 Direct Mentees</strong></td>
+                                <td class="num">$157.50</td>
+                                <td class="num"><strong>$10,237.50</strong></td>
+                            </tr>
+                            <tr>
+                                <td><strong>10 Direct Mentees</strong></td>
+                                <td class="num">$315.00</td>
+                                <td class="num"><strong>$20,475.00</strong></td>
+                            </tr>
+                            <tr class="highlight-row">
+                                <td><strong>20 Direct Mentees</strong></td>
+                                <td class="num">$630.00</td>
+                                <td class="num"><strong>$40,950.00</strong></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <p style="font-size:7.2pt; color:#444; margin-top:2px;">
+                        Overrides are credited instantly in real-time as mentees advance.
+                    </p>
+                </div>
+
+                <!-- Operating Summary Checklist -->
+                <div class="card" style="padding: 8px 10px;">
+                    <div class="card-title" style="font-size:9.2pt; margin-bottom:4px;">Direct Milestones &amp; ID Governance</div>
+                    <ul style="font-size:7.9pt; padding-left:14px; line-height:1.32;">
+                        <li><strong>Zen &amp; Alpha:</strong> 2 direct referrals required.</li>
+                        <li><strong>Nova, Valt, Apex:</strong> 3 total cumulative directs required.</li>
+                        <li><strong>Orbit, Prime, Elite:</strong> 4 total cumulative directs required.</li>
+                        <li><strong>Titan &amp; Royal:</strong> 5 total cumulative directs required.</li>
+                        <li><strong>Legend &amp; Ultima:</strong> 6 total cumulative directs required.</li>
+                        <li><strong>R1–R11 Exit:</strong> 20% Fee &bull; <strong>Permanent Ban</strong> (cannot be reactivated).</li>
+                        <li><strong>Ultima Exit:</strong> 10% Fee &bull; <strong>Lifetime Active ID</strong> (Directs + 5% Overrides).</li>
+                        <li><strong>Commissions:</strong> Flat <strong>10% deduction</strong> on referral cashouts.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- SUMMARY STATEMENT BOX -->
+        <div class="highlight-box" style="margin-top:6px; padding:6px 10px;">
+            <p style="font-size:8.4pt; line-height:1.35;">
+                <strong>Strategic Summary:</strong> An affiliate begins with a single <strong>$10 USDT</strong> activation. By holding rewards through the 2-ID rolling auto-upgrade queue, capital systematically doubles into an apex rank valuation of <strong>$20,480.00</strong>, delivering a final net payout of <strong>$18,432.00 USDT</strong>. Simultaneously, building a direct frontline produces up to <strong>$2,047.50</strong> per partner.
+            </p>
+        </div>
+    </div>
+
+    <!-- FOOTER PAGE 2 -->
+    <div class="footer">
+        <div>SEORALINK &bull; Corporate Spec Sheet &bull; Korean Business Network</div>
+        <div>Page 2 of 2</div>
+    </div>
+</div>
+
+</body>
+</html>

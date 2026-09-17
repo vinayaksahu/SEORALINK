@@ -1,6 +1,6 @@
 import { Prisma } from "@prisma/client";
 import { db } from "./db";
-import { TIER_VALUES, REQUIRED_DIRECTS, RATES } from "./constants";
+import { TIER_VALUES, REQUIRED_DIRECTS, RATES, TIER_NAMES } from "./constants";
 import { executeLedgerTransaction } from "./ledger";
 import Decimal from "decimal.js";
 
@@ -46,9 +46,6 @@ export async function processTierQueue(
     // 4. Match completed (100%)!
     const matchedUser = frontEntry.user;
     const grossReward = new Decimal(TIER_VALUES[tier]);
-    const deductionPercent = tier === 12 ? RATES.ULTIMA_DEDUCTION_PERCENT : RATES.STANDARD_DEDUCTION_PERCENT;
-    const deduction = grossReward.times(deductionPercent).dividedBy(100);
-    const netPayout = grossReward.minus(deduction);
 
     // Mark entry as COMPLETED
     await tx.queueEntry.update({
@@ -60,41 +57,34 @@ export async function processTierQueue(
       },
     });
 
-    // Credit net reward to matched member's Income Wallet
-    const matchRefKey = `RANK_REWARD_T${tier}_IDX${frontEntry.queueIndex}_${matchedUser.id}`;
-    await executeLedgerTransaction(
-      {
-        userId: matchedUser.id,
-        type: "RANK_REWARD",
-        wallet: "INCOME",
-        amount: netPayout,
-        referenceKey: matchRefKey,
-        description: `Tier ${tier} (${grossReward} USDT Gross - ${deductionPercent}% Reserve Deduction = ${netPayout} USDT Net Payout)`,
-        tierNumber: tier,
-      },
-      tx
-    );
-
-    // Pay 5% Upline Override to direct mentor
+    // Pay 5% Upline Override to direct mentor (ONLY if mentor is not banned)
     if (matchedUser.sponsorId) {
-      const overrideAmount = grossReward.times(RATES.UPLINE_OVERRIDE_PERCENT).dividedBy(100);
-      const overrideRefKey = `OVERRIDE_T${tier}_FROM_${matchedUser.id}_FOR_${matchedUser.sponsorId}`;
-      await executeLedgerTransaction(
-        {
-          userId: matchedUser.sponsorId,
-          type: "UPLINE_OVERRIDE",
-          wallet: "INCOME",
-          amount: overrideAmount,
-          referenceKey: overrideRefKey,
-          description: `5% Mentorship Override from ${matchedUser.fullName} (${matchedUser.customId}) completing Tier ${tier}`,
-          sourceUserId: matchedUser.id,
-          tierNumber: tier,
-        },
-        tx
-      );
+      const sponsor = await tx.user.findUnique({
+        where: { id: matchedUser.sponsorId },
+        select: { id: true, status: true },
+      });
+
+      // Banned/deactivated IDs forfeit all overrides; only active/eligible IDs earn
+      if (sponsor && sponsor.status !== "BLOCKED" && sponsor.status !== "SUSPENDED") {
+        const overrideAmount = grossReward.times(RATES.UPLINE_OVERRIDE_PERCENT).dividedBy(100);
+        const overrideRefKey = `OVERRIDE_T${tier}_FROM_${matchedUser.id}_FOR_${matchedUser.sponsorId}`;
+        await executeLedgerTransaction(
+          {
+            userId: matchedUser.sponsorId,
+            type: "UPLINE_OVERRIDE",
+            wallet: "INCOME",
+            amount: overrideAmount,
+            referenceKey: overrideRefKey,
+            description: `5% Mentorship Override from ${matchedUser.fullName} (${matchedUser.customId}) completing Tier ${tier} (${TIER_NAMES[tier]})`,
+            sourceUserId: matchedUser.id,
+            tierNumber: tier,
+          },
+          tx
+        );
+      }
     }
 
-    // Check direct qualification for Next Tier promotion
+    // Rolling Auto-Upgrade: 100% of value rolls into Next Tier if within 12 tiers
     const nextTier = tier + 1;
     if (nextTier <= 12) {
       const requiredDirects = REQUIRED_DIRECTS[nextTier];
@@ -105,7 +95,7 @@ export async function processTierQueue(
           data: { currentTier: nextTier },
         });
 
-        // Add to next tier queue
+        // Add to next tier queue (100% roll-forward)
         const nextQueueIndex = await tx.queueEntry.count({
           where: { tier: nextTier },
         });
@@ -123,6 +113,12 @@ export async function processTierQueue(
         // Trigger queue processing on next tier (cascading velocity)
         await processTierQueue(nextTier, tx);
       }
+    } else if (tier === 12) {
+      // Completed Tier 12 Ultima! Rank queue finishes, user stays ACTIVE for lifetime direct & override benefits
+      await tx.user.update({
+        where: { id: matchedUser.id },
+        data: { currentTier: 12 },
+      });
     }
 
     matchesProcessed++;

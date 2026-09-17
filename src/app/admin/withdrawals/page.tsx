@@ -22,6 +22,8 @@ export default async function AdminWithdrawalsPage() {
           customId: true,
           fullName: true,
           email: true,
+          status: true,
+          currentTier: true,
         },
       },
     },
@@ -38,6 +40,7 @@ export default async function AdminWithdrawalsPage() {
     network: w.network,
     txHash: w.txHash,
     status: w.status,
+    adminNote: w.adminNote,
     createdAt: w.createdAt.toISOString(),
     user: w.user,
   }));

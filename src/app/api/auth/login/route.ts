@@ -34,9 +34,16 @@ export async function POST(req: Request) {
       );
     }
 
-    if (user.status === "BLOCKED" || user.status === "SUSPENDED") {
+    if (user.status === "BLOCKED") {
       return NextResponse.json(
-        { error: `Account is ${user.status.toLowerCase()}. Please contact administration.` },
+        { error: "This ID has been permanently deactivated/banned due to an intermediate rank reward cashout under the Single-Exit protocol. It cannot be reactivated." },
+        { status: 403 }
+      );
+    }
+
+    if (user.status === "SUSPENDED") {
+      return NextResponse.json(
+        { error: "Account is suspended. Please contact administration." },
         { status: 403 }
       );
     }

@@ -76,6 +76,16 @@ export default async function MemberTeamPage() {
         </div>
       </div>
 
+      {/* Protocol Mentorship Policy Callout */}
+      <div className="card-seoralink p-4 border-[#10b981]/30 bg-[#061814]/40 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
+        <div className="text-[#94a3b8]">
+          <strong className="text-white">5% Mentorship Override Rules:</strong> Direct sponsor overrides ($0.50 up to $1,024.00 per tier, max $2,047.50 cumulative per mentee) credit instantly to your Commission Wallet whenever active mentees advance. Commission withdrawals carry only a flat 10% fee and never affect your account status!
+        </div>
+        <div className="px-2.5 py-1 rounded bg-[#10b981]/20 text-[#10b981] font-mono-num font-bold text-[11px] whitespace-nowrap">
+          10% Flat Cashout Fee
+        </div>
+      </div>
+
       {/* Direct Referrals Table */}
       <div className="card-seoralink p-6 space-y-4">
         <h3 className="text-sm font-bold text-white flex items-center gap-2">
@@ -111,9 +121,11 @@ export default async function MemberTeamPage() {
                       <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
                         d.status === "ACTIVE"
                           ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/30"
+                          : d.status === "BLOCKED"
+                          ? "bg-rose-500/10 text-rose-400 border border-rose-500/30"
                           : "bg-amber-500/10 text-amber-400 border border-amber-500/30"
                       }`}>
-                        {d.status}
+                        {d.status === "BLOCKED" ? "RETIRED (EXIT)" : d.status}
                       </span>
                     </td>
                     <td className="py-2.5 px-3 text-[#94a3b8]">

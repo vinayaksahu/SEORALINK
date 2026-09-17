@@ -50,18 +50,66 @@ export const REQUIRED_DIRECTS = [
 
 export const CUMULATIVE_REWARDS = [
   0,     // 0: Junior
-  10,    // 1: Zen
-  30,    // 2: Alpha
-  70,    // 3: Nova
-  150,   // 4: Valt
-  310,   // 5: Apex
-  630,   // 6: Orbit
-  1270,  // 7: Prime
-  2550,  // 8: Elite
-  5110,  // 9: Titan
-  10230, // 10: Royal
-  20470, // 11: Legend
-  40950, // 12: Ultima
+  8,     // 1: Zen ($8 Net)
+  16,    // 2: Alpha ($16 Net)
+  32,    // 3: Nova ($32 Net)
+  64,    // 4: Valt ($64 Net)
+  128,   // 5: Apex ($128 Net)
+  256,   // 6: Orbit ($256 Net)
+  512,   // 7: Prime ($512 Net)
+  1024,  // 8: Elite ($1,024 Net)
+  2048,  // 9: Titan ($2,048 Net)
+  4096,  // 10: Royal ($4,096 Net)
+  8192,  // 11: Legend ($8,192 Net)
+  18432, // 12: Ultima ($18,432 Net)
+] as const;
+
+export const NET_CASHOUT_VALUES = [
+  0,     // 0: Junior (Entry)
+  8,     // 1: Zen (80% Net of $10)
+  16,    // 2: Alpha (80% Net of $20)
+  32,    // 3: Nova (80% Net of $40)
+  64,    // 4: Valt (80% Net of $80)
+  128,   // 5: Apex (80% Net of $160)
+  256,   // 6: Orbit (80% Net of $320)
+  512,   // 7: Prime (80% Net of $640)
+  1024,  // 8: Elite (80% Net of $1,280)
+  2048,  // 9: Titan (80% Net of $2,560)
+  4096,  // 10: Royal (80% Net of $5,120)
+  8192,  // 11: Legend (80% Net of $10,240)
+  18432, // 12: Ultima (90% Net of $20,480 - 10% Fee)
+] as const;
+
+export const UPLINE_OVERRIDE_VALUES = [
+  0.50,    // 0: Junior ($0.50 Direct Sponsor)
+  0.50,    // 1: Zen (5% of $10)
+  1.00,    // 2: Alpha (5% of $20)
+  2.00,    // 3: Nova (5% of $40)
+  4.00,    // 4: Valt (5% of $80)
+  8.00,    // 5: Apex (5% of $160)
+  16.00,   // 6: Orbit (5% of $320)
+  32.00,   // 7: Prime (5% of $640)
+  64.00,   // 8: Elite (5% of $1,280)
+  128.00,  // 9: Titan (5% of $2,560)
+  256.00,  // 10: Royal (5% of $5,120)
+  512.00,  // 11: Legend (5% of $10,240)
+  1024.00, // 12: Ultima (5% of $20,480)
+] as const;
+
+export const CUMULATIVE_UPLINE_OVERRIDES = [
+  0.50,    // 0: Junior
+  1.00,    // 1: Zen
+  2.00,    // 2: Alpha
+  4.00,    // 3: Nova
+  8.00,    // 4: Valt
+  16.00,   // 5: Apex
+  32.00,   // 6: Orbit ($31.50 cumulative without direct)
+  64.00,   // 7: Prime
+  128.00,  // 8: Elite
+  256.00,  // 9: Titan
+  512.00,  // 10: Royal
+  1024.00, // 11: Legend
+  2048.00, // 12: Ultima ($2,047.50 cumulative overrides)
 ] as const;
 
 export const TIER_COLORS = {
@@ -84,7 +132,9 @@ export const RATES = {
   MICRO_ENTRY_FEE: 10.0, // $10 USDT
   DIRECT_COMMISSION_PERCENT: 5.0, // 5% ($0.50)
   UPLINE_OVERRIDE_PERCENT: 5.0, // 5%
-  STANDARD_DEDUCTION_PERCENT: 20.0, // 20% on Tiers 0-11
-  ULTIMA_DEDUCTION_PERCENT: 10.0, // 10% on Tier 12 (Ultima)
+  STANDARD_DEDUCTION_PERCENT: 20.0, // 20% on Tiers 1-11
+  INTERMEDIATE_DEDUCTION_PERCENT: 20.0, // 20% on Tiers 1-11 (Permanent Ban)
+  ULTIMA_DEDUCTION_PERCENT: 10.0, // 10% on Tier 12 (Ultima - Lifetime Active)
+  COMMISSION_DEDUCTION_PERCENT: 10.0, // 10% on all Direct & Mentorship commission withdrawals
   MIN_WITHDRAWAL_AMOUNT: 10.0, // $10 USDT minimum
 } as const;

@@ -63,29 +63,37 @@ export async function activateUserAccount(userId: string): Promise<ActivationRes
 
     // 4. Reward Direct Sponsor (5% = $0.50 instant direct bonus)
     if (user.sponsorId) {
+      const sponsor = await tx.user.findUnique({
+        where: { id: user.sponsorId },
+        select: { id: true, status: true, currentTier: true },
+      });
+
       // Increment sponsor active direct count
       await tx.user.update({
         where: { id: user.sponsorId },
         data: { directCount: { increment: 1 } },
       });
 
-      const directBonus = entryFee.times(RATES.DIRECT_COMMISSION_PERCENT).dividedBy(100);
-      const sponsorRefKey = `DIRECT_COMMISSION_FROM_${user.id}_FOR_${user.sponsorId}`;
-      await executeLedgerTransaction(
-        {
-          userId: user.sponsorId,
-          type: "DIRECT_COMMISSION",
-          wallet: "INCOME",
-          amount: directBonus,
-          referenceKey: sponsorRefKey,
-          description: `5% Instant Direct Sponsor Bonus from ${user.fullName} (${user.customId})`,
-          sourceUserId: user.id,
-        },
-        tx
-      );
+      // Only pay direct commission if sponsor is not banned (R1-R11 exited IDs forfeit commissions)
+      if (sponsor && sponsor.status !== "BLOCKED" && sponsor.status !== "SUSPENDED") {
+        const directBonus = entryFee.times(RATES.DIRECT_COMMISSION_PERCENT).dividedBy(100);
+        const sponsorRefKey = `DIRECT_COMMISSION_FROM_${user.id}_FOR_${user.sponsorId}`;
+        await executeLedgerTransaction(
+          {
+            userId: user.sponsorId,
+            type: "DIRECT_COMMISSION",
+            wallet: "INCOME",
+            amount: directBonus,
+            referenceKey: sponsorRefKey,
+            description: `5% Instant Direct Sponsor Bonus from ${user.fullName} (${user.customId})`,
+            sourceUserId: user.id,
+          },
+          tx
+        );
 
-      // Check if sponsor was held from a rank promotion due to missing direct
-      await checkPendingRankPromotions(user.sponsorId, tx);
+        // Check if sponsor was held from a rank promotion due to missing direct
+        await checkPendingRankPromotions(user.sponsorId, tx);
+      }
     }
 
     // 5. Enter Global Single-Leg Tier 0 (Junior) Queue
