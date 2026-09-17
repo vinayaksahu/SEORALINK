@@ -10,7 +10,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Unauthorized access" }, { status: 401 });
     }
 
-    const { amount, txHash, network } = await req.json();
+    const { amount, txHash, network, depositAddress } = await req.json();
 
     if (!amount || parseFloat(amount) <= 0) {
       return NextResponse.json({ error: "Please enter a valid deposit amount" }, { status: 400 });
@@ -40,6 +40,7 @@ export async function POST(req: Request) {
         amount: new Decimal(amount).toFixed(8),
         txHash: trimmedHash,
         network: network || "USDT_BEP20",
+        adminNote: depositAddress ? `Sent to wallet: ${depositAddress.trim()}` : null,
         status: "PENDING",
       },
     });

@@ -10,6 +10,7 @@ interface DepositItem {
   txHash: string;
   network: string;
   status: string;
+  adminNote?: string | null;
   createdAt: string;
   user: {
     customId: string;
@@ -151,7 +152,14 @@ export default function DepositsTableClient({ initialDeposits }: { initialDeposi
                         <ExternalLink size={12} />
                       </a>
                     </div>
-                    <div className="text-[10px] text-[#64748b]">{d.network}</div>
+                    <div className="text-[10px] text-[#64748b] flex items-center gap-2">
+                      <span>{d.network}</span>
+                      {d.adminNote && (
+                        <span className="text-[#d4af37] truncate max-w-[140px]" title={d.adminNote}>
+                          &bull; {d.adminNote}
+                        </span>
+                      )}
+                    </div>
                   </td>
                   <td className="py-3 px-4">
                     {d.status === "APPROVED" && (

@@ -4,11 +4,19 @@ import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { QrCode, Copy, Check, ArrowRight, AlertCircle, CheckCircle2 } from "lucide-react";
 
-export default function DepositFormClient({ depositAddress }: { depositAddress: string }) {
+export default function DepositFormClient({
+  depositAddress,
+  initialNetwork,
+  walletLabel,
+}: {
+  depositAddress: string;
+  initialNetwork?: string;
+  walletLabel?: string;
+}) {
   const router = useRouter();
   const [amount, setAmount] = useState("10.00");
   const [txHash, setTxHash] = useState("");
-  const [network, setNetwork] = useState("USDT_BEP20");
+  const [network, setNetwork] = useState(initialNetwork || "USDT_BEP20");
   const [copied, setCopied] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -30,7 +38,7 @@ export default function DepositFormClient({ depositAddress }: { depositAddress: 
       const res = await fetch("/api/member/deposit", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ amount, txHash, network }),
+        body: JSON.stringify({ amount, txHash, network, depositAddress }),
       });
 
       const data = await res.json();
@@ -48,6 +56,8 @@ export default function DepositFormClient({ depositAddress }: { depositAddress: 
     }
   };
 
+  const networkDisplay = network === "USDT_TRC20" ? "USDT (TRC-20 / TRON)" : "USDT (BEP-20 / BSC)";
+
   return (
     <div className="card-seoralink p-6 space-y-6">
       <h3 className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
@@ -57,9 +67,9 @@ export default function DepositFormClient({ depositAddress }: { depositAddress: 
 
       {/* Company Address Box */}
       <div className="p-4 rounded-xl border border-[#d4af37]/30 bg-[#0b1120] space-y-3">
-        <div className="text-[10px] font-mono-num uppercase text-[#94a3b8] flex justify-between">
-          <span>Official Company Deposit Address</span>
-          <span className="text-[#38bdf8] font-bold">USDT (BEP-20 / BSC)</span>
+        <div className="text-[10px] font-mono-num uppercase text-[#94a3b8] flex justify-between items-center">
+          <span>{walletLabel || "Official Company Deposit Address"}</span>
+          <span className="text-[#38bdf8] font-bold">{networkDisplay}</span>
         </div>
 
         <div className="flex items-center gap-2">
@@ -67,7 +77,7 @@ export default function DepositFormClient({ depositAddress }: { depositAddress: 
             type="text"
             readOnly
             value={depositAddress}
-            className="w-full bg-[#070a14] border border-[#1e293b] text-white font-mono-num text-xs px-3 py-2 rounded-lg focus:outline-none"
+            className="w-full bg-[#070a14] border border-[#1e293b] text-white font-mono-num text-xs px-3 py-2 rounded-lg focus:outline-none select-all"
           />
           <button
             type="button"
@@ -80,7 +90,7 @@ export default function DepositFormClient({ depositAddress }: { depositAddress: 
         </div>
 
         <p className="text-[10px] text-[#94a3b8]">
-          Send only USDT via BNB Smart Chain (BEP-20) to this address. Minimum deposit is $10 USDT.
+          Send only USDT via {network === "USDT_TRC20" ? "TRON (TRC-20)" : "BNB Smart Chain (BEP-20)"} to this designated address. Minimum deposit is $10 USDT.
         </p>
       </div>
 

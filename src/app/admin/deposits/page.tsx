@@ -34,6 +34,7 @@ export default async function AdminDepositsPage() {
     txHash: d.txHash,
     network: d.network,
     status: d.status,
+    adminNote: d.adminNote,
     createdAt: d.createdAt.toISOString(),
     user: d.user,
   }));

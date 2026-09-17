@@ -16,11 +16,69 @@ export default async function MemberDepositPage() {
     take: 20,
   });
 
-  // Fetch deposit address from system config (or fallback)
+  // Fetch deposit address settings from system config
+  const addressListConfig = await db.systemConfig.findUnique({
+    where: { key: "USDT_DEPOSIT_ADDRESSES" },
+  });
+  const distributionModeConfig = await db.systemConfig.findUnique({
+    where: { key: "DEPOSIT_DISTRIBUTION_MODE" },
+  });
   const depositAddressConfig = await db.systemConfig.findUnique({
     where: { key: "USDT_DEPOSIT_ADDRESS" },
   });
-  const depositAddress = depositAddressConfig?.value || "0x71C569E9903b41D8B4eAE6b22312dE9d89Ae0001";
+  const defaultNetworkConfig = await db.systemConfig.findUnique({
+    where: { key: "DEFAULT_NETWORK" },
+  });
+
+  const defaultAddress = depositAddressConfig?.value || "0x71C569E9903b41D8B4eAE6b22312dE9d89Ae0001";
+  const defaultNetwork = defaultNetworkConfig?.value || "USDT_BEP20";
+  const distributionMode = distributionModeConfig?.value || "MULTI_USER";
+
+  let addresses: Array<{
+    id: string;
+    address: string;
+    label?: string;
+    network: string;
+    isActive: boolean;
+    isPrimary?: boolean;
+  }> = [];
+
+  try {
+    if (addressListConfig?.value) {
+      addresses = JSON.parse(addressListConfig.value);
+    }
+  } catch (e) {
+    addresses = [];
+  }
+
+  const activeAddresses = addresses.filter((a) => a.isActive);
+
+  let selectedAddress = defaultAddress;
+  let selectedNetwork = defaultNetwork;
+  let selectedLabel = "Official Deposit Wallet";
+
+  if (activeAddresses.length > 0) {
+    if (distributionMode === "MULTI_USER" && activeAddresses.length > 1) {
+      // Deterministic hash based on session.userId so different users see different addresses simultaneously,
+      // while a single user sees a consistent address across page reloads.
+      let hash = 0;
+      const keyStr = session.userId || "user";
+      for (let i = 0; i < keyStr.length; i++) {
+        hash = ((hash << 5) - hash) + keyStr.charCodeAt(i);
+        hash |= 0;
+      }
+      const index = Math.abs(hash) % activeAddresses.length;
+      const chosen = activeAddresses[index];
+      selectedAddress = chosen.address;
+      selectedNetwork = chosen.network || defaultNetwork;
+      selectedLabel = chosen.label || `Company Wallet #${index + 1}`;
+    } else {
+      const primary = activeAddresses.find((a) => a.isPrimary) || activeAddresses[0];
+      selectedAddress = primary.address;
+      selectedNetwork = primary.network || defaultNetwork;
+      selectedLabel = primary.label || "Official Deposit Wallet";
+    }
+  }
 
   return (
     <div className="space-y-8">
@@ -30,13 +88,17 @@ export default async function MemberDepositPage() {
           Deposit USDT &bull; Fund Wallet Top-Up
         </h2>
         <p className="text-xs text-[#94a3b8] mt-1">
-          Deposit USDT (BEP-20) to your Fund Wallet to activate accounts or register downline partners.
+          Deposit USDT to your Fund Wallet to activate accounts or register downline partners.
         </p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
         {/* Deposit Submission Form Component */}
-        <DepositFormClient depositAddress={depositAddress} />
+        <DepositFormClient
+          depositAddress={selectedAddress}
+          initialNetwork={selectedNetwork}
+          walletLabel={selectedLabel}
+        />
 
         {/* Deposit History Table */}
         <div className="card-seoralink p-6 space-y-4">

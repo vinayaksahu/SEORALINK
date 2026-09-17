@@ -6,6 +6,14 @@ import { FloatingThemeToggle } from "@/components/FloatingThemeToggle";
 export const metadata: Metadata = {
   title: "SEORALINK | Korean Business Network",
   description: "Premier international business ecosystem engineered on universal queue progression and high-performance dual-tier rewards.",
+  icons: {
+    icon: [
+      { url: "/icon.svg", type: "image/svg+xml" },
+      { url: "/logo-icon.png", type: "image/png" },
+    ],
+    shortcut: "/icon.svg",
+    apple: "/logo-icon.png",
+  },
 };
 
 export default function RootLayout({
@@ -16,6 +24,9 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning className="dark">
       <head>
+        <link rel="icon" type="image/svg+xml" href="/icon.svg" />
+        <link rel="icon" type="image/png" href="/logo-icon.png" />
+        <link rel="apple-touch-icon" href="/logo-icon.png" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link
