@@ -70,7 +70,18 @@ async function resetDatabase() {
         totalWithdrawn: new Decimal(0.0),
       }
     });
-    console.log("✅ Admin account reset to clean baseline.");
+
+    // Place Admin into Tier 0 root queue position
+    await db.queueEntry.create({
+      data: {
+        userId: admin.id,
+        tier: 0,
+        queueIndex: 0,
+        childrenPlaced: 0,
+        status: "WAITING",
+      },
+    });
+    console.log("✅ Admin account reset to clean baseline & enrolled at Tier 0 Queue index 0.");
   } else {
     // If no admin existed, create a fresh one
     console.log("Creating fresh Super Admin account...");
@@ -92,7 +103,17 @@ async function resetDatabase() {
         totalWithdrawn: new Decimal(0.0),
       }
     });
-    console.log("✅ Super Admin created:", admin.email);
+
+    await db.queueEntry.create({
+      data: {
+        userId: admin.id,
+        tier: 0,
+        queueIndex: 0,
+        childrenPlaced: 0,
+        status: "WAITING",
+      },
+    });
+    console.log("✅ Super Admin created & enrolled at Tier 0 Queue index 0:", admin.email);
   }
 
   // 4. Ensure default SystemConfig exists

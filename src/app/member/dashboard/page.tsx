@@ -220,6 +220,8 @@ export default async function MemberDashboardPage() {
             const directsReq = REQUIRED_DIRECTS[idx];
             const netCashout = NET_CASHOUT_VALUES[idx];
             const isUltimaTier = idx === 12;
+            const isDirectsMet = user.directCount >= directsReq;
+            const waitingQueueEntry = user.queueEntries.find((q) => q.tier === idx && q.status === "WAITING");
 
             return (
               <div
@@ -249,10 +251,40 @@ export default async function MemberDashboardPage() {
                   <div className="text-[10px] font-mono-num text-[#10b981] font-semibold mt-0.5">
                     Net: ${netCashout.toLocaleString()}
                   </div>
+
+                  {isCurrent && waitingQueueEntry && (
+                    <div className="mt-2 py-1 px-2 rounded bg-sky-500/10 border border-sky-500/20 text-[9.5px] text-sky-400 font-bold flex items-center justify-between">
+                      <span>Tripod Match:</span>
+                      <span>{waitingQueueEntry.childrenPlaced}/2 Units</span>
+                    </div>
+                  )}
                 </div>
 
-                <div className="mt-3 pt-2 border-t border-[#1e293b]/60 text-[10px] text-[#94a3b8]">
-                  Req: {directsReq} Directs
+                <div className="mt-3 pt-2 border-t border-[#1e293b]/60 text-[10px]">
+                  {directsReq === 0 ? (
+                    <div className="flex items-center justify-between text-[#94a3b8]">
+                      <span>Requirement:</span>
+                      <span className="text-[#10b981] font-bold">0 Directs</span>
+                    </div>
+                  ) : isDirectsMet ? (
+                    <div className="flex items-center justify-between text-[#10b981]">
+                      <span className="font-bold flex items-center gap-1">
+                        <CheckCircle2 size={11} /> Qualified
+                      </span>
+                      <span className="font-mono-num font-bold">
+                        {user.directCount}/{directsReq} Directs
+                      </span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-between">
+                      <span className="text-[#f59e0b] font-semibold">
+                        {directsReq - user.directCount} more needed
+                      </span>
+                      <span className="text-[#94a3b8] font-mono-num">
+                        {user.directCount}/{directsReq}
+                      </span>
+                    </div>
+                  )}
                 </div>
               </div>
             );
