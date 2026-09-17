@@ -26,6 +26,8 @@ interface MemberMobileNavProps {
     fullName: string;
     fundBalance: any;
     incomeBalance: any;
+    rankPoolBalance?: number;
+    hasWithdrawnRankPool?: boolean;
     status: string;
     role: string;
   };
@@ -69,8 +71,8 @@ export function MemberMobileNav({ user }: MemberMobileNavProps) {
     { href: "/member/ledger", label: "Ledger History", icon: FileText },
   ];
 
-  const fundVal = parseFloat(user.fundBalance?.toString() || "0").toFixed(2);
-  const incomeVal = parseFloat(user.incomeBalance?.toString() || "0").toFixed(2);
+  const commissionVal = parseFloat(user.incomeBalance?.toString() || "0").toFixed(2);
+  const rankPoolVal = (user.rankPoolBalance || 0).toFixed(2);
 
   return (
     <>
@@ -98,23 +100,27 @@ export function MemberMobileNav({ user }: MemberMobileNavProps) {
       <div
         className={`fixed inset-y-0 left-0 w-72 max-w-[85vw] h-[100dvh] max-h-[100dvh] bg-[#070a14] border-r border-[#d4af37]/30 z-[70] flex flex-col shadow-2xl transition-all duration-300 ease-in-out md:hidden ${
           isOpen
-            ? "translate-x-0 opacity-100 pointer-events-auto visible"
-            : "-translate-x-full opacity-0 pointer-events-none invisible"
+            ? "translate-x-0 opacity-100 visible pointer-events-auto"
+            : "-translate-x-full opacity-0 invisible pointer-events-none"
         }`}
         role="dialog"
         aria-modal="true"
         aria-label="Mobile Navigation"
       >
-        {/* 1. TOP HEADER (shrink-0) */}
-        <div className="shrink-0 p-4 border-b border-[#d4af37]/20 flex items-center justify-between bg-[#040711]">
-          <Link href="/member/dashboard" onClick={() => setIsOpen(false)}>
+        {/* 1. FIXED TOP BRAND HEADER */}
+        <div className="p-4 border-b border-[#d4af37]/20 flex items-center justify-between bg-[#070a14] shrink-0">
+          <Link
+            href="/member/dashboard"
+            onClick={() => setIsOpen(false)}
+            className="flex items-center gap-2"
+          >
             <Logo size={28} />
           </Link>
           <button
             type="button"
             onClick={() => setIsOpen(false)}
-            className="p-1.5 rounded-lg text-[#94a3b8] hover:text-white hover:bg-[#1e293b]/60 border border-transparent hover:border-[#d4af37]/40 transition-colors"
-            aria-label="Close navigation menu"
+            className="w-8 h-8 rounded-lg flex items-center justify-center text-[#94a3b8] hover:text-white hover:bg-[#0d1424] transition-colors cursor-pointer"
+            aria-label="Close menu"
           >
             <X size={20} />
           </button>
@@ -149,18 +155,26 @@ export function MemberMobileNav({ user }: MemberMobileNavProps) {
           {/* Quick Balances Compact Box */}
           <div className="p-3 border-b border-[#1e293b]/60 bg-[#070a14]">
             <div className="grid grid-cols-2 gap-2">
-              <div className="p-2 rounded-lg border border-[#38bdf8]/30 bg-[#0d1424]">
-                <div className="text-[9px] font-mono-num uppercase text-[#94a3b8]">Fund Wallet</div>
-                <div className="font-mono-num font-bold text-[#38bdf8] text-xs mt-0.5">
-                  ${fundVal}
-                </div>
-              </div>
-              <div className="p-2 rounded-lg border border-[#10b981]/30 bg-[#0d1424]">
-                <div className="text-[9px] font-mono-num uppercase text-[#94a3b8]">Income Wallet</div>
+              <Link
+                href="/member/withdraw"
+                onClick={() => setIsOpen(false)}
+                className="p-2 rounded-lg border border-[#10b981]/30 bg-[#0d1424] hover:border-[#10b981] transition-all block"
+              >
+                <div className="text-[9px] font-mono-num uppercase text-[#94a3b8]">Commission Wallet</div>
                 <div className="font-mono-num font-bold text-[#10b981] text-xs mt-0.5">
-                  ${incomeVal}
+                  ${commissionVal}
                 </div>
-              </div>
+              </Link>
+              <Link
+                href="/member/withdraw"
+                onClick={() => setIsOpen(false)}
+                className="p-2 rounded-lg border border-[#d4af37]/40 bg-[#0d1424] hover:border-[#d4af37] transition-all block"
+              >
+                <div className="text-[9px] font-mono-num uppercase text-[#94a3b8]">Rank Pool Wallet</div>
+                <div className="font-mono-num font-bold text-[#d4af37] text-xs mt-0.5">
+                  ${rankPoolVal}
+                </div>
+              </Link>
             </div>
           </div>
 

@@ -21,6 +21,14 @@ export default async function MemberWithdrawPage() {
     take: 20,
   });
 
+  const existingRankWithdrawal = await db.withdrawalRequest.findFirst({
+    where: {
+      userId: session.userId,
+      adminNote: { contains: "CASHOUT" },
+      status: { not: "REJECTED" },
+    },
+  });
+  const hasWithdrawnRankPool = Boolean(existingRankWithdrawal);
   const incomeBal = parseFloat(user.incomeBalance.toString());
 
   return (
@@ -28,10 +36,10 @@ export default async function MemberWithdrawPage() {
       <div>
         <h2 className="text-xl font-bold text-white flex items-center gap-2">
           <ArrowUpRight size={20} className="text-[#10b981]" />
-          Withdrawal Portal &bull; Commission Cashout &amp; Rank Exit
+          Withdrawal Portal &bull; Commission Wallet &amp; Rank Pool Wallet
         </h2>
         <p className="text-xs text-[#94a3b8] mt-1">
-          Withdraw accumulated direct &amp; mentorship commissions (10% fee), or execute your rank reward exit (80% net R1–11 exit / 90% Ultima apex).
+          Withdraw from your Commission Wallet anytime (flat 10% fee, ID stays active), or execute your one-time Rank Pool Wallet cashout (80% net R1–11 exit with ID retirement / 90% Ultima apex with lifetime active ID).
         </p>
       </div>
 
@@ -41,6 +49,7 @@ export default async function MemberWithdrawPage() {
           incomeBalance={incomeBal}
           currentTier={user.currentTier}
           isBanned={user.status === "BLOCKED"}
+          hasWithdrawnRankPool={hasWithdrawnRankPool}
           savedAddress={user.usdtAddress || ""}
         />
 

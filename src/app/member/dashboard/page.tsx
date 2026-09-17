@@ -42,6 +42,16 @@ export default async function MemberDashboardPage() {
   const rankValuation = TIER_VALUES[currentTier];
   const netCashoutVal = NET_CASHOUT_VALUES[currentTier];
 
+  const existingRankWithdrawal = await db.withdrawalRequest.findFirst({
+    where: {
+      userId: session.userId,
+      adminNote: { contains: "CASHOUT" },
+      status: { not: "REJECTED" },
+    },
+  });
+  const hasWithdrawnRankPool = Boolean(existingRankWithdrawal);
+  const rankPoolBalance = (user.status === "ACTIVE" && !hasWithdrawnRankPool) ? rankValuation : 0;
+
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://seoralink.com";
   const referralLink = `${appUrl}/register?ref=${user.customId}`;
 
@@ -123,19 +133,23 @@ export default async function MemberDashboardPage() {
           </div>
         </div>
 
-        {/* Active Rank Holding Value */}
+        {/* Rank Pool Wallet */}
         <div className="card-seoralink p-5 flex flex-col justify-between border-[#d4af37]/40">
           <div className="flex items-center justify-between text-xs font-mono-num uppercase text-[#94a3b8]">
-            <span>Rank Holding Asset</span>
+            <span>Rank Pool Wallet</span>
             <Trophy size={16} className="text-[#d4af37]" />
           </div>
           <div className="text-3xl font-mono-num font-bold text-[#d4af37] my-2">
-            ${rankValuation.toLocaleString()}
+            ${rankPoolBalance.toLocaleString()}
           </div>
           <div className="flex justify-between items-center text-[10px] text-[#94a3b8]">
-            <span>Tier {currentTier} ({TIER_NAMES[currentTier]})</span>
+            <span>
+              {hasWithdrawnRankPool
+                ? "Claimed (Single-Exit)"
+                : `Tier ${currentTier} (${TIER_NAMES[currentTier]})`}
+            </span>
             <Link href="/member/withdraw" className="text-[#d4af37] font-bold hover:underline">
-              Exit Options &rarr;
+              {hasWithdrawnRankPool ? "History &rarr;" : "Cashout &rarr;"}
             </Link>
           </div>
         </div>

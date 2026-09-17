@@ -9,6 +9,7 @@ interface WithdrawFormClientProps {
   incomeBalance: number;
   currentTier: number;
   isBanned?: boolean;
+  hasWithdrawnRankPool?: boolean;
   savedAddress?: string;
 }
 
@@ -16,6 +17,7 @@ export default function WithdrawFormClient({
   incomeBalance,
   currentTier,
   isBanned = false,
+  hasWithdrawnRankPool = false,
   savedAddress = "",
 }: WithdrawFormClientProps) {
   const router = useRouter();
@@ -121,7 +123,7 @@ export default function WithdrawFormClient({
               : "text-[#94a3b8] hover:text-white"
           }`}
         >
-          <Trophy size={14} /> {isUltima ? "Ultima Apex Cashout" : "Rank Exit Cashout"}
+          <Trophy size={14} /> Rank Pool Wallet (One-Time Exit)
         </button>
       </div>
 
@@ -170,37 +172,50 @@ export default function WithdrawFormClient({
           </>
         )}
 
-        {/* ================= TAB 2: RANK REWARD EXIT ================= */}
+        {/* ================= TAB 2: RANK POOL WALLET ================= */}
         {activeTab === "RANK_EXIT" && (
           <div className="space-y-4">
-            {currentTier < 1 ? (
+            {hasWithdrawnRankPool ? (
+              <div className="p-5 rounded-xl border border-[#d4af37]/40 bg-[#0d1424] space-y-2 text-center text-xs">
+                <CheckCircle2 size={32} className="text-[#10b981] mx-auto" />
+                <div className="text-sm font-bold text-white">Rank Pool Wallet Claimed</div>
+                <p className="text-[#94a3b8] leading-relaxed">
+                  You have already executed your one-time Rank Pool Wallet withdrawal. Under the Single-Exit Protocol, only one lifetime withdrawal is permitted from the Rank Pool.
+                </p>
+                {isUltima && (
+                  <div className="text-xs text-[#10b981] font-semibold pt-1">
+                    ★ Your account remains permanently ACTIVE for life to continue earning and withdrawing direct &amp; mentorship commissions!
+                  </div>
+                )}
+              </div>
+            ) : currentTier < 1 ? (
               <div className="p-4 rounded-xl border border-[#d4af37]/40 bg-[#0d1424] text-center text-xs text-[#cbd5e1]">
-                You are currently at Junior (Entry). You must complete at least Tier 1 (Zen) to qualify for a rank reward exit.
+                You are currently at Junior (Entry). You must complete at least Tier 1 (Zen) to qualify for a rank pool cashout.
               </div>
             ) : isUltima ? (
               /* Ultima Celebration Notice */
               <div className="p-4 rounded-xl border border-[#10b981] bg-[#10b981]/10 space-y-2 text-xs text-[#cbd5e1]">
                 <div className="flex items-center gap-2 text-[#10b981] font-bold text-sm">
-                  <Trophy size={18} /> Apex Ultima (Tier 12) Cycle Complete!
+                  <Trophy size={18} /> Apex Ultima (Tier 12) Rank Pool Complete!
                 </div>
                 <p>
-                  As an Ultima cycle achiever, you unlock the exclusive <strong>10% protocol fee</strong> privilege. You will receive <strong>$18,432.00 USDT Net</strong> on your $20,480 gross rank asset.
+                  As an Ultima cycle achiever, you unlock the exclusive <strong>10% protocol fee</strong> privilege. You will receive <strong>$18,432.00 USDT Net</strong> on your $20,480 Rank Pool holding.
                 </p>
                 <p className="text-white font-semibold">
-                  ★ Your account REMAINS PERMANENTLY ACTIVE FOR LIFE to sponsor direct members and receive 5% mentorship overrides forever!
+                  ★ Your account REMAINS PERMANENTLY ACTIVE FOR LIFE to sponsor direct members ($0.50) and receive 5% mentorship overrides forever! (No account ban on Ultima).
                 </p>
               </div>
             ) : (
               /* Intermediate Rank Single-Exit Warning */
               <div className="p-4 rounded-xl border-2 border-red-500/80 bg-red-500/10 space-y-2.5 text-xs">
                 <div className="flex items-center gap-2 text-red-400 font-bold text-sm">
-                  <AlertTriangle size={18} /> CRITICAL WARNING: Single-Exit Protocol Rule
+                  <AlertTriangle size={18} /> CRITICAL WARNING: Rank Pool Single-Exit Protocol Rule
                 </div>
                 <p className="text-[#e2e8f0] leading-relaxed">
-                  Cashing out your rank reward at Tier {currentTier} ({TIER_NAMES[currentTier]}) will incur a <strong>20% protocol deduction</strong> ($gross: ${rankGross.toLocaleString()} &rarr; net: ${rankNet.toLocaleString()} USDT).
+                  Cashing out your Rank Pool Wallet at Tier {currentTier} ({TIER_NAMES[currentTier]}) will incur a <strong>20% protocol deduction</strong> ($gross: ${rankGross.toLocaleString()} &rarr; net: ${rankNet.toLocaleString()} USDT).
                 </p>
                 <div className="p-2.5 rounded bg-black/40 border border-red-500/40 text-red-300 font-semibold leading-relaxed">
-                  ⚠️ UPON CONFIRMATION: Your account will be <strong>PERMANENTLY BANNED and DEACTIVATED</strong>. You CANNOT reactivate it in the future, and all future direct commissions, team overrides, and auto-upgrades are strictly forfeited forever.
+                  ⚠️ UPON CASHOUT: Your ID will be <strong>PERMANENTLY BANNED and DEACTIVATED</strong>. You can only withdraw from the Rank Pool Wallet once in your lifetime. Future direct commissions, team overrides, and auto-upgrades are strictly forfeited forever.
                 </div>
 
                 <label className="flex items-start gap-2 pt-2 cursor-pointer text-white">
@@ -211,7 +226,7 @@ export default function WithdrawFormClient({
                     className="mt-0.5 accent-red-500 rounded"
                   />
                   <span className="text-[11px] font-bold">
-                    I understand that my account will be permanently banned and cannot be reactivated.
+                    I understand that this Rank Pool withdrawal is ONE-TIME only and my ID will be permanently banned.
                   </span>
                 </label>
               </div>
@@ -282,15 +297,21 @@ export default function WithdrawFormClient({
         ) : (
           <button
             type="submit"
-            disabled={loading || currentTier < 1 || (!isUltima && !rankExitConfirmed)}
+            disabled={loading || hasWithdrawnRankPool || currentTier < 1 || (!isUltima && !rankExitConfirmed)}
             className={`w-full py-3 text-xs font-extrabold rounded-lg flex items-center justify-center gap-2 mt-2 transition-all disabled:opacity-50 ${
               isUltima
                 ? "bg-[#10b981] text-black hover:bg-[#10b981]/90 shadow-lg"
                 : "bg-red-600 text-white hover:bg-red-700 shadow-lg"
             }`}
           >
-            {loading ? "Processing Cashout..." : isUltima ? "Cashout Ultima Apex ($18,432.00 Net)" : `Exit Single-Leg & Ban ID ($${rankNet.toLocaleString()} Net)`}
-            {!loading && <ArrowRight size={14} />}
+            {loading
+              ? "Processing Cashout..."
+              : hasWithdrawnRankPool
+              ? "Rank Pool Already Cashed Out"
+              : isUltima
+              ? "Cashout Ultima Rank Pool ($18,432.00 Net)"
+              : `Exit Rank Pool & Ban ID ($${rankNet.toLocaleString()} Net)`}
+            {!loading && !hasWithdrawnRankPool && <ArrowRight size={14} />}
           </button>
         )}
       </form>

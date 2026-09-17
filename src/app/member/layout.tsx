@@ -17,6 +17,7 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import { MemberMobileNav } from "@/components/MemberMobileNav";
+import { TIER_VALUES } from "@/lib/constants";
 
 export default async function MemberLayout({
   children,
@@ -46,6 +47,18 @@ export default async function MemberLayout({
     redirect("/login");
   }
 
+  const existingRankWithdrawal = await db.withdrawalRequest.findFirst({
+    where: {
+      userId: user.id,
+      adminNote: { contains: "CASHOUT" },
+      status: { not: "REJECTED" },
+    },
+  });
+  const hasWithdrawnRankPool = Boolean(existingRankWithdrawal);
+  const rankPoolBalance = (user.status === "ACTIVE" && !hasWithdrawnRankPool)
+    ? (TIER_VALUES[user.currentTier] || 0)
+    : 0;
+
   const navLinks = [
     { href: "/member/dashboard", label: "Dashboard", icon: LayoutDashboard },
     { href: "/member/queue", label: "Tripod Queue", icon: GitCommit },
@@ -61,6 +74,8 @@ export default async function MemberLayout({
     fullName: user.fullName,
     fundBalance: user.fundBalance ? Number(user.fundBalance) : 0,
     incomeBalance: user.incomeBalance ? Number(user.incomeBalance) : 0,
+    rankPoolBalance,
+    hasWithdrawnRankPool,
     status: user.status,
     role: user.role,
   };
@@ -163,21 +178,29 @@ export default async function MemberLayout({
             {/* Header Theme Switcher */}
             <ThemeToggle variant="compact" size="sm" showLabels={false} />
 
-            {/* Fund Wallet */}
-            <div className="flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg border border-[#38bdf8]/30 bg-white dark:bg-[#0d1424]">
-              <span className="text-[9px] sm:text-[10px] font-mono-num uppercase text-slate-500 dark:text-[#94a3b8]">Fund:</span>
-              <span className="font-mono-num font-bold text-[#0284c7] dark:text-[#38bdf8] text-xs">
-                ${parseFloat(user.fundBalance?.toString() || "0").toFixed(2)}
-              </span>
-            </div>
-
-            {/* Income Wallet */}
-            <div className="flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg border border-[#10b981]/30 bg-white dark:bg-[#0d1424]">
-              <span className="text-[9px] sm:text-[10px] font-mono-num uppercase text-slate-500 dark:text-[#94a3b8]">Inc:</span>
+            {/* Commission Wallet */}
+            <Link
+              href="/member/withdraw"
+              title="Commission Wallet (Direct & Mentorship Overrides)"
+              className="flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg border border-[#10b981]/30 bg-white dark:bg-[#0d1424] hover:border-[#10b981] transition-all"
+            >
+              <span className="text-[9px] sm:text-[10px] font-mono-num uppercase text-slate-500 dark:text-[#94a3b8]">Comm:</span>
               <span className="font-mono-num font-bold text-[#059669] dark:text-[#10b981] text-xs">
                 ${parseFloat(user.incomeBalance?.toString() || "0").toFixed(2)}
               </span>
-            </div>
+            </Link>
+
+            {/* Rank Pool Wallet */}
+            <Link
+              href="/member/withdraw"
+              title="Rank Pool Wallet (One-Time Exit)"
+              className="flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg border border-[#d4af37]/40 bg-white dark:bg-[#0d1424] hover:border-[#d4af37] transition-all"
+            >
+              <span className="text-[9px] sm:text-[10px] font-mono-num uppercase text-slate-500 dark:text-[#94a3b8]">Rank Pool:</span>
+              <span className="font-mono-num font-bold text-[#b45309] dark:text-[#d4af37] text-xs">
+                ${rankPoolBalance.toFixed(2)}
+              </span>
+            </Link>
 
             {/* Deposit CTA */}
             <Link

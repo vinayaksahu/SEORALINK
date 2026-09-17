@@ -106,11 +106,26 @@ export async function POST(req: Request) {
       }
 
       // ==========================================
-      // CASE 2: RANK REWARD CASHOUT (SINGLE-EXIT / ULTIMA)
+      // CASE 2: RANK POOL WALLET CASHOUT (SINGLE-EXIT / ULTIMA)
       // ==========================================
+      // Verify user hasn't already taken a Rank Pool withdrawal
+      const existingRankWithdrawal = await tx.withdrawalRequest.findFirst({
+        where: {
+          userId: user.id,
+          adminNote: { contains: "CASHOUT" },
+          status: { not: "REJECTED" },
+        },
+      });
+
+      if (existingRankWithdrawal) {
+        throw new Error(
+          "You have already executed your one-time Rank Pool Wallet withdrawal. The Rank Pool Wallet allows only one single cashout in a member's lifetime."
+        );
+      }
+
       const tier = user.currentTier;
       if (tier < 1) {
-        throw new Error("You must reach at least Tier 1 (Zen) to qualify for Rank Reward cashout.");
+        throw new Error("You must reach at least Tier 1 (Zen) to qualify for Rank Pool Wallet cashout.");
       }
 
       const grossValue = new Decimal(TIER_VALUES[tier]);
