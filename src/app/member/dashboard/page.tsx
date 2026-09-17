@@ -197,7 +197,7 @@ export default async function MemberDashboardPage() {
 
       {/* 12-Tier Ladder Grid */}
       <div className="space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
             <h3 className="text-lg font-bold text-white flex items-center gap-2">
               <span className="w-2 h-5 bg-[#d4af37] rounded-full inline-block"></span>
@@ -207,9 +207,28 @@ export default async function MemberDashboardPage() {
               Holding rewards rolls 100% forward into the next doubling tier &bull; Peak Net Cashout: <strong>$18,432.00 USDT (Ultima)</strong>
             </p>
           </div>
-          <Link href="/member/queue" className="text-xs font-bold text-[#38bdf8] hover:underline flex items-center gap-1">
-            Tripod Visualizer &rarr;
-          </Link>
+          <div className="flex flex-wrap items-center gap-3">
+            {/* Status Color Legend */}
+            <div className="flex items-center gap-2 text-[10px] font-bold bg-[#0b1120] border border-[#1e293b] px-2.5 py-1 rounded-lg">
+              <span className="flex items-center gap-1 text-red-400">
+                <span className="w-2 h-2 rounded-full bg-red-500/80"></span>
+                Passed
+              </span>
+              <span className="text-[#334155]">&bull;</span>
+              <span className="flex items-center gap-1 text-emerald-400">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                Current
+              </span>
+              <span className="text-[#334155]">&bull;</span>
+              <span className="flex items-center gap-1 text-amber-400">
+                <span className="w-2 h-2 rounded-full bg-amber-400/80"></span>
+                Upcoming
+              </span>
+            </div>
+            <Link href="/member/queue" className="text-xs font-bold text-[#38bdf8] hover:underline flex items-center gap-1">
+              Tripod Visualizer &rarr;
+            </Link>
+          </div>
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
@@ -226,48 +245,126 @@ export default async function MemberDashboardPage() {
             return (
               <div
                 key={name}
-                className={`card-seoralink p-4 flex flex-col justify-between ${
+                className={`card-seoralink p-4 flex flex-col justify-between transition-all ${
                   isCurrent
-                    ? "border-2 border-[#d4af37] bg-[#d4af37]/10 shadow-[0_0_15px_rgba(212,175,55,0.2)]"
+                    ? "border-2 border-emerald-500 bg-emerald-950/25 shadow-[0_0_20px_rgba(16,185,129,0.3)] scale-[1.02] z-10"
                     : isCompleted
-                    ? "border-[#10b981]/40 bg-[#10b981]/5"
-                    : "border-[#1e293b]/50 opacity-60"
+                    ? "border border-red-500/35 hover:border-red-500/55 bg-red-950/20 shadow-sm"
+                    : "border border-amber-500/25 hover:border-amber-500/45 bg-amber-950/10 opacity-90"
                 }`}
               >
                 <div>
                   <div className="flex justify-between items-center text-[10px] font-mono-num">
-                    <span className="text-[#94a3b8]">T{idx}</span>
-                    {isCompleted && <span className="text-[#10b981] font-bold">&check; Passed</span>}
-                    {isCurrent && <span className="badge-gold text-[9px]">Active</span>}
-                    {isLocked && <span className="text-[#64748b]">Locked</span>}
+                    <span
+                      className={
+                        isCurrent
+                          ? "text-emerald-400 font-bold"
+                          : isCompleted
+                          ? "text-red-400/80"
+                          : "text-amber-400/70"
+                      }
+                    >
+                      T{idx}
+                    </span>
+                    {isCompleted && (
+                      <span className="text-red-400 bg-red-500/15 border border-red-500/30 px-1.5 py-0.5 rounded text-[9px] font-bold inline-flex items-center gap-1">
+                        ✓ Passed
+                      </span>
+                    )}
+                    {isCurrent && (
+                      <span className="bg-emerald-500/25 text-emerald-300 border border-emerald-500/60 px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider animate-pulse">
+                        ACTIVE
+                      </span>
+                    )}
+                    {isLocked && (
+                      <span className="text-amber-400/75 bg-amber-500/10 border border-amber-500/25 px-1.5 py-0.5 rounded text-[9px] font-medium">
+                        Locked
+                      </span>
+                    )}
                   </div>
-                  <div className="text-sm font-bold text-white mt-1 flex items-center gap-1">
-                    {isUltimaTier && <span className="text-[#10b981]">★</span>}
+                  <div
+                    className={`text-sm font-bold mt-1 flex items-center gap-1 ${
+                      isCurrent
+                        ? "text-white font-black text-base"
+                        : isCompleted
+                        ? "text-slate-200"
+                        : "text-slate-300 font-bold"
+                    }`}
+                  >
+                    {isUltimaTier && <span className={isCurrent ? "text-emerald-400" : isCompleted ? "text-red-400" : "text-amber-400"}>★</span>}
                     {name}
                   </div>
-                  <div className="text-xs font-mono-num font-bold text-[#d4af37] mt-0.5">
-                    ${TIER_VALUES[idx].toLocaleString()} <span className="text-[9px] text-[#94a3b8] font-normal">Holding</span>
+                  <div
+                    className={`text-xs font-mono-num font-bold mt-0.5 ${
+                      isCurrent
+                        ? "text-emerald-300"
+                        : isCompleted
+                        ? "text-red-300/85"
+                        : "text-amber-300/85"
+                    }`}
+                  >
+                    ${TIER_VALUES[idx].toLocaleString()}{" "}
+                    <span
+                      className={`text-[9px] font-normal ${
+                        isCurrent
+                          ? "text-emerald-400/70"
+                          : isCompleted
+                          ? "text-red-400/60"
+                          : "text-amber-400/60"
+                      }`}
+                    >
+                      Holding
+                    </span>
                   </div>
-                  <div className="text-[10px] font-mono-num text-[#10b981] font-semibold mt-0.5">
+                  <div
+                    className={`text-[10px] font-mono-num font-semibold mt-0.5 ${
+                      isCurrent
+                        ? "text-emerald-400 font-bold"
+                        : isCompleted
+                        ? "text-red-400/90"
+                        : "text-amber-400/70"
+                    }`}
+                  >
                     Net: ${netCashout.toLocaleString()}
                   </div>
 
                   {isCurrent && waitingQueueEntry && (
-                    <div className="mt-2 py-1 px-2 rounded bg-sky-500/10 border border-sky-500/20 text-[9.5px] text-sky-400 font-bold flex items-center justify-between">
+                    <div className="mt-2 py-1 px-2 rounded bg-emerald-500/15 border border-emerald-500/30 text-[9.5px] text-emerald-300 font-bold flex items-center justify-between">
                       <span>Tripod Match:</span>
                       <span>{waitingQueueEntry.childrenPlaced}/2 Units</span>
                     </div>
                   )}
                 </div>
 
-                <div className="mt-3 pt-2 border-t border-[#1e293b]/60 text-[10px]">
-                  {directsReq === 0 ? (
-                    <div className="flex items-center justify-between text-[#94a3b8]">
+                <div
+                  className={`mt-3 pt-2 border-t text-[10px] ${
+                    isCurrent
+                      ? "border-emerald-500/30"
+                      : isCompleted
+                      ? "border-red-500/20 text-red-300/80"
+                      : "border-amber-500/20 text-amber-400/75"
+                  }`}
+                >
+                  {isCompleted ? (
+                    <div className="flex items-center justify-between text-red-300/80">
+                      <span className="font-semibold flex items-center gap-1">✓ Completed</span>
+                      <span className="font-mono-num text-[9.5px]">{directsReq} Directs</span>
+                    </div>
+                  ) : directsReq === 0 ? (
+                    <div
+                      className={`flex items-center justify-between ${
+                        isCurrent ? "text-emerald-300" : "text-amber-400/70"
+                      }`}
+                    >
                       <span>Requirement:</span>
-                      <span className="text-[#10b981] font-bold">0 Directs</span>
+                      <span className="font-bold">0 Directs</span>
                     </div>
                   ) : isDirectsMet ? (
-                    <div className="flex items-center justify-between text-[#10b981]">
+                    <div
+                      className={`flex items-center justify-between ${
+                        isCurrent ? "text-emerald-400" : "text-amber-400/90"
+                      }`}
+                    >
                       <span className="font-bold flex items-center gap-1">
                         <CheckCircle2 size={11} /> Qualified
                       </span>
@@ -277,10 +374,16 @@ export default async function MemberDashboardPage() {
                     </div>
                   ) : (
                     <div className="flex items-center justify-between">
-                      <span className="text-[#f59e0b] font-semibold">
+                      <span
+                        className={
+                          isCurrent
+                            ? "text-amber-400 font-semibold"
+                            : "text-amber-400/80 font-medium"
+                        }
+                      >
                         {directsReq - user.directCount} more needed
                       </span>
-                      <span className="text-[#94a3b8] font-mono-num">
+                      <span className="opacity-80 font-mono-num">
                         {user.directCount}/{directsReq}
                       </span>
                     </div>
