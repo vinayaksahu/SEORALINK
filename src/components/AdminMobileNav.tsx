@@ -17,6 +17,7 @@ import {
   LogOut,
   ChevronRight,
   LayoutDashboard,
+  Zap,
 } from "lucide-react";
 
 interface AdminMobileNavProps {
@@ -55,6 +56,7 @@ export function AdminMobileNav({ fullName }: AdminMobileNavProps) {
     { href: "/admin/withdrawals", label: "Withdrawal Requests", icon: ArrowUpRight },
     { href: "/admin/users", label: "Member Directory", icon: Users },
     { href: "/admin/queue", label: "Queue Monitor", icon: GitCommit },
+    { href: "/admin/simulator", label: "User Generator", icon: Zap },
     { href: "/admin/settings", label: "System Settings", icon: Settings },
   ];
 
@@ -74,7 +76,7 @@ export function AdminMobileNav({ fullName }: AdminMobileNavProps) {
       {/* Backdrop */}
       {isOpen && (
         <div
-          className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[60] md:hidden transition-opacity duration-300"
+          className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[60] transition-opacity duration-300"
           onClick={() => setIsOpen(false)}
           aria-hidden="true"
         />
@@ -82,7 +84,7 @@ export function AdminMobileNav({ fullName }: AdminMobileNavProps) {
 
       {/* Slide-over Drawer */}
       <div
-        className={`fixed inset-y-0 left-0 w-72 max-w-[85vw] h-[100dvh] max-h-[100dvh] bg-white dark:bg-[#070a14] border-r border-red-500/30 z-[70] flex flex-col shadow-2xl transition-all duration-300 ease-in-out md:hidden ${
+        className={`fixed inset-y-0 left-0 w-72 sm:w-80 max-w-[85vw] h-[100dvh] max-h-[100dvh] bg-white dark:bg-[#070a14] border-r border-red-500/30 z-[70] flex flex-col shadow-2xl transition-all duration-300 ease-in-out ${
           isOpen
             ? "translate-x-0 opacity-100 pointer-events-auto visible"
             : "-translate-x-full opacity-0 pointer-events-none invisible"

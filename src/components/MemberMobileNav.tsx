@@ -90,7 +90,7 @@ export function MemberMobileNav({ user }: MemberMobileNavProps) {
       {/* Slide-out Backdrop Overlay */}
       {isOpen && (
         <div
-          className="fixed inset-0 bg-black/75 backdrop-blur-sm z-[60] md:hidden transition-opacity duration-300"
+          className="fixed inset-0 bg-black/75 backdrop-blur-sm z-[60] transition-opacity duration-300"
           onClick={() => setIsOpen(false)}
           aria-hidden="true"
         />
@@ -98,14 +98,14 @@ export function MemberMobileNav({ user }: MemberMobileNavProps) {
 
       {/* Side Menu Drawer Panel */}
       <div
-        className={`fixed inset-y-0 left-0 w-72 max-w-[85vw] h-[100dvh] max-h-[100dvh] bg-[#070a14] border-r border-[#d4af37]/30 z-[70] flex flex-col shadow-2xl transition-all duration-300 ease-in-out md:hidden ${
+        className={`fixed inset-y-0 left-0 w-72 sm:w-80 max-w-[85vw] h-[100dvh] max-h-[100dvh] bg-[#070a14] border-r border-[#d4af37]/30 z-[70] flex flex-col shadow-2xl transition-all duration-300 ease-in-out ${
           isOpen
             ? "translate-x-0 opacity-100 visible pointer-events-auto"
             : "-translate-x-full opacity-0 invisible pointer-events-none"
         }`}
         role="dialog"
         aria-modal="true"
-        aria-label="Mobile Navigation"
+        aria-label="Navigation Menu"
       >
         {/* 1. FIXED TOP BRAND HEADER */}
         <div className="p-4 border-b border-[#d4af37]/20 flex items-center justify-between bg-[#070a14] shrink-0">
