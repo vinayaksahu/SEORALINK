@@ -29,7 +29,7 @@ export async function POST(req: Request) {
 
     if (!user) {
       return NextResponse.json(
-        { error: "No account found matching this ID or email" },
+        { error: "Invalid Member ID or password" },
         { status: 401 }
       );
     }
@@ -57,15 +57,15 @@ export async function POST(req: Request) {
 
     if (!requireAdmin && (user.role === "ADMIN" || user.role === "SUPER_ADMIN")) {
       return NextResponse.json(
-        { error: "Admin accounts must log in via the Admin Portal at /adminlogin." },
-        { status: 403 }
+        { error: "Invalid Member ID or password" },
+        { status: 401 }
       );
     }
 
     const passwordMatch = await comparePassword(password, user.passwordHash);
     if (!passwordMatch) {
       return NextResponse.json(
-        { error: "Invalid password provided" },
+        { error: "Invalid Member ID or password" },
         { status: 401 }
       );
     }
