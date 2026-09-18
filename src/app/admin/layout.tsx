@@ -38,8 +38,9 @@ export default async function AdminLayout({
     { href: "/admin/withdrawals", label: "Withdrawal Requests", icon: ArrowUpRight },
     { href: "/admin/tickets", label: "Support Tickets", icon: LifeBuoy },
     { href: "/admin/users", label: "Member Directory", icon: Users },
+    { href: "/admin/tree", label: "Network Tree View", icon: GitBranch },
     { href: "/admin/queue", label: "Queue Monitor", icon: GitCommit },
-    { href: "/admin/simulator", label: "Tree & Rank Engine", icon: GitBranch },
+    { href: "/admin/simulator", label: "Simulation Engine", icon: Zap },
     { href: "/admin/backup", label: "Database Backup", icon: Database },
     { href: "/admin/settings", label: "System Settings", icon: Settings },
   ];
