@@ -81,6 +81,7 @@ export default async function AdminUsersPage({
       email: u.email,
       phone: u.phone,
       status: u.status,
+      isSystemExited: hasWithdrawn,
       currentTier: u.currentTier,
       directCount: u.directCount,
       fundBalance: u.fundBalance.toString(),

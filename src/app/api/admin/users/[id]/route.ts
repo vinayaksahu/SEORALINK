@@ -28,6 +28,22 @@ export async function PATCH(
 
     // --- Administrative Status Actions (Activate / Block / Unblock) ---
     if (action || (status && (status === "ACTIVE" || status === "BLOCKED" || status === "INACTIVE"))) {
+      // Check if target member has executed Rank Pool Single-Exit
+      const hasRankExit = await db.withdrawalRequest.findFirst({
+        where: {
+          userId: id,
+          adminNote: { contains: "CASHOUT" },
+          status: { not: "REJECTED" },
+        },
+      });
+
+      if (hasRankExit) {
+        return NextResponse.json(
+          { error: "This member permanently exited the network under the Single-Exit protocol. Status modification and re-entry are strictly prohibited." },
+          { status: 400 }
+        );
+      }
+
       const targetAction = (action || status).toUpperCase();
 
       if (targetAction === "ACTIVATE" || (targetAction === "ACTIVE" && existingUser.status === "INACTIVE")) {

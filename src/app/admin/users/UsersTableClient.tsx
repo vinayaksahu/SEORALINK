@@ -28,6 +28,7 @@ export interface UserItem {
   email: string;
   phone: string | null;
   status: string;
+  isSystemExited?: boolean;
   currentTier: number;
   directCount: number;
   fundBalance: string;
@@ -348,50 +349,65 @@ export default function UsersTableClient({ initialUsers }: { initialUsers: UserI
 
                 <td className="py-3 px-4">
                   <div className="flex flex-col items-start gap-1.5">
-                    <span
-                      className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                        u.status === "ACTIVE"
-                          ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/30"
-                          : u.status === "BLOCKED"
-                          ? "bg-rose-500/10 text-rose-400 border border-rose-500/30"
-                          : "bg-amber-500/10 text-amber-400 border border-amber-500/30"
-                      }`}
-                    >
-                      {u.status}
-                    </span>
+                    {/* If user executed Rank Pool Single-Exit: SYSTEM EXITED (No Re-entry) */}
+                    {u.isSystemExited ? (
+                      <>
+                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold tracking-wider bg-purple-500/15 text-purple-300 border border-purple-500/30 flex items-center gap-1 shadow-sm">
+                          <CheckCircle2 size={10} className="text-purple-400" />
+                          SYSTEM EXITED
+                        </span>
+                        <span className="text-[9px] text-[#64748b] font-medium italic">
+                          Single-Exit (No Re-entry)
+                        </span>
+                      </>
+                    ) : (
+                      <>
+                        <span
+                          className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                            u.status === "ACTIVE"
+                              ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/30"
+                              : u.status === "BLOCKED"
+                              ? "bg-rose-500/10 text-rose-400 border border-rose-500/30"
+                              : "bg-amber-500/10 text-amber-400 border border-amber-500/30"
+                          }`}
+                        >
+                          {u.status}
+                        </span>
 
-                    {/* Interactive Admin Actions */}
-                    {u.status === "INACTIVE" && (
-                      <button
-                        onClick={() => openStatusModal(u, "ACTIVATE")}
-                        className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/15 text-emerald-400 hover:bg-emerald-500 hover:text-black border border-emerald-500/30 transition-all flex items-center gap-1 cursor-pointer whitespace-nowrap"
-                        title="Activate Member Account"
-                      >
-                        <Zap size={10} />
-                        <span>Activate</span>
-                      </button>
-                    )}
+                        {/* Interactive Admin Actions */}
+                        {u.status === "INACTIVE" && (
+                          <button
+                            onClick={() => openStatusModal(u, "ACTIVATE")}
+                            className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/15 text-emerald-400 hover:bg-emerald-500 hover:text-black border border-emerald-500/30 transition-all flex items-center gap-1 cursor-pointer whitespace-nowrap"
+                            title="Activate Member Account"
+                          >
+                            <Zap size={10} />
+                            <span>Activate</span>
+                          </button>
+                        )}
 
-                    {u.status === "ACTIVE" && u.customId !== "SL000001" && (
-                      <button
-                        onClick={() => openStatusModal(u, "BLOCK")}
-                        className="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-500/10 text-rose-400 hover:bg-rose-500 hover:text-white border border-rose-500/25 transition-all flex items-center gap-1 cursor-pointer whitespace-nowrap"
-                        title="Block Member Account"
-                      >
-                        <Ban size={10} />
-                        <span>Block</span>
-                      </button>
-                    )}
+                        {u.status === "ACTIVE" && u.customId !== "SL000001" && (
+                          <button
+                            onClick={() => openStatusModal(u, "BLOCK")}
+                            className="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-500/10 text-rose-400 hover:bg-rose-500 hover:text-white border border-rose-500/25 transition-all flex items-center gap-1 cursor-pointer whitespace-nowrap"
+                            title="Block Member Account"
+                          >
+                            <Ban size={10} />
+                            <span>Block</span>
+                          </button>
+                        )}
 
-                    {u.status === "BLOCKED" && (
-                      <button
-                        onClick={() => openStatusModal(u, "UNBLOCK")}
-                        className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/15 text-amber-300 hover:bg-amber-500 hover:text-black border border-amber-500/30 transition-all flex items-center gap-1 cursor-pointer whitespace-nowrap"
-                        title="Unblock Member Account"
-                      >
-                        <CheckCircle2 size={10} />
-                        <span>Unblock</span>
-                      </button>
+                        {u.status === "BLOCKED" && (
+                          <button
+                            onClick={() => openStatusModal(u, "UNBLOCK")}
+                            className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/15 text-amber-300 hover:bg-amber-500 hover:text-black border border-amber-500/30 transition-all flex items-center gap-1 cursor-pointer whitespace-nowrap"
+                            title="Unblock Member Account"
+                          >
+                            <CheckCircle2 size={10} />
+                            <span>Unblock</span>
+                          </button>
+                        )}
+                      </>
                     )}
                   </div>
                 </td>
@@ -401,13 +417,19 @@ export default function UsersTableClient({ initialUsers }: { initialUsers: UserI
                 </td>
 
                 <td className="py-3 px-4 text-right">
-                  <Link
-                    href={`/admin/simulator?target=${u.customId}`}
-                    className="px-2.5 py-1 rounded-lg bg-red-500/15 text-red-400 hover:bg-red-500 hover:text-white border border-red-500/30 font-sans font-bold text-[11px] transition-all inline-flex items-center gap-1 cursor-pointer"
-                  >
-                    <Zap size={12} />
-                    <span>Boost / Directs</span>
-                  </Link>
+                  {u.isSystemExited ? (
+                    <span className="text-[11px] text-[#64748b] font-mono italic pr-2">
+                      Exited
+                    </span>
+                  ) : (
+                    <Link
+                      href={`/admin/simulator?target=${u.customId}`}
+                      className="px-2.5 py-1 rounded-lg bg-red-500/15 text-red-400 hover:bg-red-500 hover:text-white border border-red-500/30 font-sans font-bold text-[11px] transition-all inline-flex items-center gap-1 cursor-pointer"
+                    >
+                      <Zap size={12} />
+                      <span>Boost / Directs</span>
+                    </Link>
+                  )}
                 </td>
               </tr>
             ))

@@ -63,13 +63,13 @@ export default async function MemberDashboardPage() {
     <div className="space-y-8">
       {/* Single-Exit Settlement Notice */}
       {hasWithdrawnRankPool && (
-        <div className="p-4 rounded-xl border border-amber-500/50 bg-amber-500/10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="p-5 rounded-xl border border-purple-500/50 bg-purple-500/10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="flex items-start sm:items-center gap-3">
-            <ShieldAlert size={28} className="text-amber-400 flex-shrink-0" />
+            <CheckCircle2 size={30} className="text-purple-400 flex-shrink-0" />
             <div>
-              <div className="text-sm font-bold text-amber-400">Single-Exit Settlement Executed</div>
-              <div className="text-xs text-[#cbd5e1] mt-0.5">
-                Your one-time Rank Pool cashout has been processed. Under the Single-Exit protocol, rank progression and downline mentorship overrides have concluded. You can still access your portal and withdraw any remaining balance from your Commission Wallet.
+              <div className="text-sm font-bold text-purple-300">System Exited &bull; Single-Exit Settlement Concluded</div>
+              <div className="text-xs text-[#cbd5e1] mt-0.5 leading-relaxed">
+                Your one-time Rank Pool cashout has concluded under the protocol Single-Exit rules. Your rank queue progression has ended. You can still access your portal and withdraw any remaining Commission Wallet balance.
               </div>
             </div>
           </div>
@@ -84,16 +84,24 @@ export default async function MemberDashboardPage() {
         </div>
       )}
 
-      {/* Account Banned Warning (only if blocked by admin without rank exit) */}
+      {/* Account Blocked by Administration (with Contact Support option) */}
       {isBanned && (
-        <div className="p-4 rounded-xl border border-red-500/60 bg-red-500/10 flex items-start sm:items-center gap-3">
-          <ShieldAlert size={28} className="text-red-400 flex-shrink-0" />
-          <div>
-            <div className="text-sm font-bold text-red-400">Account Blocked by Administration</div>
-            <div className="text-xs text-[#cbd5e1] mt-0.5">
-              This account has been administratively blocked. Please contact support.
+        <div className="p-5 rounded-xl border-2 border-rose-500/60 bg-rose-500/10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-lg">
+          <div className="flex items-start sm:items-center gap-3">
+            <ShieldAlert size={32} className="text-rose-400 flex-shrink-0" />
+            <div>
+              <div className="text-base font-bold text-rose-400">Account Blocked by Administration</div>
+              <div className="text-xs text-[#cbd5e1] mt-1 leading-relaxed">
+                Your account has been administratively blocked. Please reach out to customer support to resolve this issue and restore your account access.
+              </div>
             </div>
           </div>
+          <Link
+            href="/member/support"
+            className="px-4 py-2 rounded-lg bg-rose-600 text-white font-extrabold text-xs whitespace-nowrap hover:bg-rose-500 transition-all flex items-center gap-1.5 shadow"
+          >
+            Contact Support &rarr;
+          </Link>
         </div>
       )}
 
