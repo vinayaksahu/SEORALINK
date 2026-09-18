@@ -63,6 +63,31 @@ export default async function AdminSettingsPage() {
         </p>
       </div>
 
+      {/* Database Backup & Disaster Recovery Link Banner */}
+      <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-amber-500/10 via-slate-900 to-slate-900 border border-amber-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex items-start sm:items-center gap-3.5">
+          <div className="w-10 h-10 rounded-xl bg-[#d4af37]/15 border border-[#d4af37]/30 flex items-center justify-center shrink-0">
+            <Database size={20} className="text-[#d4af37]" />
+          </div>
+          <div>
+            <div className="text-xs font-bold text-white flex items-center gap-2">
+              Database Backup & Disaster Recovery
+              <span className="text-[10px] bg-[#d4af37]/20 text-[#d4af37] px-2 py-0.5 rounded font-mono font-semibold">JSON & Excel (.xlsx)</span>
+            </div>
+            <p className="text-[11px] text-slate-400 mt-0.5">
+              Download your full database locally in JSON or Excel sheets, and restore anytime when setting up a fresh database.
+            </p>
+          </div>
+        </div>
+
+        <Link
+          href="/admin/backup"
+          className="px-4 py-2 rounded-xl bg-[#d4af37] hover:bg-[#c49f27] text-black font-bold text-xs flex items-center justify-center gap-1.5 shrink-0 transition-all active:scale-95 shadow-lg shadow-[#d4af37]/10"
+        >
+          Open Backup Console <ArrowRight size={14} />
+        </Link>
+      </div>
+
       <SettingsFormClient
         initialAddress={usdtAddress}
         initialAddresses={initialAddresses}
