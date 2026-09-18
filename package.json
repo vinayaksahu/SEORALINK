@@ -1,6 +1,6 @@
 {
   "name": "seoralink",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -10,8 +10,8 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@prisma/adapter-pg": "^7.9.1",
-    "@prisma/client": "^7.9.1",
+    "@prisma/adapter-pg": "^7.10.0",
+    "@prisma/client": "^7.10.0",
     "@types/qrcode": "^1.5.6",
     "bcryptjs": "^3.0.3",
     "clsx": "^2.1.1",
@@ -20,7 +20,7 @@
     "lucide-react": "^1.30.0",
     "next": "16.3.0",
     "pg": "^8.22.0",
-    "prisma": "^7.9.1",
+    "prisma": "^7.10.0",
     "qrcode": "^1.5.4",
     "react": "19.2.8",
     "react-dom": "19.2.8",
@@ -38,6 +38,10 @@
     "typescript": "^5"
   },
   "allowScripts": {
+    "prisma": true,
+    "@prisma/engines": true,
+    "prisma@7.10.0": true,
+    "@prisma/engines@7.10.0": true,
     "prisma@7.9.1": true,
     "@prisma/engines@7.9.1": true
   }

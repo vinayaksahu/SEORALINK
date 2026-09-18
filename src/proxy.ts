@@ -4,7 +4,7 @@ import { jwtVerify } from "jose";
 const secretKey = process.env.JWT_SECRET || "seoralink-default-jwt-secret-key-2026-auth";
 const encodedKey = new TextEncoder().encode(secretKey);
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const token = request.cookies.get("sl_session")?.value;
 
@@ -80,6 +80,8 @@ export async function middleware(request: NextRequest) {
 
   return NextResponse.next();
 }
+
+export default proxy;
 
 export const config = {
   matcher: ["/member/:path*", "/admin/:path*", "/login", "/register", "/adminlogin"],
