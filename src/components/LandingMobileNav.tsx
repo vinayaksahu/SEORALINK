@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { Logo } from "@/components/Logo";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { LanguageSelector } from "@/components/LanguageSelector";
 import { Menu, X, ArrowRight, LogIn, UserPlus } from "lucide-react";
 
 export function LandingMobileNav() {
@@ -99,6 +100,10 @@ export function LandingMobileNav() {
 
         {/* 3. Docked Footer Actions & Theme (shrink-0) */}
         <div className="shrink-0 p-4 border-t border-slate-200 dark:border-[#1e293b]/60 bg-slate-50 dark:bg-[#040711] space-y-3 pb-6">
+          <div className="px-1">
+            <LanguageSelector variant="drawer" />
+          </div>
+
           <div className="flex items-center justify-between px-1">
             <span className="text-[10px] font-bold text-slate-500 dark:text-[#94a3b8] uppercase tracking-wider">
               Theme Mode

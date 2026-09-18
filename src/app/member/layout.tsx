@@ -18,6 +18,7 @@ import {
   LifeBuoy,
 } from "lucide-react";
 import { MemberMobileNav } from "@/components/MemberMobileNav";
+import { LanguageSelector } from "@/components/LanguageSelector";
 import { TIER_VALUES } from "@/lib/constants";
 
 export default async function MemberLayout({
@@ -105,9 +106,10 @@ export default async function MemberLayout({
             Welcome back, <strong className="text-slate-900 dark:text-white">{user.fullName}</strong>
           </div>
 
-          {/* Live Dual Wallet Counters & Theme Switcher */}
+          {/* Live Dual Wallet Counters, Language & Theme Switcher */}
           <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
-            {/* Header Theme Switcher */}
+            {/* Header Language & Theme Switchers */}
+            <LanguageSelector variant="compact" />
             <ThemeToggle variant="compact" size="sm" showLabels={false} />
 
             {/* Commission Wallet */}

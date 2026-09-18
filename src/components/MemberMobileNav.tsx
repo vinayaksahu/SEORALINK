@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Logo } from "@/components/Logo";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { LanguageSelector } from "@/components/LanguageSelector";
 import {
   Menu,
   X,
@@ -225,6 +226,10 @@ export function MemberMobileNav({ user }: MemberMobileNavProps) {
 
         {/* 3. PERMANENTLY DOCKED BOTTOM FOOTER (shrink-0) */}
         <div className="shrink-0 border-t border-[#1e293b]/80 bg-[#040711] p-3 space-y-2.5 pb-6">
+          <div className="px-1">
+            <LanguageSelector variant="drawer" />
+          </div>
+
           <div className="flex items-center justify-between px-1">
             <span className="text-[10px] font-bold text-[#94a3b8] uppercase tracking-wider">
               Theme Mode

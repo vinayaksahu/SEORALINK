@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Logo } from "@/components/Logo";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { LanguageSelector } from "@/components/LanguageSelector";
 import {
   Menu,
   X,
@@ -163,6 +164,10 @@ export function AdminMobileNav({ fullName }: AdminMobileNavProps) {
 
         {/* 3. Docked Footer (shrink-0) */}
         <div className="shrink-0 border-t border-slate-200 dark:border-[#1e293b]/60 bg-slate-50 dark:bg-[#040711] p-3 space-y-2.5 pb-6">
+          <div className="px-1">
+            <LanguageSelector variant="drawer" />
+          </div>
+
           <div className="flex items-center justify-between px-1">
             <span className="text-[10px] font-bold text-slate-500 dark:text-[#94a3b8] uppercase tracking-wider">
               Theme Mode

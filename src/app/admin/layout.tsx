@@ -18,6 +18,7 @@ import {
   LifeBuoy,
 } from "lucide-react";
 import { AdminMobileNav } from "@/components/AdminMobileNav";
+import { LanguageSelector } from "@/components/LanguageSelector";
 
 export default async function AdminLayout({
   children,
@@ -61,7 +62,8 @@ export default async function AdminLayout({
             </div>
           </div>
 
-          <div className="flex items-center gap-3 shrink-0">
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+            <LanguageSelector variant="compact" />
             <ThemeToggle variant="compact" size="sm" showLabels={false} />
             <div className="text-xs text-slate-600 dark:text-[#94a3b8] hidden sm:block">
               Operator: <strong className="text-slate-900 dark:text-white">{session.fullName}</strong>
