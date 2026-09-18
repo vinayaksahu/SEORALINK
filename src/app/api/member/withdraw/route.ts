@@ -12,16 +12,17 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Unauthorized access" }, { status: 401 });
     }
 
-    const { category, amount, toAddress, network } = await req.json();
+    const { category, amount, toAddress } = await req.json();
 
-    if (!toAddress || toAddress.trim().length < 10) {
+    const cleanAddress = toAddress ? toAddress.trim() : "";
+    if (!cleanAddress || !cleanAddress.startsWith("0x") || cleanAddress.length !== 42) {
       return NextResponse.json(
-        { error: "A valid destination USDT wallet address is required" },
+        { error: "A valid Binance Smart Chain (BEP-20) destination address starting with 0x (42 characters) is required" },
         { status: 400 }
       );
     }
 
-    const targetNetwork = network || "USDT_BEP20";
+    const targetNetwork = "USDT_BEP20";
     const withdrawalCategory = category === "RANK_EXIT" ? "RANK_EXIT" : "COMMISSION";
 
     return await db.$transaction(async (tx) => {
@@ -50,10 +51,13 @@ export async function POST(req: Request) {
       // CASE 1: COMMISSION WALLET WITHDRAWAL (10% FEE - ID STAYS ACTIVE)
       // ==========================================
       if (withdrawalCategory === "COMMISSION") {
-        if (!amount || parseFloat(amount) < RATES.MIN_WITHDRAWAL_AMOUNT) {
-          throw new Error(
-            `Minimum commission withdrawal amount is $${RATES.MIN_WITHDRAWAL_AMOUNT.toFixed(2)} USDT`
-          );
+        const numAmount = parseFloat(amount);
+        if (!amount || isNaN(numAmount) || numAmount < 10) {
+          throw new Error("Minimum commission withdrawal amount is $10.00 USDT");
+        }
+
+        if (numAmount % 5 !== 0) {
+          throw new Error("Withdrawal amount must be in multiples of $5 USDT (e.g. $10, $15, $20, $25, $30...)");
         }
 
         const amountDec = new Decimal(amount);

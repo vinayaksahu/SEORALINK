@@ -14,7 +14,8 @@ export async function POST(
 
     const { id } = await params;
     const body = await req.json().catch(() => ({}));
-    const txHash = body?.txHash || null;
+    const txHash = body?.txHash ? body.txHash.trim() : null;
+    const adminNote = body?.adminNote ? body.adminNote.trim() : (txHash ? `TxID: ${txHash}` : "Approved by administrator");
 
     const withdrawal = await db.withdrawalRequest.findUnique({
       where: { id },
@@ -37,6 +38,7 @@ export async function POST(
       data: {
         status: "APPROVED",
         txHash,
+        adminNote,
         processedAt: new Date(),
         processedById: session.userId,
       },

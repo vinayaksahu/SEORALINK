@@ -126,6 +126,11 @@ export default function SettingsFormClient({
       return;
     }
 
+    if (!trimmed.startsWith("0x") || trimmed.length !== 42) {
+      setError("Please enter a valid BNB Smart Chain (BEP-20) address starting with 0x (42 characters).");
+      return;
+    }
+
     if (addresses.some((a) => a.address.toLowerCase() === trimmed.toLowerCase())) {
       setError("This wallet address is already added in the pool.");
       return;
@@ -135,7 +140,7 @@ export default function SettingsFormClient({
       id: `addr_${Date.now()}`,
       address: trimmed,
       label: newLabel.trim() || `Wallet ${addresses.length + 1}`,
-      network: newNetwork,
+      network: "USDT_BEP20",
       isActive: true,
       isPrimary: addresses.length === 0,
     };
@@ -323,22 +328,18 @@ export default function SettingsFormClient({
 
               <div className="space-y-1">
                 <label className="text-[10px] text-[#94a3b8] uppercase">Network</label>
-                <select
-                  value={newNetwork}
-                  onChange={(e) => setNewNetwork(e.target.value)}
-                  className="w-full bg-[#0b1120] border border-[#1e293b] text-white rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-[#d4af37]"
-                >
-                  <option value="USDT_BEP20">USDT &bull; BNB Smart Chain (BEP-20)</option>
-                  <option value="USDT_TRC20">USDT &bull; TRON (TRC-20)</option>
-                </select>
+                <div className="w-full bg-[#0b1120] border border-[#1e293b] text-[#38bdf8] rounded-lg px-3 py-2 text-xs font-mono font-bold flex items-center justify-between">
+                  <span>USDT &bull; BEP-20</span>
+                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-[#38bdf8]/15 border border-[#38bdf8]/30">BSC</span>
+                </div>
               </div>
             </div>
 
             <div className="space-y-1">
-              <label className="text-[10px] text-[#94a3b8] uppercase">USDT Wallet Address *</label>
+              <label className="text-[10px] text-[#94a3b8] uppercase">USDT Wallet Address (0x...) *</label>
               <input
                 type="text"
-                placeholder="0x... or T..."
+                placeholder="0x... (BNB Smart Chain BEP-20 address)"
                 value={newAddress}
                 onChange={(e) => setNewAddress(e.target.value)}
                 className="w-full bg-[#0b1120] border border-[#1e293b] text-white rounded-lg px-3 py-2 text-xs font-mono-num focus:outline-none focus:border-[#d4af37]"
@@ -464,19 +465,18 @@ export default function SettingsFormClient({
 
       {/* Global Default Network */}
       <div className="space-y-1.5 pt-2 border-t border-[#1e293b]">
-        <label className="text-xs font-bold text-[#cbd5e1] uppercase tracking-wider">
-          Default Network
+        <label className="text-xs font-bold text-[#cbd5e1] uppercase tracking-wider flex items-center justify-between">
+          <span>Default Network</span>
+          <span className="text-[10px] text-[#38bdf8] font-mono font-bold">BEP-20 Only</span>
         </label>
-        <select
-          value={network}
-          onChange={(e) => setNetwork(e.target.value)}
-          className="w-full bg-[#0b1120] border border-[#1e293b] text-white rounded-lg px-4 py-2.5 text-xs font-mono-num focus:outline-none focus:border-[#d4af37]"
-        >
-          <option value="USDT_BEP20">USDT &bull; BNB Smart Chain (BEP-20)</option>
-          <option value="USDT_TRC20">USDT &bull; TRON (TRC-20)</option>
-        </select>
+        <div className="w-full bg-[#0b1120] border border-[#1e293b] text-white rounded-lg px-4 py-2.5 text-xs font-mono-num flex items-center justify-between">
+          <span className="font-bold text-[#38bdf8]">USDT &bull; BNB Smart Chain (BEP-20)</span>
+          <span className="text-[10px] px-2 py-0.5 rounded bg-[#38bdf8]/15 text-[#38bdf8] border border-[#38bdf8]/30 font-bold">
+            BSC
+          </span>
+        </div>
         <p className="text-[10px] text-[#94a3b8]">
-          Fallback network when creating standard deposit transactions.
+          Deposit and withdrawal transactions are strictly processed on BNB Smart Chain (BEP-20).
         </p>
       </div>
 

@@ -12,8 +12,12 @@ export async function POST(req: Request) {
 
     const { amount, txHash, network, depositAddress } = await req.json();
 
-    if (!amount || parseFloat(amount) <= 0) {
-      return NextResponse.json({ error: "Please enter a valid deposit amount" }, { status: 400 });
+    const amountNum = parseFloat(amount);
+    if (!amount || isNaN(amountNum) || amountNum !== 10) {
+      return NextResponse.json(
+        { error: "Deposit amount is strictly fixed at $10.00 USDT" },
+        { status: 400 }
+      );
     }
 
     if (!txHash || txHash.trim().length < 10) {
@@ -37,9 +41,9 @@ export async function POST(req: Request) {
     const deposit = await db.depositRequest.create({
       data: {
         userId: session.userId,
-        amount: new Decimal(amount).toFixed(8),
+        amount: new Decimal(10).toFixed(8),
         txHash: trimmedHash,
-        network: network || "USDT_BEP20",
+        network: "USDT_BEP20",
         adminNote: depositAddress ? `Sent to wallet: ${depositAddress.trim()}` : null,
         status: "PENDING",
       },

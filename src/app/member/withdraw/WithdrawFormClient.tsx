@@ -52,6 +52,28 @@ export default function WithdrawFormClient({
     setError("");
     setSuccess("");
 
+    if (activeTab === "COMMISSION") {
+      const num = parseFloat(amount);
+      if (isNaN(num) || num < 10) {
+        setError("Minimum withdrawal amount is $10.00 USDT.");
+        return;
+      }
+      if (num % 5 !== 0) {
+        setError("Withdrawal amount must be in multiples of $5 USDT (e.g. $10, $15, $20, $25, $30, etc.).");
+        return;
+      }
+      if (num > incomeBalance) {
+        setError(`Insufficient Commission Wallet balance. Available: $${incomeBalance.toFixed(2)} USDT.`);
+        return;
+      }
+    }
+
+    const cleanAddress = toAddress.trim();
+    if (!cleanAddress.startsWith("0x") || cleanAddress.length !== 42) {
+      setError("Please enter a valid BNB Smart Chain (BEP-20) wallet address starting with 0x (42 characters).");
+      return;
+    }
+
     if (activeTab === "RANK_EXIT" && !isUltima && !rankExitConfirmed) {
       setError("You must check the confirmation box acknowledging that your account will be permanently banned.");
       return;
@@ -63,8 +85,8 @@ export default function WithdrawFormClient({
       const payload = {
         category: activeTab,
         amount: activeTab === "COMMISSION" ? amount : rankGross.toString(),
-        toAddress: toAddress.trim(),
-        network,
+        toAddress: cleanAddress,
+        network: "USDT_BEP20",
       };
 
       const res = await fetch("/api/member/withdraw", {
@@ -159,15 +181,20 @@ export default function WithdrawFormClient({
               </label>
               <input
                 type="number"
-                step="0.01"
+                step="5"
                 min="10"
-                max={incomeBalance}
+                max={Math.floor(incomeBalance / 5) * 5}
                 required
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
                 className="w-full bg-[#0b1120] border border-[#d4af37]/30 text-white rounded-lg px-4 py-2.5 text-xs font-mono-num font-bold focus:outline-none focus:border-[#d4af37]"
               />
-              <div className="text-[10px] text-[#94a3b8]">Minimum withdrawal amount: $10.00 USDT</div>
+              <div className="text-[10px] text-[#94a3b8] flex justify-between items-center">
+                <span>Minimum: $10.00 USDT &bull; Must be in multiples of $5 ($10, $15, $20, $25...)</span>
+                {numCommAmount > 0 && numCommAmount % 5 !== 0 && (
+                  <span className="text-amber-400 font-bold">Must be multiple of 5</span>
+                )}
+              </div>
             </div>
           </>
         )}
@@ -234,33 +261,38 @@ export default function WithdrawFormClient({
           </div>
         )}
 
-        {/* Common Destination Address Inputs */}
+        {/* Common Destination Address Inputs - Fixed to BEP-20 only */}
         <div className="space-y-1.5">
-          <label className="text-xs font-bold text-[#cbd5e1] uppercase tracking-wider">
-            Payout Network
+          <label className="text-xs font-bold text-[#cbd5e1] uppercase tracking-wider flex items-center justify-between">
+            <span>Payout Network</span>
+            <span className="text-[10px] text-[#38bdf8] font-mono font-bold">Only BEP-20 Supported</span>
           </label>
-          <select
-            value={network}
-            onChange={(e) => setNetwork(e.target.value)}
-            className="w-full bg-[#0b1120] border border-[#d4af37]/30 text-white rounded-lg px-4 py-2.5 text-xs font-mono-num font-medium focus:outline-none focus:border-[#d4af37]"
-          >
-            <option value="USDT_BEP20">USDT &bull; BNB Smart Chain (BEP-20)</option>
-            <option value="USDT_TRC20">USDT &bull; TRON (TRC-20)</option>
-          </select>
+          <div className="w-full bg-[#0b1120] border border-[#1e293b] text-white rounded-lg px-4 py-2.5 text-xs font-mono-num flex items-center justify-between">
+            <span className="font-bold text-[#38bdf8]">USDT &bull; BNB Smart Chain (BEP-20)</span>
+            <span className="text-[10px] px-2 py-0.5 rounded bg-[#38bdf8]/15 text-[#38bdf8] border border-[#38bdf8]/30 font-bold">
+              BSC
+            </span>
+          </div>
+          <p className="text-[10px] text-[#94a3b8]">
+            Withdrawals are processed exclusively in USDT via the BNB Smart Chain (BEP-20).
+          </p>
         </div>
 
         <div className="space-y-1.5">
           <label className="text-xs font-bold text-[#cbd5e1] uppercase tracking-wider">
-            Destination USDT Wallet Address
+            Destination USDT Wallet Address (BEP-20) *
           </label>
           <input
             type="text"
             required
             value={toAddress}
             onChange={(e) => setToAddress(e.target.value)}
-            placeholder="0x... or T..."
+            placeholder="0x..."
             className="w-full bg-[#0b1120] border border-[#d4af37]/30 text-white rounded-lg px-4 py-2.5 text-xs font-mono-num focus:outline-none focus:border-[#d4af37]"
           />
+          <p className="text-[10px] text-[#94a3b8]">
+            Ensure this is your correct Binance Smart Chain BEP-20 address starting with 0x.
+          </p>
         </div>
 
         {/* Live Calculation Preview */}
@@ -288,7 +320,12 @@ export default function WithdrawFormClient({
         {activeTab === "COMMISSION" ? (
           <button
             type="submit"
-            disabled={loading || numCommAmount > incomeBalance || numCommAmount < 10}
+            disabled={
+              loading ||
+              numCommAmount > incomeBalance ||
+              numCommAmount < 10 ||
+              numCommAmount % 5 !== 0
+            }
             className="btn-primary w-full py-3 text-xs font-extrabold flex items-center justify-center gap-2 mt-2 disabled:opacity-50"
           >
             {loading ? "Submitting Request..." : "Request Commission Payout (10% Fee)"}
