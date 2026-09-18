@@ -57,8 +57,8 @@ export async function processTierQueue(
       },
     });
 
-    // Pay 5% Upline Override to direct mentor (ONLY if mentor is not banned)
-    if (matchedUser.sponsorId) {
+    // Pay 5% Upline Override to direct mentor (ONLY for Tiers 1-12, entry Tier 0 has no override)
+    if (tier >= 1 && matchedUser.sponsorId) {
       const sponsor = await tx.user.findUnique({
         where: { id: matchedUser.sponsorId },
         select: { id: true, status: true },

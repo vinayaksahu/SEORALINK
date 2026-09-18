@@ -395,8 +395,8 @@ export async function executeDirectRankBoost(
       });
     }
 
-    // Award 5% Upline Override to sponsor if applicable
-    if (refreshedUser.sponsorId) {
+    // Award 5% Upline Override to sponsor if applicable (ONLY for Tiers 1-12, entry Tier 0 has no override)
+    if (tier >= 1 && refreshedUser.sponsorId) {
       const grossReward = new Decimal(TIER_VALUES[tier]);
       const overrideAmount = grossReward.times(RATES.UPLINE_OVERRIDE_PERCENT).dividedBy(100);
       const overrideRefKey = `BOOST_OVERRIDE_T${tier}_${refreshedUser.id}_${Date.now()}`;

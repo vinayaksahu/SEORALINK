@@ -81,7 +81,7 @@ export const NET_CASHOUT_VALUES = [
 ] as const;
 
 export const UPLINE_OVERRIDE_VALUES = [
-  0.50,    // 0: Junior ($0.50 Direct Sponsor)
+  0.00,    // 0: Junior (No mentorship override on entry tier)
   0.50,    // 1: Zen (5% of $10)
   1.00,    // 2: Alpha (5% of $20)
   2.00,    // 3: Nova (5% of $40)
@@ -97,19 +97,19 @@ export const UPLINE_OVERRIDE_VALUES = [
 ] as const;
 
 export const CUMULATIVE_UPLINE_OVERRIDES = [
-  0.50,    // 0: Junior
-  1.00,    // 1: Zen
-  2.00,    // 2: Alpha
-  4.00,    // 3: Nova
-  8.00,    // 4: Valt
-  16.00,   // 5: Apex
-  32.00,   // 6: Orbit ($31.50 cumulative without direct)
-  64.00,   // 7: Prime
-  128.00,  // 8: Elite
-  256.00,  // 9: Titan
-  512.00,  // 10: Royal
-  1024.00, // 11: Legend
-  2048.00, // 12: Ultima ($2,047.50 cumulative overrides)
+  0.00,    // 0: Junior
+  0.50,    // 1: Zen
+  1.50,    // 2: Alpha ($0.50 + $1.00)
+  3.50,    // 3: Nova ($1.50 + $2.00)
+  7.50,    // 4: Valt ($3.50 + $4.00)
+  15.50,   // 5: Apex ($7.50 + $8.00)
+  31.50,   // 6: Orbit ($15.50 + $16.00)
+  63.50,   // 7: Prime ($31.50 + $32.00)
+  127.50,  // 8: Elite ($63.50 + $64.00)
+  255.50,  // 9: Titan ($127.50 + $128.00)
+  511.50,  // 10: Royal ($255.50 + $256.00)
+  1023.50, // 11: Legend ($511.50 + $512.00)
+  2047.50, // 12: Ultima ($1023.50 + $1024.00)
 ] as const;
 
 export const TIER_COLORS = {
