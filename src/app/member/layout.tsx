@@ -56,7 +56,7 @@ export default async function MemberLayout({
     },
   });
   const hasWithdrawnRankPool = Boolean(existingRankWithdrawal);
-  const rankPoolBalance = (user.status === "ACTIVE" && !hasWithdrawnRankPool)
+  const rankPoolBalance = (user.status === "ACTIVE" && !hasWithdrawnRankPool && user.currentTier > 0)
     ? (TIER_VALUES[user.currentTier] || 0)
     : 0;
 

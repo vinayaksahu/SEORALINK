@@ -50,7 +50,7 @@ export default async function MemberDashboardPage() {
     },
   });
   const hasWithdrawnRankPool = Boolean(existingRankWithdrawal);
-  const rankPoolBalance = (user.status === "ACTIVE" && !hasWithdrawnRankPool) ? rankValuation : 0;
+  const rankPoolBalance = (user.status === "ACTIVE" && !hasWithdrawnRankPool && currentTier > 0) ? rankValuation : 0;
 
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://seoralink.com";
   const referralLink = `${appUrl}/register?ref=${user.customId}`;
