@@ -1,9 +1,10 @@
 import React from "react";
+import Link from "next/link";
 import { getSession } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { redirect } from "next/navigation";
 import SettingsFormClient from "./SettingsFormClient";
-import { Settings } from "lucide-react";
+import { Settings, Database, ArrowRight } from "lucide-react";
 
 export default async function AdminSettingsPage() {
   const session = await getSession();

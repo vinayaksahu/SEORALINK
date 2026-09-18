@@ -20,6 +20,7 @@ import {
   LayoutDashboard,
   Zap,
   LifeBuoy,
+  Database,
 } from "lucide-react";
 
 interface AdminMobileNavProps {
@@ -60,6 +61,7 @@ export function AdminMobileNav({ fullName }: AdminMobileNavProps) {
     { href: "/admin/users", label: "Member Directory", icon: Users },
     { href: "/admin/queue", label: "Queue Monitor", icon: GitCommit },
     { href: "/admin/simulator", label: "User Generator", icon: Zap },
+    { href: "/admin/backup", label: "Database Backup", icon: Database },
     { href: "/admin/settings", label: "System Settings", icon: Settings },
   ];
 

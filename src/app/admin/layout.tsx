@@ -16,6 +16,7 @@ import {
   LayoutDashboard,
   Zap,
   LifeBuoy,
+  Database,
 } from "lucide-react";
 import { AdminMobileNav } from "@/components/AdminMobileNav";
 import { LanguageSelector } from "@/components/LanguageSelector";
@@ -38,6 +39,7 @@ export default async function AdminLayout({
     { href: "/admin/users", label: "Member Directory", icon: Users },
     { href: "/admin/queue", label: "Queue Monitor", icon: GitCommit },
     { href: "/admin/simulator", label: "User Generator", icon: Zap },
+    { href: "/admin/backup", label: "Database Backup", icon: Database },
     { href: "/admin/settings", label: "System Settings", icon: Settings },
   ];
 
