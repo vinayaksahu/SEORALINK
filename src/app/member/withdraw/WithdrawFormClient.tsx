@@ -9,6 +9,7 @@ interface WithdrawFormClientProps {
   incomeBalance: number;
   currentTier: number;
   isBanned?: boolean;
+  isInactive?: boolean;
   hasWithdrawnRankPool?: boolean;
   savedAddress?: string;
 }
@@ -17,6 +18,7 @@ export default function WithdrawFormClient({
   incomeBalance,
   currentTier,
   isBanned = false,
+  isInactive = false,
   hasWithdrawnRankPool = false,
   savedAddress = "",
 }: WithdrawFormClientProps) {
@@ -50,7 +52,10 @@ export default function WithdrawFormClient({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-    setSuccess("");
+    if (isInactive) {
+      setError("Account activation ($10 USDT) is required before requesting withdrawals. Please activate your account first.");
+      return;
+    }
 
     if (activeTab === "COMMISSION") {
       const num = parseFloat(amount);
@@ -148,6 +153,24 @@ export default function WithdrawFormClient({
           <Trophy size={14} /> Rank Pool Wallet (One-Time Exit)
         </button>
       </div>
+
+      {isInactive && (
+        <div className="p-4 rounded-xl border border-amber-500/50 bg-amber-500/10 flex items-start gap-3">
+          <AlertTriangle size={20} className="text-amber-400 flex-shrink-0 mt-0.5" />
+          <div>
+            <div className="text-xs font-bold text-white uppercase tracking-wider">Account Activation Required ($10 USDT)</div>
+            <div className="text-[11px] text-[#cbd5e1] mt-1 leading-relaxed">
+              You must activate your account with the $10 USDT Micro-Entry fee before you can initiate withdrawals from your Commission Wallet or Rank Pool.
+            </div>
+            <a
+              href="/member/activate"
+              className="inline-flex items-center gap-1.5 mt-2.5 px-3 py-1.5 rounded-lg bg-[#d4af37] text-black font-extrabold text-[10px] uppercase tracking-wider hover:bg-[#d4af37]/90 transition-all shadow"
+            >
+              Activate Account Now ($10) &rarr;
+            </a>
+          </div>
+        </div>
+      )}
 
       {error && (
         <div className="p-3.5 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-xs flex items-start gap-2">
@@ -322,33 +345,40 @@ export default function WithdrawFormClient({
             type="submit"
             disabled={
               loading ||
+              isInactive ||
               numCommAmount > incomeBalance ||
               numCommAmount < 10 ||
               numCommAmount % 5 !== 0
             }
             className="btn-primary w-full py-3 text-xs font-extrabold flex items-center justify-center gap-2 mt-2 disabled:opacity-50"
           >
-            {loading ? "Submitting Request..." : "Request Commission Payout (10% Fee)"}
-            {!loading && <ArrowRight size={14} />}
+            {isInactive
+              ? "Account Activation ($10) Required to Withdraw"
+              : loading
+              ? "Submitting Request..."
+              : "Request Commission Payout (10% Fee)"}
+            {!loading && !isInactive && <ArrowRight size={14} />}
           </button>
         ) : (
           <button
             type="submit"
-            disabled={loading || hasWithdrawnRankPool || currentTier < 1 || (!isUltima && !rankExitConfirmed)}
+            disabled={loading || isInactive || hasWithdrawnRankPool || currentTier < 1 || (!isUltima && !rankExitConfirmed)}
             className={`w-full py-3 text-xs font-extrabold rounded-lg flex items-center justify-center gap-2 mt-2 transition-all disabled:opacity-50 ${
               isUltima
                 ? "bg-[#10b981] text-black hover:bg-[#10b981]/90 shadow-lg"
                 : "bg-red-600 text-white hover:bg-red-700 shadow-lg"
             }`}
           >
-            {loading
+            {isInactive
+              ? "Account Activation ($10) Required"
+              : loading
               ? "Processing Cashout..."
               : hasWithdrawnRankPool
               ? "Rank Pool Already Cashed Out"
               : isUltima
               ? "Cashout Ultima Rank Pool ($18,432.00 Net)"
               : `Exit Rank Pool & Ban ID ($${rankNet.toLocaleString()} Net)`}
-            {!loading && !hasWithdrawnRankPool && <ArrowRight size={14} />}
+            {!loading && !isInactive && !hasWithdrawnRankPool && <ArrowRight size={14} />}
           </button>
         )}
       </form>

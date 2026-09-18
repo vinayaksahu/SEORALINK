@@ -49,6 +49,7 @@ export default async function MemberWithdrawPage() {
           incomeBalance={incomeBal}
           currentTier={user.currentTier}
           isBanned={user.status === "BLOCKED"}
+          isInactive={user.status === "INACTIVE"}
           hasWithdrawnRankPool={hasWithdrawnRankPool}
           savedAddress={user.usdtAddress || ""}
         />

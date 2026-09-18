@@ -302,6 +302,10 @@ export async function executeDirectRankBoost(
     throw new Error("Target user not found for rank boost.");
   }
 
+  if (user.status !== "ACTIVE") {
+    throw new Error(`Cannot boost inactive user ${user.fullName} (${user.customId}). Account must be activated with $10 USDT first.`);
+  }
+
   const currentTier = user.currentTier;
   const targetTier = requestedTargetTier !== undefined && requestedTargetTier > currentTier
     ? Math.min(12, requestedTargetTier)

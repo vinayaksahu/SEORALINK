@@ -43,8 +43,8 @@ export async function POST(req: Request) {
         throw new Error("This account is permanently deactivated/banned and cannot initiate withdrawals.");
       }
 
-      if (user.status === "INACTIVE") {
-        throw new Error("Account must be activated before initiating withdrawals.");
+      if (user.status !== "ACTIVE") {
+        throw new Error("Account activation ($10 USDT) is required before initiating withdrawals. Please activate your account first.");
       }
 
       // ==========================================
