@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { adminActivateUserAccount } from "@/lib/activation";
 
 export async function PATCH(
   req: Request,
@@ -14,16 +15,7 @@ export async function PATCH(
 
     const { id } = await params;
     const body = await req.json();
-    const { fullName, email, phone } = body;
-
-    if (!fullName || typeof fullName !== "string" || fullName.trim().length < 2) {
-      return NextResponse.json({ error: "Full Name must be at least 2 characters" }, { status: 400 });
-    }
-
-    const trimmedEmail = email ? email.trim().toLowerCase() : "";
-    if (!trimmedEmail || !trimmedEmail.includes("@") || !trimmedEmail.includes(".")) {
-      return NextResponse.json({ error: "Please provide a valid email address" }, { status: 400 });
-    }
+    const { action, status, fullName, email, phone } = body;
 
     // Check if target user exists
     const existingUser = await db.user.findUnique({
@@ -33,6 +25,66 @@ export async function PATCH(
     if (!existingUser) {
       return NextResponse.json({ error: "Member not found" }, { status: 404 });
     }
+
+    // --- Administrative Status Actions (Activate / Block / Unblock) ---
+    if (action || (status && (status === "ACTIVE" || status === "BLOCKED" || status === "INACTIVE"))) {
+      const targetAction = (action || status).toUpperCase();
+
+      if (targetAction === "ACTIVATE" || (targetAction === "ACTIVE" && existingUser.status === "INACTIVE")) {
+        if (existingUser.status === "ACTIVE") {
+          return NextResponse.json({ error: "Member is already active" }, { status: 400 });
+        }
+
+        const result = await adminActivateUserAccount(id);
+        return NextResponse.json({
+          ...result,
+          status: "ACTIVE",
+        });
+      }
+
+      if (targetAction === "BLOCK" || targetAction === "BLOCKED") {
+        if (existingUser.id === session.userId || existingUser.role === "ADMIN" || existingUser.role === "SUPER_ADMIN") {
+          return NextResponse.json({ error: "Cannot block an administrator account" }, { status: 400 });
+        }
+
+        await db.user.update({
+          where: { id },
+          data: { status: "BLOCKED" },
+        });
+
+        return NextResponse.json({
+          success: true,
+          message: `Member ${existingUser.customId} (${existingUser.fullName}) has been blocked.`,
+          status: "BLOCKED",
+        });
+      }
+
+      if (targetAction === "UNBLOCK" || (targetAction === "ACTIVE" && existingUser.status === "BLOCKED")) {
+        await db.user.update({
+          where: { id },
+          data: { status: "ACTIVE" },
+        });
+
+        return NextResponse.json({
+          success: true,
+          message: `Member ${existingUser.customId} (${existingUser.fullName}) has been unblocked and restored to ACTIVE.`,
+          status: "ACTIVE",
+        });
+      }
+
+      return NextResponse.json({ error: "Invalid status action specified" }, { status: 400 });
+    }
+
+    // --- Profile Information Update ---
+    if (!fullName || typeof fullName !== "string" || fullName.trim().length < 2) {
+      return NextResponse.json({ error: "Full Name must be at least 2 characters" }, { status: 400 });
+    }
+
+    const trimmedEmail = email ? email.trim().toLowerCase() : "";
+    if (!trimmedEmail || !trimmedEmail.includes("@") || !trimmedEmail.includes(".")) {
+      return NextResponse.json({ error: "Please provide a valid email address" }, { status: 400 });
+    }
+
 
     // Check email uniqueness if email changed
     if (trimmedEmail !== existingUser.email.toLowerCase()) {
