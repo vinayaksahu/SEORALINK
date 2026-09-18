@@ -1,7 +1,7 @@
 import { db } from "./db";
 import { hashPassword } from "./auth";
 import { activateUserAccount } from "./activation";
-import { processTierQueue, checkPendingRankPromotions } from "./queueEngine";
+import { processTierQueue, checkPendingRankPromotions, awardMentorshipOverride } from "./queueEngine";
 import { TIER_NAMES, TIER_VALUES, REQUIRED_DIRECTS, RATES } from "./constants";
 import { executeLedgerTransaction } from "./ledger";
 import { generateCustomId } from "./utils";
@@ -395,32 +395,14 @@ export async function executeDirectRankBoost(
       });
     }
 
-    // Award 5% Upline Override to sponsor if applicable (ONLY for Tiers 1-12, entry Tier 0 has no override)
-    if (tier >= 1 && refreshedUser.sponsorId) {
-      const grossReward = new Decimal(TIER_VALUES[tier]);
-      const overrideAmount = grossReward.times(RATES.UPLINE_OVERRIDE_PERCENT).dividedBy(100);
-      const overrideRefKey = `BOOST_OVERRIDE_T${tier}_${refreshedUser.id}_${Date.now()}`;
-      try {
-        await executeLedgerTransaction({
-          userId: refreshedUser.sponsorId,
-          type: "UPLINE_OVERRIDE",
-          wallet: "INCOME",
-          amount: overrideAmount,
-          referenceKey: overrideRefKey,
-          description: `5% Mentorship Override from ${refreshedUser.fullName} (${refreshedUser.customId}) completing Tier ${tier} (${TIER_NAMES[tier]}) [Boost]`,
-          sourceUserId: refreshedUser.id,
-          tierNumber: tier,
-        });
-      } catch {
-        // Skip duplicate key in simulator
-      }
-    }
-
     // Advance user to nextTierNum
     await db.user.update({
       where: { id: refreshedUser.id },
       data: { currentTier: nextTierNum },
     });
+
+    // Award 5% Mentorship Override to direct sponsor for advancing to nextTierNum (Tiers 1 to 12)
+    await awardMentorshipOverride(refreshedUser, nextTierNum, db);
 
     // Enroll into next tier queue
     const nextQueueIndex = await db.queueEntry.count({ where: { tier: nextTierNum } });

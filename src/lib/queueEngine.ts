@@ -57,33 +57,6 @@ export async function processTierQueue(
       },
     });
 
-    // Pay 5% Upline Override to direct mentor (ONLY for Tiers 1-12, entry Tier 0 has no override)
-    if (tier >= 1 && matchedUser.sponsorId) {
-      const sponsor = await tx.user.findUnique({
-        where: { id: matchedUser.sponsorId },
-        select: { id: true, status: true },
-      });
-
-      // Banned/deactivated IDs forfeit all overrides; only active/eligible IDs earn
-      if (sponsor && sponsor.status !== "BLOCKED" && sponsor.status !== "SUSPENDED") {
-        const overrideAmount = grossReward.times(RATES.UPLINE_OVERRIDE_PERCENT).dividedBy(100);
-        const overrideRefKey = `OVERRIDE_T${tier}_FROM_${matchedUser.id}_FOR_${matchedUser.sponsorId}`;
-        await executeLedgerTransaction(
-          {
-            userId: matchedUser.sponsorId,
-            type: "UPLINE_OVERRIDE",
-            wallet: "INCOME",
-            amount: overrideAmount,
-            referenceKey: overrideRefKey,
-            description: `5% Mentorship Override from ${matchedUser.fullName} (${matchedUser.customId}) completing Tier ${tier} (${TIER_NAMES[tier]})`,
-            sourceUserId: matchedUser.id,
-            tierNumber: tier,
-          },
-          tx
-        );
-      }
-    }
-
     // Rolling Auto-Upgrade: 100% of value rolls into Next Tier if within 12 tiers
     const nextTier = tier + 1;
     if (nextTier <= 12) {
@@ -94,6 +67,9 @@ export async function processTierQueue(
           where: { id: matchedUser.id },
           data: { currentTier: nextTier },
         });
+
+        // Award 5% Mentorship Override to sponsor for advancing to nextTier (Tiers 1 to 12)
+        await awardMentorshipOverride(matchedUser, nextTier, tx);
 
         // Add to next tier queue (100% roll-forward)
         const nextQueueIndex = await tx.queueEntry.count({
@@ -181,6 +157,9 @@ export async function checkPendingRankPromotions(
       data: { currentTier: 1 },
     });
 
+    // Award 5% Mentorship Override to direct sponsor for advancing to Tier 1 (Zen)
+    await awardMentorshipOverride(user, 1, tx);
+
     // Enroll into Tier 1 (Zen) queue
     const inTier1 = await tx.queueEntry.findFirst({
       where: { userId: user.id, tier: 1 },
@@ -222,6 +201,9 @@ export async function checkPendingRankPromotions(
         data: { currentTier: targetNextTier },
       });
 
+      // Award 5% Mentorship Override to direct sponsor for advancing to targetNextTier
+      await awardMentorshipOverride(user, targetNextTier, tx);
+
       const nextQueueIndex = await tx.queueEntry.count({
         where: { tier: targetNextTier },
       });
@@ -239,4 +221,50 @@ export async function checkPendingRankPromotions(
       await processTierQueue(targetNextTier, tx);
     }
   }
+}
+
+/**
+ * Awards 5% Mentorship Override to direct sponsor when a mentee advances to a tier (Tiers 1 to 12).
+ * Entry Tier 0 (Junior) has NO mentorship override.
+ */
+export async function awardMentorshipOverride(
+  mentee: { id: string; customId: string; fullName: string; sponsorId: string | null },
+  advancedTier: number,
+  externalTx?: Prisma.TransactionClient
+) {
+  if (advancedTier < 1 || advancedTier > 12 || !mentee.sponsorId) return;
+
+  const tx = externalTx || db;
+
+  const sponsor = await tx.user.findUnique({
+    where: { id: mentee.sponsorId },
+    select: { id: true, status: true },
+  });
+
+  // Blocked or suspended sponsors forfeit overrides
+  if (!sponsor || sponsor.status === "BLOCKED" || sponsor.status === "SUSPENDED") return;
+
+  const tierValue = new Decimal(TIER_VALUES[advancedTier]);
+  const overrideAmount = tierValue.times(RATES.UPLINE_OVERRIDE_PERCENT).dividedBy(100);
+  const overrideRefKey = `OVERRIDE_T${advancedTier}_FROM_${mentee.id}_FOR_${mentee.sponsorId}`;
+
+  // Idempotency check - ensure override is never paid twice for the same tier
+  const existing = await tx.ledgerEntry.findFirst({
+    where: { referenceKey: overrideRefKey },
+  });
+  if (existing) return;
+
+  await executeLedgerTransaction(
+    {
+      userId: mentee.sponsorId,
+      type: "UPLINE_OVERRIDE",
+      wallet: "INCOME",
+      amount: overrideAmount,
+      referenceKey: overrideRefKey,
+      description: `5% Mentorship Override from ${mentee.fullName} (${mentee.customId}) advancing to Tier ${advancedTier} (${TIER_NAMES[advancedTier]})`,
+      sourceUserId: mentee.id,
+      tierNumber: advancedTier,
+    },
+    tx
+  );
 }
