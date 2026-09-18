@@ -70,6 +70,17 @@ export default async function AdminLayout({
             <div className="text-xs text-slate-600 dark:text-[#94a3b8] hidden sm:block">
               Operator: <strong className="text-slate-900 dark:text-white">{session.fullName}</strong>
             </div>
+            <form action="/api/auth/logout?redirect=/adminlogin" method="POST" className="m-0 p-0 hidden sm:block">
+              <input type="hidden" name="redirect" value="/adminlogin" />
+              <button
+                type="submit"
+                title="Sign Out Admin"
+                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-bold text-red-500 dark:text-red-400 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 transition-colors cursor-pointer"
+              >
+                <LogOut size={13} />
+                <span>Logout</span>
+              </button>
+            </form>
           </div>
         </header>
 

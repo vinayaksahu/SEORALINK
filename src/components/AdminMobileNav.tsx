@@ -177,7 +177,8 @@ export function AdminMobileNav({ fullName }: AdminMobileNavProps) {
             <ThemeToggle variant="segmented" size="xs" showLabels={false} />
           </div>
 
-          <form action="/api/auth/logout" method="POST" className="m-0 p-0">
+          <form action="/api/auth/logout?redirect=/adminlogin" method="POST" className="m-0 p-0">
+            <input type="hidden" name="redirect" value="/adminlogin" />
             <button
               type="submit"
               className="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg text-xs font-bold text-red-500 dark:text-red-400 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 hover:border-red-500/50 transition-colors cursor-pointer active:scale-98 shadow-sm"

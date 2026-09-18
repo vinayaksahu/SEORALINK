@@ -40,7 +40,17 @@ export async function middleware(request: NextRequest) {
   // 3. Prevent logged-in users from hitting /login or /register
   if (pathname === "/login" || pathname === "/register") {
     if (session) {
+      if (session.role === "ADMIN" || session.role === "SUPER_ADMIN") {
+        return NextResponse.redirect(new URL("/admin", request.url));
+      }
       return NextResponse.redirect(new URL("/member/dashboard", request.url));
+    }
+  }
+
+  // 4. Prevent logged-in admins from hitting /adminlogin (redirect directly to /admin)
+  if (pathname === "/adminlogin") {
+    if (session && (session.role === "ADMIN" || session.role === "SUPER_ADMIN")) {
+      return NextResponse.redirect(new URL("/admin", request.url));
     }
   }
 
@@ -48,5 +58,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/member/:path*", "/admin/:path*", "/login", "/register"],
+  matcher: ["/member/:path*", "/admin/:path*", "/login", "/register", "/adminlogin"],
 };

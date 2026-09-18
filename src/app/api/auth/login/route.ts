@@ -55,6 +55,13 @@ export async function POST(req: Request) {
       );
     }
 
+    if (!requireAdmin && (user.role === "ADMIN" || user.role === "SUPER_ADMIN")) {
+      return NextResponse.json(
+        { error: "Admin accounts must log in via the Admin Portal at /adminlogin." },
+        { status: 403 }
+      );
+    }
+
     const passwordMatch = await comparePassword(password, user.passwordHash);
     if (!passwordMatch) {
       return NextResponse.json(
