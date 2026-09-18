@@ -82,6 +82,22 @@ export async function getTargetUserTelemetry(identifier: string) {
   const user = await resolveUser(identifier);
   if (!user) return null;
 
+  // Check if user has executed a rank exit cashout
+  const hasRankCashout = await db.withdrawalRequest.findFirst({
+    where: {
+      userId: user.id,
+      OR: [
+        { feePercent: 20 },
+        { adminNote: { contains: "CASHOUT" } },
+        { adminNote: { contains: "RANK_EXIT" } },
+        { amount: 20480 },
+      ],
+      status: { not: "REJECTED" },
+    },
+  });
+
+  const isExited = user.status === "SUSPENDED" || user.status === "BLOCKED" || !!hasRankCashout;
+
   const currentTier = user.currentTier;
   const nextTier = Math.min(12, currentTier + 1);
   const requiredDirects = REQUIRED_DIRECTS[nextTier];
@@ -107,15 +123,17 @@ export async function getTargetUserTelemetry(identifier: string) {
       directCount: user.directCount,
       fundBalance: user.fundBalance.toString(),
       incomeBalance: user.incomeBalance.toString(),
-      status: user.status,
+      status: isExited ? "EXITED" : user.status,
+      isExited,
     },
+    isExited,
     nextTier: {
       tier: nextTier,
       name: TIER_NAMES[nextTier],
       value: TIER_VALUES[nextTier],
       requiredDirects,
       missingDirects,
-      canDirectlyPromote: missingDirects === 0,
+      canDirectlyPromote: !isExited && missingDirects === 0,
     },
     queue: {
       waitingQueueIndex: waitingQueue ? waitingQueue.queueIndex : null,
@@ -150,6 +168,25 @@ export async function runDummyUserSimulation(options: SimulatorOptions): Promise
 
   if (options.mode === "DIRECT" && !targetUser) {
     throw new Error(`Target user "${options.targetUserIdentifier}" not found. Please provide a valid Member ID or email.`);
+  }
+
+  if (targetUser) {
+    const hasRankCashout = await db.withdrawalRequest.findFirst({
+      where: {
+        userId: targetUser.id,
+        OR: [
+          { feePercent: 20 },
+          { adminNote: { contains: "CASHOUT" } },
+          { adminNote: { contains: "RANK_EXIT" } },
+          { amount: 20480 },
+        ],
+        status: { not: "REJECTED" },
+      },
+    });
+
+    if (targetUser.status === "SUSPENDED" || targetUser.status === "BLOCKED" || hasRankCashout) {
+      throw new Error(`Target member ${targetUser.customId} (${targetUser.fullName}) has EXITED the ecosystem (Account Permanently Deactivated). Simulator operations are disabled.`);
+    }
   }
 
   // If in BOOST_RANK mode, run specialized rank promotion pipeline
@@ -300,6 +337,23 @@ export async function executeDirectRankBoost(
 
   if (!user) {
     throw new Error("Target user not found for rank boost.");
+  }
+
+  const hasRankCashout = await db.withdrawalRequest.findFirst({
+    where: {
+      userId: user.id,
+      OR: [
+        { feePercent: 20 },
+        { adminNote: { contains: "CASHOUT" } },
+        { adminNote: { contains: "RANK_EXIT" } },
+        { amount: 20480 },
+      ],
+      status: { not: "REJECTED" },
+    },
+  });
+
+  if (user.status === "SUSPENDED" || user.status === "BLOCKED" || hasRankCashout) {
+    throw new Error(`Cannot boost member ${user.fullName} (${user.customId}): This account has EXITED the ecosystem (Account Permanently Deactivated).`);
   }
 
   if (user.status !== "ACTIVE") {

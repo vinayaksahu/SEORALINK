@@ -196,6 +196,11 @@ export default function TreeView({ onSelectForForm }: TreeViewProps) {
       return;
     }
 
+    if (selectedUser && (selectedUser.status === "EXITED" || selectedUser.isRankExit) && (actionType === "BOOST_RANK" || actionType === "DIRECT")) {
+      setExecutionError(`Cannot simulate actions for ${selectedUser.customId}: This ID has exited the network and is permanently deactivated.`);
+      return;
+    }
+
     setExecuting(true);
     setExecutingAction(actionType);
     setExecutionError("");
@@ -579,32 +584,74 @@ export default function TreeView({ onSelectForForm }: TreeViewProps) {
             </div>
 
             {/* Directs Telemetry Pills */}
-            <div className="flex items-center gap-3 text-xs shrink-0">
-              <div className="px-3 py-2 rounded-xl bg-slate-900/80 border border-slate-800 text-center">
-                <div className="text-[10px] text-[#94a3b8] uppercase font-bold">Direct Referrals</div>
-                <div className="text-sm font-extrabold text-white">
-                  {selectedUser.directCount} <span className="text-xs text-[#94a3b8]">/ {selectedUser.requiredDirectsForNext}</span>
+            {(() => {
+              const isSelectedUserExited = selectedUser.status === "EXITED" || selectedUser.isRankExit;
+              return (
+                <div className="flex items-center gap-3 text-xs shrink-0">
+                  <div className="px-3 py-2 rounded-xl bg-slate-900/80 border border-slate-800 text-center">
+                    <div className="text-[10px] text-[#94a3b8] uppercase font-bold">Direct Referrals</div>
+                    <div className="text-sm font-extrabold text-white">
+                      {selectedUser.directCount} <span className="text-xs text-[#94a3b8]">/ {selectedUser.requiredDirectsForNext}</span>
+                    </div>
+                  </div>
+                  <div className={`px-3 py-2 rounded-xl text-center border ${
+                    isSelectedUserExited 
+                      ? "bg-rose-950/60 border-rose-500/40" 
+                      : "bg-slate-900/80 border-slate-800"
+                  }`}>
+                    <div className={`text-[10px] uppercase font-bold ${
+                      isSelectedUserExited ? "text-rose-400" : "text-[#94a3b8]"
+                    }`}>
+                      {isSelectedUserExited ? "Simulator Status" : "Next Rank Target"}
+                    </div>
+                    <div className={`text-sm font-extrabold ${
+                      isSelectedUserExited 
+                        ? "text-rose-400" 
+                        : selectedUser.missingDirects > 0 ? "text-amber-400" : "text-emerald-400"
+                    }`}>
+                      {isSelectedUserExited 
+                        ? "DISABLED (EXITED)" 
+                        : selectedUser.missingDirects > 0 ? `${selectedUser.missingDirects} Missing` : "Ready to Advance"}
+                    </div>
+                  </div>
+                  {onSelectForForm && (
+                    <button
+                      type="button"
+                      disabled={isSelectedUserExited}
+                      onClick={() => !isSelectedUserExited && onSelectForForm(selectedUser.customId)}
+                      className={`px-3 py-2 rounded-xl font-bold flex items-center gap-1.5 transition-colors ${
+                        isSelectedUserExited
+                          ? "bg-slate-800/40 text-slate-600 border border-slate-800 cursor-not-allowed opacity-40"
+                          : "bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 cursor-pointer"
+                      }`}
+                      title={isSelectedUserExited ? "Simulator Disabled for Exited User" : "Configure in Standard Simulator Form"}
+                    >
+                      <Sliders size={14} />
+                      <span>Open Form</span>
+                    </button>
+                  )}
                 </div>
-              </div>
-              <div className="px-3 py-2 rounded-xl bg-slate-900/80 border border-slate-800 text-center">
-                <div className="text-[10px] text-[#94a3b8] uppercase font-bold">Next Rank Target</div>
-                <div className="text-sm font-extrabold text-amber-400">
-                  {selectedUser.missingDirects > 0 ? `${selectedUser.missingDirects} Missing` : "Ready to Advance"}
-                </div>
-              </div>
-              {onSelectForForm && (
-                <button
-                  type="button"
-                  onClick={() => onSelectForForm(selectedUser.customId)}
-                  className="px-3 py-2 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 font-bold flex items-center gap-1.5 transition-colors cursor-pointer"
-                  title="Configure in Standard Simulator Form"
-                >
-                  <Sliders size={14} />
-                  <span>Open Form</span>
-                </button>
-              )}
-            </div>
+              );
+            })()}
           </div>
+
+          {/* Exited Account Alert Warning Banner */}
+          {(selectedUser.status === "EXITED" || selectedUser.isRankExit) && (
+            <div className="p-4 rounded-xl bg-rose-950/60 border border-rose-500/50 text-xs text-rose-200 flex items-center gap-3 animate-in fade-in duration-200">
+              <ShieldAlert size={22} className="text-rose-400 shrink-0" />
+              <div>
+                <div className="font-extrabold text-white text-sm flex items-center gap-2">
+                  <span>Simulator Options Disabled</span>
+                  <span className="px-2 py-0.5 rounded bg-rose-500/20 border border-rose-500/40 text-rose-300 text-[10px] font-mono uppercase">
+                    Account Exited
+                  </span>
+                </div>
+                <p className="text-[11.5px] text-rose-300/90 mt-1 leading-relaxed">
+                  Member <strong>{selectedUser.fullName} ({selectedUser.customId})</strong> has performed a Rank Exit Cashout. This account is permanently deactivated and barred from receiving new rank upgrades, direct referral injection, or queue advancement.
+                </p>
+              </div>
+            </div>
+          )}
 
           {/* Action Execution Status / Result Banners */}
           {executionError && (
@@ -642,117 +689,153 @@ export default function TreeView({ onSelectForForm }: TreeViewProps) {
           )}
 
           {/* Quick Simulation Action Grid for Selected User */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-3.5">
-            {/* ACTION 1: AUTO-BOOST TO NEXT RANK */}
-            <div className="p-3.5 rounded-xl bg-slate-900/60 border border-red-500/30 hover:border-red-500/60 transition-all flex flex-col justify-between space-y-3">
-              <div>
-                <div className="flex items-center justify-between mb-1">
-                  <span className="p-1.5 rounded-lg bg-red-500/20 text-red-400">
-                    <Zap size={15} />
-                  </span>
-                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-red-500/20 text-red-400">
-                    Instant Upgrade
-                  </span>
-                </div>
-                <div className="text-xs font-bold text-white">Auto-Boost Rank</div>
-                <div className="text-[11px] text-slate-400 mt-0.5">
-                  Fulfills missing directs ({selectedUser.missingDirects}) & triggers queue match to promote.
-                </div>
-              </div>
+          {(() => {
+            const isSelectedUserExited = selectedUser.status === "EXITED" || selectedUser.isRankExit;
+            return (
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-3.5">
+                {/* ACTION 1: AUTO-BOOST TO NEXT RANK */}
+                <div className={`p-3.5 rounded-xl border transition-all flex flex-col justify-between space-y-3 ${
+                  isSelectedUserExited
+                    ? "bg-slate-900/30 border-slate-800/80 opacity-60"
+                    : "bg-slate-900/60 border-red-500/30 hover:border-red-500/60"
+                }`}>
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <span className={`p-1.5 rounded-lg ${isSelectedUserExited ? "bg-slate-800 text-slate-500" : "bg-red-500/20 text-red-400"}`}>
+                        <Zap size={15} />
+                      </span>
+                      <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
+                        isSelectedUserExited ? "bg-slate-800 text-slate-500" : "bg-red-500/20 text-red-400"
+                      }`}>
+                        {isSelectedUserExited ? "Disabled" : "Instant Upgrade"}
+                      </span>
+                    </div>
+                    <div className="text-xs font-bold text-white">Auto-Boost Rank</div>
+                    <div className="text-[11px] text-slate-400 mt-0.5">
+                      {isSelectedUserExited
+                        ? "Rank upgrades are disabled for this ID because it has already exited the system."
+                        : `Fulfills missing directs (${selectedUser.missingDirects}) & triggers queue match to promote.`}
+                    </div>
+                  </div>
 
-              <div className="space-y-2 pt-2 border-t border-slate-800">
-                <div className="flex items-center gap-2">
-                  <label className="text-[10px] text-slate-400 font-bold uppercase shrink-0">
-                    Target:
-                  </label>
-                  <select
-                    value={boostTargetTier}
-                    onChange={(e) => setBoostTargetTier(Number(e.target.value))}
-                    disabled={executing}
-                    className="w-full text-xs bg-slate-950 border border-slate-800 rounded-lg p-1.5 text-white font-bold"
-                  >
-                    {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
-                      .filter((t) => t > selectedUser.currentTier)
-                      .map((t) => (
-                        <option key={t} value={t}>
-                          Tier {t} ({TIER_NAMES[t]})
-                        </option>
-                      ))}
-                  </select>
-                </div>
+                  <div className="space-y-2 pt-2 border-t border-slate-800">
+                    <div className="flex items-center gap-2">
+                      <label className="text-[10px] text-slate-400 font-bold uppercase shrink-0">
+                        Target:
+                      </label>
+                      <select
+                        value={boostTargetTier}
+                        onChange={(e) => setBoostTargetTier(Number(e.target.value))}
+                        disabled={executing || isSelectedUserExited}
+                        className="w-full text-xs bg-slate-950 border border-slate-800 rounded-lg p-1.5 text-white font-bold disabled:opacity-40 disabled:cursor-not-allowed"
+                      >
+                        {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+                          .filter((t) => t > selectedUser.currentTier)
+                          .map((t) => (
+                            <option key={t} value={t}>
+                              Tier {t} ({TIER_NAMES[t]})
+                            </option>
+                          ))}
+                      </select>
+                    </div>
 
-                <button
-                  type="button"
-                  onClick={() => runAction("BOOST_RANK")}
-                  disabled={executing || selectedUser.currentTier >= 12}
-                  className="w-full py-2 px-3 rounded-lg text-xs font-extrabold bg-gradient-to-r from-red-600 to-amber-600 hover:from-red-500 hover:to-amber-500 text-white shadow-md shadow-red-600/20 transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
-                >
-                  {executing && executingAction === "BOOST_RANK" ? (
-                    <RefreshCw size={13} className="animate-spin" />
-                  ) : (
-                    <Play size={13} fill="currentColor" />
-                  )}
-                  <span>
-                    {selectedUser.currentTier >= 12
-                      ? "Pinnacle Reached"
-                      : `Boost to Tier ${boostTargetTier}`}
-                  </span>
-                </button>
-              </div>
-            </div>
-
-            {/* ACTION 2: DIRECT UNDER TARGET USER */}
-            <div className="p-3.5 rounded-xl bg-slate-900/60 border border-sky-500/30 hover:border-sky-500/60 transition-all flex flex-col justify-between space-y-3">
-              <div>
-                <div className="flex items-center justify-between mb-1">
-                  <span className="p-1.5 rounded-lg bg-sky-500/20 text-sky-400">
-                    <UserPlus size={15} />
-                  </span>
-                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-sky-500/20 text-sky-400">
-                    Direct Mentees
-                  </span>
-                </div>
-                <div className="text-xs font-bold text-white">Direct Under User</div>
-                <div className="text-[11px] text-slate-400 mt-0.5">
-                  Generates dummy accounts sponsored by {selectedUser.customId}, granting $0.50 cash & counts.
-                </div>
-              </div>
-
-              <div className="space-y-2 pt-2 border-t border-slate-800">
-                <div className="flex items-center gap-1">
-                  {[1, 2, 5].map((cnt) => (
                     <button
-                      key={cnt}
                       type="button"
-                      onClick={() => setDirectsCountToAdd(cnt)}
-                      className={`flex-1 py-1 rounded text-[11px] font-bold border transition-colors ${
-                        directsCountToAdd === cnt
-                          ? "bg-sky-500/20 border-sky-500 text-sky-300"
-                          : "bg-slate-950 border-slate-800 text-slate-400"
+                      onClick={() => runAction("BOOST_RANK")}
+                      disabled={executing || isSelectedUserExited || selectedUser.currentTier >= 12}
+                      className={`w-full py-2 px-3 rounded-lg text-xs font-extrabold transition-all flex items-center justify-center gap-1.5 ${
+                        isSelectedUserExited
+                          ? "bg-slate-800 text-slate-500 cursor-not-allowed opacity-50 shadow-none"
+                          : "bg-gradient-to-r from-red-600 to-amber-600 hover:from-red-500 hover:to-amber-500 text-white shadow-md shadow-red-600/20 cursor-pointer disabled:opacity-50"
                       }`}
                     >
-                      +{cnt}
+                      {executing && executingAction === "BOOST_RANK" ? (
+                        <RefreshCw size={13} className="animate-spin" />
+                      ) : (
+                        <Play size={13} fill="currentColor" />
+                      )}
+                      <span>
+                        {isSelectedUserExited
+                          ? "Disabled (ID Exited)"
+                          : selectedUser.currentTier >= 12
+                          ? "Pinnacle Reached"
+                          : `Boost to Tier ${boostTargetTier}`}
+                      </span>
                     </button>
-                  ))}
+                  </div>
                 </div>
 
-                <button
-                  type="button"
-                  onClick={() => runAction("DIRECT")}
-                  disabled={executing}
-                  className="w-full py-2 px-3 rounded-lg text-xs font-extrabold bg-sky-600 hover:bg-sky-500 text-white shadow-md shadow-sky-600/20 transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
-                >
-                  {executing && executingAction === "DIRECT" ? (
-                    <RefreshCw size={13} className="animate-spin" />
-                  ) : (
-                    <UserPlus size={13} />
-                  )}
-                  <span>Add {directsCountToAdd} Direct(s)</span>
-                </button>
-              </div>
-            </div>
+                {/* ACTION 2: DIRECT UNDER TARGET USER */}
+                <div className={`p-3.5 rounded-xl border transition-all flex flex-col justify-between space-y-3 ${
+                  isSelectedUserExited
+                    ? "bg-slate-900/30 border-slate-800/80 opacity-60"
+                    : "bg-slate-900/60 border-sky-500/30 hover:border-sky-500/60"
+                }`}>
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <span className={`p-1.5 rounded-lg ${isSelectedUserExited ? "bg-slate-800 text-slate-500" : "bg-sky-500/20 text-sky-400"}`}>
+                        <UserPlus size={15} />
+                      </span>
+                      <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
+                        isSelectedUserExited ? "bg-slate-800 text-slate-500" : "bg-sky-500/20 text-sky-400"
+                      }`}>
+                        {isSelectedUserExited ? "Disabled" : "Direct Mentees"}
+                      </span>
+                    </div>
+                    <div className="text-xs font-bold text-white">Direct Under User</div>
+                    <div className="text-[11px] text-slate-400 mt-0.5">
+                      {isSelectedUserExited
+                        ? "Cannot sponsor new simulated members under an exited account."
+                        : `Generates dummy accounts sponsored by ${selectedUser.customId}, granting $0.50 cash & counts.`}
+                    </div>
+                  </div>
 
-            {/* ACTION 3: GLOBAL SINGLE-LEG QUEUE */}
+                  <div className="space-y-2 pt-2 border-t border-slate-800">
+                    <div className="flex items-center gap-1">
+                      {[1, 2, 5].map((cnt) => (
+                        <button
+                          key={cnt}
+                          type="button"
+                          disabled={isSelectedUserExited}
+                          onClick={() => setDirectsCountToAdd(cnt)}
+                          className={`flex-1 py-1 rounded text-[11px] font-bold border transition-colors ${
+                            isSelectedUserExited
+                              ? "bg-slate-950/40 border-slate-900 text-slate-600 cursor-not-allowed"
+                              : directsCountToAdd === cnt
+                              ? "bg-sky-500/20 border-sky-500 text-sky-300"
+                              : "bg-slate-950 border-slate-800 text-slate-400"
+                          }`}
+                        >
+                          +{cnt}
+                        </button>
+                      ))}
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => runAction("DIRECT")}
+                      disabled={executing || isSelectedUserExited}
+                      className={`w-full py-2 px-3 rounded-lg text-xs font-extrabold transition-all flex items-center justify-center gap-1.5 ${
+                        isSelectedUserExited
+                          ? "bg-slate-800 text-slate-500 cursor-not-allowed opacity-50 shadow-none"
+                          : "bg-sky-600 hover:bg-sky-500 text-white shadow-md shadow-sky-600/20 cursor-pointer disabled:opacity-50"
+                      }`}
+                    >
+                      {executing && executingAction === "DIRECT" ? (
+                        <RefreshCw size={13} className="animate-spin" />
+                      ) : (
+                        <UserPlus size={13} />
+                      )}
+                      <span>
+                        {isSelectedUserExited
+                          ? "Disabled (ID Exited)"
+                          : `Add ${directsCountToAdd} Direct(s)`}
+                      </span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* ACTION 3: GLOBAL SINGLE-LEG QUEUE */}
             <div className="p-3.5 rounded-xl bg-slate-900/60 border border-emerald-500/30 hover:border-emerald-500/60 transition-all flex flex-col justify-between space-y-3">
               <div>
                 <div className="flex items-center justify-between mb-1">
@@ -854,6 +937,8 @@ export default function TreeView({ onSelectForForm }: TreeViewProps) {
               </div>
             </div>
           </div>
+            );
+          })()}
         </div>
       )}
     </div>
@@ -897,6 +982,8 @@ function TreeNodeItem({
   const matchesTier =
     selectedTierFilter === "ALL" || node.currentTier === selectedTierFilter;
 
+  const isExited = node.status === "EXITED" || node.isRankExit;
+
   // Flatten flat data for selection
   const flatData: FlatUserData = {
     ...node,
@@ -911,7 +998,11 @@ function TreeNodeItem({
           level > 0 ? "ml-6 border-l-2" : ""
         } ${
           isSelected
-            ? "bg-red-500/15 border-red-500 shadow-md shadow-red-500/10 ring-1 ring-red-500"
+            ? isExited
+              ? "bg-rose-950/25 border-rose-500 shadow-md shadow-rose-950/30 ring-1 ring-rose-500"
+              : "bg-red-500/15 border-red-500 shadow-md shadow-red-500/10 ring-1 ring-red-500"
+            : isExited
+            ? "bg-rose-950/10 border-rose-900/40 hover:border-rose-700/60"
             : matchesSearch && matchesTier
             ? "bg-slate-900/80 border-slate-800 hover:border-slate-700 hover:bg-slate-900"
             : "bg-slate-950/40 border-slate-900 opacity-50 hover:opacity-100"
@@ -972,27 +1063,30 @@ function TreeNodeItem({
           className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
             node.status === "ACTIVE"
               ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/30"
-              : node.status === "EXITED"
+              : isExited || node.status === "EXITED"
               ? "bg-rose-500/10 text-rose-400 border border-rose-500/30"
               : "bg-amber-500/10 text-amber-400 border border-amber-500/30"
           }`}
         >
-          {node.status}
+          {isExited ? "EXITED" : node.status}
         </span>
 
         {/* Action Trigger Button */}
         <button
           type="button"
+          disabled={isExited}
           onClick={(e) => {
             e.stopPropagation();
-            onSelectUser(flatData);
+            if (!isExited) onSelectUser(flatData);
           }}
           className={`p-1.5 rounded-lg text-xs font-bold transition-colors ${
-            isSelected
-              ? "bg-red-500 text-white"
-              : "bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white"
+            isExited
+              ? "bg-slate-800/40 text-slate-600 border border-slate-800/60 opacity-30 cursor-not-allowed"
+              : isSelected
+              ? "bg-red-500 text-white cursor-pointer"
+              : "bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white cursor-pointer"
           }`}
-          title="Select & Manage User"
+          title={isExited ? "Simulator Options Disabled: ID has EXITED" : "Select & Manage User"}
         >
           <Zap size={13} />
         </button>

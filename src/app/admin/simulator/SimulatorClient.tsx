@@ -19,6 +19,7 @@ import {
   Award,
   GitBranch,
   Sliders,
+  ShieldAlert,
 } from "lucide-react";
 import TreeView from "./TreeView";
 
@@ -127,6 +128,9 @@ export default function SimulatorClient({
       if (mode === "DIRECT" || mode === "BOOST_RANK") {
         if (!targetIdentifier.trim()) {
           throw new Error("Please select or enter a Target Member ID / Email.");
+        }
+        if (targetTelemetry && (targetTelemetry.user?.status === "EXITED" || targetTelemetry.isExited)) {
+          throw new Error(`Cannot run simulation for ${targetTelemetry.user.customId}: This ID has exited the ecosystem and is permanently deactivated.`);
         }
         payload.targetUserIdentifier = targetIdentifier.trim();
       }
@@ -403,58 +407,98 @@ export default function SimulatorClient({
               </div>
             )}
 
-            {targetTelemetry && !telemetryLoading && (
-              <div className="p-4 rounded-xl bg-gradient-to-br from-slate-900 via-[#070a14] to-red-950/20 border border-red-500/30 text-xs space-y-3">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800 pb-2.5">
-                  <div className="flex items-center gap-2">
-                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                    <strong className="text-white text-sm">{targetTelemetry.user.fullName}</strong>
-                    <span className="px-2 py-0.5 rounded bg-slate-800 text-slate-300 font-mono text-[11px]">
-                      {targetTelemetry.user.customId}
-                    </span>
-                    <span className="text-slate-400 text-[11px]">({targetTelemetry.user.email})</span>
+            {targetTelemetry && !telemetryLoading && (() => {
+              const isTargetExited = targetTelemetry.user.status === "EXITED" || targetTelemetry.isExited;
+              return (
+                <div className={`p-4 rounded-xl border text-xs space-y-3 ${
+                  isTargetExited
+                    ? "bg-rose-950/20 border-rose-500/40"
+                    : "bg-gradient-to-br from-slate-900 via-[#070a14] to-red-950/20 border-red-500/30"
+                }`}>
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800 pb-2.5">
+                    <div className="flex items-center gap-2">
+                      <span className={`w-2.5 h-2.5 rounded-full ${isTargetExited ? "bg-rose-500" : "bg-emerald-400 animate-pulse"}`}></span>
+                      <strong className="text-white text-sm">{targetTelemetry.user.fullName}</strong>
+                      <span className="px-2 py-0.5 rounded bg-slate-800 text-slate-300 font-mono text-[11px]">
+                        {targetTelemetry.user.customId}
+                      </span>
+                      <span className="text-slate-400 text-[11px]">({targetTelemetry.user.email})</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-[11px]">
+                      <span className="text-[#94a3b8]">Current Rank:</span>
+                      <span className="px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 font-bold border border-amber-500/40">
+                        Tier {targetTelemetry.user.currentTier}: {targetTelemetry.user.currentTierName}
+                      </span>
+                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                        isTargetExited
+                          ? "bg-rose-500/20 text-rose-400 border border-rose-500/40"
+                          : "bg-emerald-500/20 text-emerald-400 border border-emerald-500/40"
+                      }`}>
+                        {isTargetExited ? "EXITED" : targetTelemetry.user.status}
+                      </span>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2 text-[11px]">
-                    <span className="text-[#94a3b8]">Current Rank:</span>
-                    <span className="px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 font-bold border border-amber-500/40">
-                      Tier {targetTelemetry.user.currentTier}: {targetTelemetry.user.currentTierName}
-                    </span>
+
+                  {isTargetExited && (
+                    <div className="p-3.5 rounded-xl bg-rose-950/60 border border-rose-500/50 text-xs text-rose-200 flex items-center gap-2.5">
+                      <ShieldAlert size={18} className="text-rose-400 shrink-0" />
+                      <div>
+                        <strong className="text-white font-bold">Simulator Options Disabled:</strong>
+                        <span className="ml-1 text-rose-300">
+                          Member {targetTelemetry.user.customId} has executed a Rank Exit Cashout. This ID is permanently deactivated and barred from further simulations or rank advancement.
+                        </span>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-[11px]">
+                    <div className="bg-[#040711] p-2.5 rounded-lg border border-slate-800">
+                      <div className="text-slate-500 uppercase font-bold text-[9.5px]">Active Directs</div>
+                      <div className="text-sm font-extrabold text-white mt-0.5">
+                        {targetTelemetry.user.directCount} Directs
+                      </div>
+                    </div>
+
+                    <div className="bg-[#040711] p-2.5 rounded-lg border border-slate-800">
+                      <div className="text-slate-500 uppercase font-bold text-[9.5px]">Next Tier Requirement</div>
+                      <div className="text-sm font-extrabold text-sky-400 mt-0.5">
+                        {targetTelemetry.nextTier.requiredDirects} Directs Required
+                      </div>
+                    </div>
+
+                    <div className="bg-[#040711] p-2.5 rounded-lg border border-slate-800">
+                      <div className="text-slate-500 uppercase font-bold text-[9.5px]">
+                        {isTargetExited ? "Simulator Status" : "Missing Directs"}
+                      </div>
+                      <div className={`text-sm font-extrabold mt-0.5 ${
+                        isTargetExited
+                          ? "text-rose-400"
+                          : targetTelemetry.nextTier.missingDirects === 0
+                          ? "text-emerald-400"
+                          : "text-amber-400"
+                      }`}>
+                        {isTargetExited
+                          ? "DISABLED (EXITED)"
+                          : targetTelemetry.nextTier.missingDirects === 0
+                          ? "Qualified (0 Missing)"
+                          : `${targetTelemetry.nextTier.missingDirects} Missing`}
+                      </div>
+                    </div>
+
+                    <div className="bg-[#040711] p-2.5 rounded-lg border border-slate-800">
+                      <div className="text-slate-500 uppercase font-bold text-[9.5px]">Queue Status</div>
+                      <div className="text-sm font-extrabold text-purple-400 mt-0.5">
+                        {isTargetExited
+                          ? "Queue Closed (Exited)"
+                          : targetTelemetry.queue.waitingQueueIndex !== null
+                          ? `Pos #${targetTelemetry.queue.waitingQueueIndex} (${targetTelemetry.queue.childrenPlaced}/2)`
+                          : "Ready for Promotion"}
+                      </div>
+                    </div>
                   </div>
                 </div>
-
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-[11px]">
-                  <div className="bg-[#040711] p-2.5 rounded-lg border border-slate-800">
-                    <div className="text-slate-500 uppercase font-bold text-[9.5px]">Active Directs</div>
-                    <div className="text-sm font-extrabold text-white mt-0.5">
-                      {targetTelemetry.user.directCount} Directs
-                    </div>
-                  </div>
-
-                  <div className="bg-[#040711] p-2.5 rounded-lg border border-slate-800">
-                    <div className="text-slate-500 uppercase font-bold text-[9.5px]">Next Tier Requirement</div>
-                    <div className="text-sm font-extrabold text-sky-400 mt-0.5">
-                      {targetTelemetry.nextTier.requiredDirects} Directs Required
-                    </div>
-                  </div>
-
-                  <div className="bg-[#040711] p-2.5 rounded-lg border border-slate-800">
-                    <div className="text-slate-500 uppercase font-bold text-[9.5px]">Missing Directs</div>
-                    <div className={`text-sm font-extrabold mt-0.5 ${targetTelemetry.nextTier.missingDirects === 0 ? "text-emerald-400" : "text-amber-400"}`}>
-                      {targetTelemetry.nextTier.missingDirects === 0 ? "Qualified (0 Missing)" : `${targetTelemetry.nextTier.missingDirects} Missing`}
-                    </div>
-                  </div>
-
-                  <div className="bg-[#040711] p-2.5 rounded-lg border border-slate-800">
-                    <div className="text-slate-500 uppercase font-bold text-[9.5px]">Queue Status</div>
-                    <div className="text-sm font-extrabold text-purple-400 mt-0.5">
-                      {targetTelemetry.queue.waitingQueueIndex !== null
-                        ? `Pos #${targetTelemetry.queue.waitingQueueIndex} (${targetTelemetry.queue.childrenPlaced}/2)`
-                        : "Ready for Promotion"}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
+              );
+            })()}
           </div>
         )}
 
@@ -469,17 +513,17 @@ export default function SimulatorClient({
                 const isCurrent = targetTelemetry.user.currentTier === tierIndex;
                 const isPast = targetTelemetry.user.currentTier > tierIndex;
                 const isSelected = targetTier === tierIndex;
-
+                const isTargetExited = targetTelemetry.user.status === "EXITED" || targetTelemetry.isExited;
                 return (
                   <button
                     key={tierIndex}
                     type="button"
-                    disabled={isCurrent || isPast}
+                    disabled={isCurrent || isPast || isTargetExited}
                     onClick={() => setTargetTier(tierIndex)}
                     className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer ${
-                      isSelected
+                      isSelected && !isTargetExited
                         ? "bg-red-500 border-red-500 text-white shadow-md shadow-red-500/20"
-                        : isPast || isCurrent
+                        : isPast || isCurrent || isTargetExited
                         ? "opacity-40 bg-slate-100 dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-400 cursor-not-allowed"
                         : "bg-slate-50 dark:bg-[#0d1424] border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-red-500/40"
                     }`}
@@ -626,7 +670,7 @@ export default function SimulatorClient({
         )}
 
         {/* Execute Button */}
-        <div className="pt-4 border-t border-slate-200 dark:border-[#1e293b] flex items-center justify-between">
+        <div className="pt-4 border-t border-slate-200 dark:border-[#1e293b] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="text-xs text-slate-500">
             {mode === "BOOST_RANK" && `Promoting ${targetTelemetry?.user?.customId || "User"} to Tier ${targetTier} (${TIER_NAMES[targetTier]})`}
             {mode === "DIRECT" && `Creating ${count} dummy directs under ${targetTelemetry?.user?.customId || "Target"}`}
@@ -634,26 +678,39 @@ export default function SimulatorClient({
             {mode === "RANDOM" && `Creating ${count} dummy users distributed randomly`}
           </div>
 
-          <button
-            type="button"
-            onClick={handleExecute}
-            disabled={executing || (mode === "BOOST_RANK" && !targetTelemetry)}
-            className="px-6 py-3 rounded-xl bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-600 text-white font-extrabold text-xs tracking-wider uppercase shadow-lg shadow-red-500/20 hover:shadow-red-500/30 transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50 active:scale-98"
-          >
-            {executing ? (
-              <>
-                <RefreshCw size={16} className="animate-spin" />
-                <span>Executing Simulation...</span>
-              </>
-            ) : (
-              <>
-                <Zap size={16} />
-                <span>
-                  {mode === "BOOST_RANK" ? "🚀 Execute Rank Boost" : "🚀 Run Simulation"}
-                </span>
-              </>
-            )}
-          </button>
+          {(() => {
+            const isTargetExited = (mode === "BOOST_RANK" || mode === "DIRECT") && (targetTelemetry?.user?.status === "EXITED" || targetTelemetry?.isExited);
+            return (
+              <button
+                type="button"
+                onClick={handleExecute}
+                disabled={executing || (mode === "BOOST_RANK" && !targetTelemetry) || isTargetExited}
+                className={`px-6 py-3 rounded-xl font-extrabold text-xs tracking-wider uppercase transition-all flex items-center justify-center gap-2 ${
+                  isTargetExited
+                    ? "bg-slate-800 text-slate-500 cursor-not-allowed opacity-50 shadow-none"
+                    : "bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-600 text-white shadow-lg shadow-red-500/20 hover:shadow-red-500/30 cursor-pointer disabled:opacity-50 active:scale-98"
+                }`}
+              >
+                {executing ? (
+                  <>
+                    <RefreshCw size={16} className="animate-spin" />
+                    <span>Executing Simulation...</span>
+                  </>
+                ) : (
+                  <>
+                    <Zap size={16} />
+                    <span>
+                      {isTargetExited
+                        ? "Disabled (ID Exited)"
+                        : mode === "BOOST_RANK"
+                        ? "🚀 Execute Rank Boost"
+                        : "🚀 Run Simulation"}
+                    </span>
+                  </>
+                )}
+              </button>
+            );
+          })()}
         </div>
       </div>
 
