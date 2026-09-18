@@ -20,6 +20,7 @@ import {
 import { MemberMobileNav } from "@/components/MemberMobileNav";
 import { LanguageSelector } from "@/components/LanguageSelector";
 import { TIER_VALUES } from "@/lib/constants";
+import { checkPendingRankPromotions } from "@/lib/queueEngine";
 
 export default async function MemberLayout({
   children,
@@ -30,6 +31,9 @@ export default async function MemberLayout({
   if (!session) {
     redirect("/login");
   }
+
+  // Ensure rank upgrades are applied
+  await checkPendingRankPromotions(session.userId);
 
   const user = await db.user.findUnique({
     where: { id: session.userId },

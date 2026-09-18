@@ -128,7 +128,7 @@ export async function processTierQueue(
 }
 
 /**
- * Re-checks eligibility for users who have completed a tier but were pending direct referrals.
+ * Re-checks eligibility for users who have completed a tier or met direct requirements.
  */
 export async function checkPendingRankPromotions(
   userId: string,
@@ -139,18 +139,78 @@ export async function checkPendingRankPromotions(
     where: { id: userId },
     include: {
       queueEntries: {
-        where: { status: "COMPLETED" },
         orderBy: { tier: "desc" },
       },
     },
   });
 
-  if (!user || user.queueEntries.length === 0) return;
+  if (!user || user.status !== "ACTIVE") return;
 
-  const highestCompletedTier = user.queueEntries[0].tier;
+  // 1. Tier 0 (Junior) Promotion: If user has at least 2 directs, promote to Tier 1 (Zen)
+  if (user.currentTier === 0 && user.directCount >= REQUIRED_DIRECTS[1]) {
+    // Complete or record Tier 0 queue entry
+    const tier0Entry = user.queueEntries.find((q) => q.tier === 0);
+    if (tier0Entry) {
+      if (tier0Entry.status !== "COMPLETED") {
+        await tx.queueEntry.update({
+          where: { id: tier0Entry.id },
+          data: {
+            status: "COMPLETED",
+            childrenPlaced: 2,
+            matchedAt: new Date(),
+          },
+        });
+      }
+    } else {
+      const tier0Count = await tx.queueEntry.count({ where: { tier: 0 } });
+      await tx.queueEntry.create({
+        data: {
+          userId: user.id,
+          tier: 0,
+          queueIndex: tier0Count,
+          childrenPlaced: 2,
+          status: "COMPLETED",
+          matchedAt: new Date(),
+        },
+      });
+    }
+
+    // Upgrade user to Tier 1 (Zen)
+    await tx.user.update({
+      where: { id: user.id },
+      data: { currentTier: 1 },
+    });
+
+    // Enroll into Tier 1 (Zen) queue
+    const inTier1 = await tx.queueEntry.findFirst({
+      where: { userId: user.id, tier: 1 },
+    });
+
+    if (!inTier1) {
+      const tier1Count = await tx.queueEntry.count({ where: { tier: 1 } });
+      await tx.queueEntry.create({
+        data: {
+          userId: user.id,
+          tier: 1,
+          queueIndex: tier1Count,
+          childrenPlaced: 0,
+          status: "WAITING",
+        },
+      });
+
+      await processTierQueue(1, tx);
+    }
+    return;
+  }
+
+  // 2. Higher Tiers Promotion: Completed queue entry waiting for required directs
+  const completedEntries = user.queueEntries.filter((q) => q.status === "COMPLETED");
+  if (completedEntries.length === 0) return;
+
+  const highestCompletedTier = completedEntries[0].tier;
   const targetNextTier = highestCompletedTier + 1;
 
-  if (targetNextTier <= 12 && user.directCount >= REQUIRED_DIRECTS[targetNextTier]) {
+  if (targetNextTier <= 12 && user.directCount >= REQUIRED_DIRECTS[targetNextTier] && user.currentTier < targetNextTier) {
     // Check if already in targetNextTier queue
     const alreadyInNextQueue = await tx.queueEntry.findFirst({
       where: { userId: user.id, tier: targetNextTier },

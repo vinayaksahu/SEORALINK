@@ -4,6 +4,7 @@ import { getSession } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { redirect } from "next/navigation";
 import { TIER_NAMES, TIER_VALUES, REQUIRED_DIRECTS, NET_CASHOUT_VALUES } from "@/lib/constants";
+import { checkPendingRankPromotions } from "@/lib/queueEngine";
 import { ReferralShareCard } from "@/components/ReferralShareCard";
 import {
   Wallet,
@@ -22,6 +23,9 @@ import {
 export default async function MemberDashboardPage() {
   const session = await getSession();
   if (!session) redirect("/login");
+
+  // Automatically check and promote if directs qualification is satisfied
+  await checkPendingRankPromotions(session.userId);
 
   const user = await db.user.findUnique({
     where: { id: session.userId },
