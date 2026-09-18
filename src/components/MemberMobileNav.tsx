@@ -18,6 +18,7 @@ import {
   LogOut,
   ShieldCheck,
   PlusCircle,
+  LifeBuoy,
 } from "lucide-react";
 
 interface MemberMobileNavProps {
@@ -69,6 +70,7 @@ export function MemberMobileNav({ user }: MemberMobileNavProps) {
     { href: "/member/withdraw", label: "Withdraw", icon: ArrowUpRight },
     { href: "/member/team", label: "Team Network", icon: Users },
     { href: "/member/ledger", label: "Ledger History", icon: FileText },
+    { href: "/member/support", label: "Support Tickets", icon: LifeBuoy },
   ];
 
   const commissionVal = parseFloat(user.incomeBalance?.toString() || "0").toFixed(2);

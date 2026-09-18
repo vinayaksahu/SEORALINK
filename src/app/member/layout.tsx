@@ -15,6 +15,7 @@ import {
   FileText,
   LogOut,
   ShieldCheck,
+  LifeBuoy,
 } from "lucide-react";
 import { MemberMobileNav } from "@/components/MemberMobileNav";
 import { TIER_VALUES } from "@/lib/constants";
@@ -67,6 +68,7 @@ export default async function MemberLayout({
     { href: "/member/withdraw", label: "Withdraw", icon: ArrowUpRight },
     { href: "/member/team", label: "Team Network", icon: Users },
     { href: "/member/ledger", label: "Ledger History", icon: FileText },
+    { href: "/member/support", label: "Support Tickets", icon: LifeBuoy },
   ];
 
   const serializedUser = {
