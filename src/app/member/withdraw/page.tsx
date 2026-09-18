@@ -29,6 +29,8 @@ export default async function MemberWithdrawPage() {
     },
   });
   const hasWithdrawnRankPool = Boolean(existingRankWithdrawal);
+  const isBanned = user.status === "BLOCKED" && !hasWithdrawnRankPool;
+  const isInactive = user.status === "INACTIVE" && !hasWithdrawnRankPool;
   const incomeBal = parseFloat(user.incomeBalance.toString());
 
   return (
@@ -39,7 +41,7 @@ export default async function MemberWithdrawPage() {
           Withdrawal Portal &bull; Commission Wallet &amp; Rank Pool Wallet
         </h2>
         <p className="text-xs text-[#94a3b8] mt-1">
-          Withdraw from your Commission Wallet anytime (flat 10% fee, ID stays active), or execute your one-time Rank Pool Wallet cashout (80% net R1–11 exit with ID retirement / 90% Ultima apex with lifetime active ID).
+          Withdraw from your Commission Wallet anytime (flat 10% fee), or execute your one-time Rank Pool Wallet cashout (80% net R1–11 exit with ID retirement / 90% Ultima apex with lifetime active ID).
         </p>
       </div>
 
@@ -48,8 +50,8 @@ export default async function MemberWithdrawPage() {
         <WithdrawFormClient
           incomeBalance={incomeBal}
           currentTier={user.currentTier}
-          isBanned={user.status === "BLOCKED"}
-          isInactive={user.status === "INACTIVE"}
+          isBanned={isBanned}
+          isInactive={isInactive}
           hasWithdrawnRankPool={hasWithdrawnRankPool}
           savedAddress={user.usdtAddress || ""}
         />

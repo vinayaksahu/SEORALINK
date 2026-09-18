@@ -39,24 +39,43 @@ export async function POST(req: Request) {
         throw new Error("User account not found");
       }
 
+      const hasRankExit = Boolean(
+        await tx.withdrawalRequest.findFirst({
+          where: {
+            userId: user.id,
+            adminNote: { contains: "CASHOUT" },
+            status: { not: "REJECTED" },
+          },
+        })
+      );
+
       if (user.status === "BLOCKED" || user.status === "SUSPENDED") {
-        throw new Error("This account is permanently deactivated/banned and cannot initiate withdrawals.");
+        if (!hasRankExit) {
+          throw new Error("This account has been blocked by administration and cannot initiate withdrawals.");
+        }
+
+        // Single-Exit accounts can only withdraw remaining balance from Commission Wallet
+        if (withdrawalCategory !== "COMMISSION") {
+          throw new Error("You have already executed your one-time lifetime Rank Pool Wallet cashout.");
+        }
       }
 
-      if (user.status !== "ACTIVE") {
+      if (user.status !== "ACTIVE" && !hasRankExit) {
         throw new Error("Account activation ($10 USDT) is required before initiating withdrawals. Please activate your account first.");
       }
 
       // ==========================================
-      // CASE 1: COMMISSION WALLET WITHDRAWAL (10% FEE - ID STAYS ACTIVE)
+      // CASE 1: COMMISSION WALLET WITHDRAWAL (10% FEE)
       // ==========================================
       if (withdrawalCategory === "COMMISSION") {
         const numAmount = parseFloat(amount);
-        if (!amount || isNaN(numAmount) || numAmount < 10) {
-          throw new Error("Minimum commission withdrawal amount is $10.00 USDT");
+        const minAmount = hasRankExit ? 1 : 10;
+
+        if (!amount || isNaN(numAmount) || numAmount < minAmount) {
+          throw new Error(`Minimum commission withdrawal amount is $${minAmount.toFixed(2)} USDT`);
         }
 
-        if (numAmount % 5 !== 0) {
+        if (!hasRankExit && numAmount % 5 !== 0) {
           throw new Error("Withdrawal amount must be in multiples of $5 USDT (e.g. $10, $15, $20, $25, $30...)");
         }
 

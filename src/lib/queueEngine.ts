@@ -58,6 +58,20 @@ export async function processTierQueue(
     });
 
     // Rolling Auto-Upgrade: 100% of value rolls into Next Tier if within 12 tiers
+    // If matchedUser has executed a Rank Exit cashout, their rank is permanently frozen
+    const userRankExit = await tx.withdrawalRequest.findFirst({
+      where: {
+        userId: matchedUser.id,
+        adminNote: { contains: "CASHOUT" },
+        status: { not: "REJECTED" },
+      },
+    });
+
+    if (userRankExit) {
+      matchesProcessed++;
+      continue;
+    }
+
     const nextTier = tier + 1;
     if (nextTier <= 12) {
       const requiredDirects = REQUIRED_DIRECTS[nextTier];
@@ -121,6 +135,16 @@ export async function checkPendingRankPromotions(
   });
 
   if (!user || user.status !== "ACTIVE") return;
+
+  // Check if user has executed a Rank Pool cashout (Single-Exit)
+  const userRankExit = await tx.withdrawalRequest.findFirst({
+    where: {
+      userId: user.id,
+      adminNote: { contains: "CASHOUT" },
+      status: { not: "REJECTED" },
+    },
+  });
+  if (userRankExit) return;
 
   // 1. Tier 0 (Junior) Promotion: If user has at least 2 directs, promote to Tier 1 (Zen)
   if (user.currentTier === 0 && user.directCount >= REQUIRED_DIRECTS[1]) {
@@ -243,6 +267,16 @@ export async function awardMentorshipOverride(
 
   // Blocked or suspended sponsors forfeit overrides
   if (!sponsor || sponsor.status === "BLOCKED" || sponsor.status === "SUSPENDED") return;
+
+  // If sponsor took a Rank Pool Cashout before Tier 12 (Single-Exit), downline upgrade overrides are forfeited
+  const sponsorRankExit = await tx.withdrawalRequest.findFirst({
+    where: {
+      userId: mentee.sponsorId,
+      adminNote: { contains: "RANK_EXIT_CASHOUT" },
+      status: { not: "REJECTED" },
+    },
+  });
+  if (sponsorRankExit) return;
 
   const tierValue = new Decimal(TIER_VALUES[advancedTier]);
   const overrideAmount = tierValue.times(RATES.UPLINE_OVERRIDE_PERCENT).dividedBy(100);

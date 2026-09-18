@@ -26,7 +26,11 @@ export default function WithdrawFormClient({
   const [activeTab, setActiveTab] = useState<"COMMISSION" | "RANK_EXIT">("COMMISSION");
 
   // Commission Form State
-  const [amount, setAmount] = useState(incomeBalance >= 10 ? "10.00" : "0.00");
+  const [amount, setAmount] = useState(
+    hasWithdrawnRankPool
+      ? (incomeBalance > 0 ? incomeBalance.toFixed(2) : "0.00")
+      : (incomeBalance >= 10 ? "10.00" : "0.00")
+  );
   const [toAddress, setToAddress] = useState(savedAddress);
   const [network, setNetwork] = useState("USDT_BEP20");
 
@@ -59,11 +63,12 @@ export default function WithdrawFormClient({
 
     if (activeTab === "COMMISSION") {
       const num = parseFloat(amount);
-      if (isNaN(num) || num < 10) {
-        setError("Minimum withdrawal amount is $10.00 USDT.");
+      const minAmount = hasWithdrawnRankPool ? 1 : 10;
+      if (isNaN(num) || num < minAmount) {
+        setError(`Minimum withdrawal amount is $${minAmount.toFixed(2)} USDT.`);
         return;
       }
-      if (num % 5 !== 0) {
+      if (!hasWithdrawnRankPool && num % 5 !== 0) {
         setError("Withdrawal amount must be in multiples of $5 USDT (e.g. $10, $15, $20, $25, $30, etc.).");
         return;
       }
@@ -114,13 +119,13 @@ export default function WithdrawFormClient({
     }
   };
 
-  if (isBanned) {
+  if (isBanned && !hasWithdrawnRankPool) {
     return (
       <div className="card-seoralink p-6 border border-red-500/50 bg-red-500/10 space-y-3 text-center">
         <ShieldAlert size={36} className="text-red-400 mx-auto" />
-        <h3 className="text-sm font-bold text-red-400">Withdrawals Disabled</h3>
+        <h3 className="text-sm font-bold text-red-400">Account Blocked</h3>
         <p className="text-xs text-[#cbd5e1] leading-relaxed">
-          This account executed a Single-Exit rank reward cashout and has been permanently deactivated/banned. No further withdrawals or transactions are permitted.
+          This account has been blocked by administration. Withdrawals and transactions are disabled.
         </p>
       </div>
     );
@@ -146,11 +151,15 @@ export default function WithdrawFormClient({
           onClick={() => { setActiveTab("RANK_EXIT"); setError(""); setSuccess(""); }}
           className={`py-2.5 px-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
             activeTab === "RANK_EXIT"
-              ? isUltima ? "bg-[#d4af37] text-black font-extrabold" : "bg-red-500 text-white font-extrabold"
+              ? isUltima
+                ? "bg-[#d4af37] text-black font-extrabold"
+                : hasWithdrawnRankPool
+                ? "bg-[#1e293b] text-[#94a3b8] font-bold"
+                : "bg-red-500 text-white font-extrabold"
               : "text-[#94a3b8] hover:text-white"
           }`}
         >
-          <Trophy size={14} /> Rank Pool Wallet (One-Time Exit)
+          <Trophy size={14} /> {hasWithdrawnRankPool ? "Rank Pool (Cashed Out)" : "Rank Pool Wallet (One-Time Exit)"}
         </button>
       </div>
 
@@ -190,31 +199,55 @@ export default function WithdrawFormClient({
         {/* ================= TAB 1: COMMISSION WALLET ================= */}
         {activeTab === "COMMISSION" && (
           <>
-            <div className="p-3 rounded-lg bg-[#10b981]/10 border border-[#10b981]/30 text-xs text-[#cbd5e1]">
-              <span className="text-[#10b981] font-bold">Standard Commission Withdrawal:</span>
-              <p className="mt-1">
-                Withdraw your 5% direct referral bonuses and 5% upline mentorship overrides with a flat <strong>10% protocol fee</strong>. Your ID remains fully active and continues earning!
-              </p>
-            </div>
+            {hasWithdrawnRankPool ? (
+              <div className="p-3.5 rounded-lg bg-amber-500/10 border border-amber-500/30 text-xs text-[#cbd5e1]">
+                <span className="text-amber-400 font-bold">Commission Wallet Settlement:</span>
+                <p className="mt-1">
+                  Your Rank Pool has concluded under the Single-Exit protocol. You can withdraw your remaining Commission Wallet balance below (flat <strong>10% protocol fee</strong>).
+                </p>
+              </div>
+            ) : (
+              <div className="p-3 rounded-lg bg-[#10b981]/10 border border-[#10b981]/30 text-xs text-[#cbd5e1]">
+                <span className="text-[#10b981] font-bold">Standard Commission Withdrawal:</span>
+                <p className="mt-1">
+                  Withdraw your 5% direct referral bonuses and 5% upline mentorship overrides with a flat <strong>10% protocol fee</strong>. Your ID remains fully active and continues earning!
+                </p>
+              </div>
+            )}
 
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-[#cbd5e1] uppercase tracking-wider flex justify-between">
+              <label className="text-xs font-bold text-[#cbd5e1] uppercase tracking-wider flex justify-between items-center">
                 <span>Withdrawal Amount (USDT)</span>
-                <span className="text-[#10b981] font-mono-num font-bold">Available: ${incomeBalance.toFixed(2)}</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-[#10b981] font-mono-num font-bold">Available: ${incomeBalance.toFixed(2)}</span>
+                  {hasWithdrawnRankPool && incomeBalance > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => setAmount(incomeBalance.toFixed(2))}
+                      className="text-[10px] text-amber-400 font-bold underline hover:text-amber-300 cursor-pointer"
+                    >
+                      Withdraw All (${incomeBalance.toFixed(2)})
+                    </button>
+                  )}
+                </div>
               </label>
               <input
                 type="number"
-                step="5"
-                min="10"
-                max={Math.floor(incomeBalance / 5) * 5}
+                step={hasWithdrawnRankPool ? "0.01" : "5"}
+                min={hasWithdrawnRankPool ? "1" : "10"}
+                max={hasWithdrawnRankPool ? incomeBalance : Math.floor(incomeBalance / 5) * 5}
                 required
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
                 className="w-full bg-[#0b1120] border border-[#d4af37]/30 text-white rounded-lg px-4 py-2.5 text-xs font-mono-num font-bold focus:outline-none focus:border-[#d4af37]"
               />
               <div className="text-[10px] text-[#94a3b8] flex justify-between items-center">
-                <span>Minimum: $10.00 USDT &bull; Must be in multiples of $5 ($10, $15, $20, $25...)</span>
-                {numCommAmount > 0 && numCommAmount % 5 !== 0 && (
+                <span>
+                  {hasWithdrawnRankPool
+                    ? "Minimum: $1.00 USDT • Full remaining balance cashout supported"
+                    : "Minimum: $10.00 USDT • Must be in multiples of $5 ($10, $15, $20, $25...)"}
+                </span>
+                {!hasWithdrawnRankPool && numCommAmount > 0 && numCommAmount % 5 !== 0 && (
                   <span className="text-amber-400 font-bold">Must be multiple of 5</span>
                 )}
               </div>
@@ -347,8 +380,7 @@ export default function WithdrawFormClient({
               loading ||
               isInactive ||
               numCommAmount > incomeBalance ||
-              numCommAmount < 10 ||
-              numCommAmount % 5 !== 0
+              (hasWithdrawnRankPool ? numCommAmount < 1 : (numCommAmount < 10 || numCommAmount % 5 !== 0))
             }
             className="btn-primary w-full py-3 text-xs font-extrabold flex items-center justify-center gap-2 mt-2 disabled:opacity-50"
           >

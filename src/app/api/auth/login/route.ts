@@ -35,10 +35,21 @@ export async function POST(req: Request) {
     }
 
     if (user.status === "BLOCKED") {
-      return NextResponse.json(
-        { error: "This ID has been permanently deactivated/banned due to an intermediate rank reward cashout under the Single-Exit protocol. It cannot be reactivated." },
-        { status: 403 }
-      );
+      const hasRankExit = await db.withdrawalRequest.findFirst({
+        where: {
+          userId: user.id,
+          adminNote: { contains: "CASHOUT" },
+          status: { not: "REJECTED" },
+        },
+      });
+
+      if (!hasRankExit) {
+        return NextResponse.json(
+          { error: "This account has been blocked by administration. Please contact support." },
+          { status: 403 }
+        );
+      }
+      // Accounts retired under Single-Exit protocol are permitted to log in and manage remaining commission balance
     }
 
     if (user.status === "SUSPENDED") {

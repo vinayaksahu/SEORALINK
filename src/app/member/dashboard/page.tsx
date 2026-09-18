@@ -42,7 +42,6 @@ export default async function MemberDashboardPage() {
   const commissionBal = parseFloat(user.incomeBalance?.toString() || "0");
   const currentTier = user.currentTier;
   const isUltima = currentTier === 12;
-  const isBanned = user.status === "BLOCKED";
   const rankValuation = TIER_VALUES[currentTier];
   const netCashoutVal = NET_CASHOUT_VALUES[currentTier];
 
@@ -54,6 +53,7 @@ export default async function MemberDashboardPage() {
     },
   });
   const hasWithdrawnRankPool = Boolean(existingRankWithdrawal);
+  const isBanned = user.status === "BLOCKED" && !hasWithdrawnRankPool;
   const rankPoolBalance = (user.status === "ACTIVE" && !hasWithdrawnRankPool && currentTier > 0) ? rankValuation : 0;
 
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://seoralink.com";
@@ -61,14 +61,37 @@ export default async function MemberDashboardPage() {
 
   return (
     <div className="space-y-8">
-      {/* Account Banned / Single-Exit Warning */}
+      {/* Single-Exit Settlement Notice */}
+      {hasWithdrawnRankPool && (
+        <div className="p-4 rounded-xl border border-amber-500/50 bg-amber-500/10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="flex items-start sm:items-center gap-3">
+            <ShieldAlert size={28} className="text-amber-400 flex-shrink-0" />
+            <div>
+              <div className="text-sm font-bold text-amber-400">Single-Exit Settlement Executed</div>
+              <div className="text-xs text-[#cbd5e1] mt-0.5">
+                Your one-time Rank Pool cashout has been processed. Under the Single-Exit protocol, rank progression and downline mentorship overrides have concluded. You can still access your portal and withdraw any remaining balance from your Commission Wallet.
+              </div>
+            </div>
+          </div>
+          {commissionBal > 0 && (
+            <Link
+              href="/member/withdraw"
+              className="px-4 py-2 rounded-lg bg-[#10b981] text-black font-extrabold text-xs whitespace-nowrap hover:bg-[#10b981]/90 transition-all flex items-center gap-1.5 shadow"
+            >
+              Withdraw Comm (${commissionBal.toFixed(2)}) &rarr;
+            </Link>
+          )}
+        </div>
+      )}
+
+      {/* Account Banned Warning (only if blocked by admin without rank exit) */}
       {isBanned && (
         <div className="p-4 rounded-xl border border-red-500/60 bg-red-500/10 flex items-start sm:items-center gap-3">
           <ShieldAlert size={28} className="text-red-400 flex-shrink-0" />
           <div>
-            <div className="text-sm font-bold text-red-400">Account Permanently Deactivated (Single-Exit Executed)</div>
+            <div className="text-sm font-bold text-red-400">Account Blocked by Administration</div>
             <div className="text-xs text-[#cbd5e1] mt-0.5">
-              An intermediate rank reward cashout was initiated. As per protocol rules, this ID is permanently closed, forfeiting all future queue advancements, direct commissions, and team overrides. It cannot be reactivated.
+              This account has been administratively blocked. Please contact support.
             </div>
           </div>
         </div>
