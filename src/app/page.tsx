@@ -5,6 +5,7 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { TIER_NAMES, TIER_VALUES, REQUIRED_DIRECTS, CUMULATIVE_REWARDS } from "@/lib/constants";
 import { ArrowRight, ShieldCheck, Zap, Users, Trophy, ChevronRight, CheckCircle2 } from "lucide-react";
 import { LandingMobileNav } from "@/components/LandingMobileNav";
+import { LanguageSelector } from "@/components/LanguageSelector";
 
 export default function HomePage() {
   return (
@@ -24,8 +25,9 @@ export default function HomePage() {
           </nav>
 
           <div className="flex items-center gap-3 shrink-0">
-            {/* Desktop Theme Switcher + Auth CTAs */}
+            {/* Desktop Language + Theme Switcher + Auth CTAs */}
             <div className="hidden sm:flex items-center gap-3">
+              <LanguageSelector variant="compact" />
               <ThemeToggle variant="segmented" size="xs" />
               <Link
                 href="/login"
@@ -41,8 +43,9 @@ export default function HomePage() {
               </Link>
             </div>
 
-            {/* Mobile Actions: Compact Theme Switcher + Mobile Drawer */}
+            {/* Mobile Actions: Language + Compact Theme Switcher + Mobile Drawer */}
             <div className="sm:hidden flex items-center gap-2 shrink-0">
+              <LanguageSelector variant="compact" />
               <ThemeToggle variant="compact" size="sm" showLabels={false} />
               <LandingMobileNav />
             </div>

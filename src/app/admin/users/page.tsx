@@ -3,8 +3,9 @@ import Link from "next/link";
 import { getSession } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { redirect } from "next/navigation";
-import { TIER_NAMES } from "@/lib/constants";
-import { Users, Search, Zap, UserPlus } from "lucide-react";
+import { TIER_NAMES, TIER_VALUES } from "@/lib/constants";
+import { Users, Search, Zap } from "lucide-react";
+import UsersTableClient from "./UsersTableClient";
 
 export default async function AdminUsersPage({
   searchParams,
@@ -25,6 +26,7 @@ export default async function AdminUsersPage({
       { customId: { contains: searchQuery, mode: "insensitive" } },
       { fullName: { contains: searchQuery, mode: "insensitive" } },
       { email: { contains: searchQuery, mode: "insensitive" } },
+      { phone: { contains: searchQuery, mode: "insensitive" } },
     ];
   }
 
@@ -53,6 +55,45 @@ export default async function AdminUsersPage({
       },
     },
     take: 50,
+  });
+
+  // Check rank pool cashouts for active users
+  const rankWithdrawals = await db.withdrawalRequest.findMany({
+    where: {
+      adminNote: { contains: "CASHOUT" },
+      status: { not: "REJECTED" },
+    },
+    select: { userId: true },
+  });
+  const rankWithdrawnUserIds = new Set(rankWithdrawals.map((w) => w.userId));
+
+  const mappedUsers = users.map((u) => {
+    const hasWithdrawn = rankWithdrawnUserIds.has(u.id);
+    const poolBalance =
+      u.status === "ACTIVE" && !hasWithdrawn && u.currentTier > 0
+        ? TIER_VALUES[u.currentTier] || 0
+        : 0;
+
+    return {
+      id: u.id,
+      customId: u.customId,
+      fullName: u.fullName,
+      email: u.email,
+      phone: u.phone,
+      status: u.status,
+      currentTier: u.currentTier,
+      directCount: u.directCount,
+      fundBalance: u.fundBalance.toString(),
+      incomeBalance: u.incomeBalance.toString(),
+      poolBalance,
+      createdAt: u.createdAt.toISOString(),
+      sponsor: u.sponsor
+        ? {
+            customId: u.sponsor.customId,
+            fullName: u.sponsor.fullName,
+          }
+        : null,
+    };
   });
 
   return (
@@ -85,7 +126,7 @@ export default async function AdminUsersPage({
             type="text"
             name="q"
             defaultValue={searchQuery || ""}
-            placeholder="Search by ID, Name, or Email..."
+            placeholder="Search by ID, Name, Email, Phone..."
             className="w-full bg-[#0d1424] border border-[#1e293b] text-white rounded-lg pl-10 pr-4 py-2 text-xs focus:outline-none focus:border-[#d4af37]"
           />
         </div>
@@ -94,77 +135,8 @@ export default async function AdminUsersPage({
         </button>
       </form>
 
-      {/* Users Table */}
-      <div className="overflow-x-auto card-seoralink border-[#1e293b]">
-        <table className="w-full text-left font-mono-num text-xs">
-          <thead>
-            <tr className="border-b border-[#1e293b] text-[#94a3b8] bg-[#0b1120] text-[10px] uppercase">
-              <th className="py-3 px-4">Member ID</th>
-              <th className="py-3 px-4">Full Name</th>
-              <th className="py-3 px-4">Sponsor</th>
-              <th className="py-3 px-4">Rank Tier</th>
-              <th className="py-3 px-4">Directs</th>
-              <th className="py-3 px-4">Fund Wallet</th>
-              <th className="py-3 px-4">Income Wallet</th>
-              <th className="py-3 px-4">Status</th>
-              <th className="py-3 px-4">Joined</th>
-              <th className="py-3 px-4 text-right">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-[#1e293b]/50">
-            {users.map((u) => (
-              <tr key={u.id} className="hover:bg-[#0f172a]/40">
-                <td className="py-3 px-4 font-bold text-[#d4af37]">{u.customId}</td>
-                <td className="py-3 px-4">
-                  <div className="font-bold text-white font-sans">{u.fullName}</div>
-                  <div className="text-[10px] text-[#94a3b8]">{u.email}</div>
-                </td>
-                <td className="py-3 px-4 text-[#cbd5e1]">
-                  {u.sponsor ? (
-                    <div>
-                      <span className="font-bold text-[#38bdf8]">{u.sponsor.customId}</span>
-                      <span className="text-[10px] text-[#94a3b8] block">{u.sponsor.fullName}</span>
-                    </div>
-                  ) : (
-                    <span className="text-[#64748b]">Genesis / Root</span>
-                  )}
-                </td>
-                <td className="py-3 px-4 text-[#38bdf8] font-bold">
-                  T{u.currentTier} ({TIER_NAMES[u.currentTier]})
-                </td>
-                <td className="py-3 px-4 font-bold text-white">{u.directCount}</td>
-                <td className="py-3 px-4 font-bold text-[#38bdf8]">
-                  ${parseFloat(u.fundBalance.toString()).toFixed(2)}
-                </td>
-                <td className="py-3 px-4 font-bold text-[#10b981]">
-                  ${parseFloat(u.incomeBalance.toString()).toFixed(2)}
-                </td>
-                <td className="py-3 px-4">
-                  <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                    u.status === "ACTIVE"
-                      ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/30"
-                      : "bg-amber-500/10 text-amber-400 border border-amber-500/30"
-                  }`}>
-                    {u.status}
-                  </span>
-                </td>
-                <td className="py-3 px-4 text-[#94a3b8] text-[11px]">
-                  {new Date(u.createdAt).toLocaleDateString()}
-                </td>
-                <td className="py-3 px-4 text-right">
-                  <Link
-                    href={`/admin/simulator?target=${u.customId}`}
-                    className="px-2.5 py-1 rounded-lg bg-red-500/15 text-red-400 hover:bg-red-500 hover:text-white border border-red-500/30 font-sans font-bold text-[11px] transition-all inline-flex items-center gap-1 cursor-pointer"
-                  >
-                    <Zap size={12} />
-                    <span>Boost / Directs</span>
-                  </Link>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      {/* Users Interactive Table */}
+      <UsersTableClient initialUsers={mappedUsers} />
     </div>
   );
 }

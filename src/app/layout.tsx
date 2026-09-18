@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { FloatingThemeToggle } from "@/components/FloatingThemeToggle";
+import { LanguageProvider } from "@/components/LanguageProvider";
+import { FloatingLanguageToggle } from "@/components/FloatingLanguageToggle";
 
 export const metadata: Metadata = {
   title: "SEORALINK | Korean Business Network",
@@ -55,10 +57,13 @@ export default function RootLayout({
         />
       </head>
       <body className="bg-slate-50 dark:bg-[#040711] text-slate-900 dark:text-[#e2e8f0] antialiased selection:bg-[#d4af37] selection:text-black min-h-screen">
-        <ThemeProvider>
-          {children}
-          <FloatingThemeToggle />
-        </ThemeProvider>
+        <LanguageProvider>
+          <ThemeProvider>
+            {children}
+            <FloatingLanguageToggle />
+            <FloatingThemeToggle />
+          </ThemeProvider>
+        </LanguageProvider>
       </body>
     </html>
   );
