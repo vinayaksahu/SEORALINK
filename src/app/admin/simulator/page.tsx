@@ -49,13 +49,13 @@ export default async function AdminSimulatorPage({
             </span>
             <div>
               <h1 className="text-xl font-extrabold text-white tracking-wide flex items-center gap-2">
-                Simulated Users & Rank Upgrade Engine
+                Network Tree & Rank Upgrade Engine
                 <span className="text-[10px] px-2 py-0.5 rounded-full bg-red-500/20 text-red-400 border border-red-500/40 font-bold uppercase">
-                  Admin Tool
+                  Genealogy & Simulator
                 </span>
               </h1>
               <p className="text-xs text-[#94a3b8] mt-1">
-                Generate simulated accounts directly under specific leaders, inject global queue momentum, or auto-promote any ID to higher ranks.
+                Visual genealogy tree & rank-wise network explorer. Auto-boost any member to higher ranks, inject targeted directs, or pump global Tripod queue momentum.
               </p>
             </div>
           </div>

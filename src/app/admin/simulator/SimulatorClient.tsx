@@ -17,7 +17,10 @@ import {
   ChevronRight,
   TrendingUp,
   Award,
+  GitBranch,
+  Sliders,
 } from "lucide-react";
+import TreeView from "./TreeView";
 
 interface RecentUser {
   id: string;
@@ -38,6 +41,7 @@ export default function SimulatorClient({
   initialTarget = "",
   recentUsers,
 }: SimulatorClientProps) {
+  const [activeTab, setActiveTab] = useState<"TREE" | "DECK">("TREE");
   const [mode, setMode] = useState<"DIRECT" | "BOOST_RANK" | "GLOBAL" | "RANDOM">("BOOST_RANK");
   const [targetIdentifier, setTargetIdentifier] = useState(initialTarget);
   const [count, setCount] = useState<number>(2);
@@ -98,6 +102,15 @@ export default function SimulatorClient({
     fetchTelemetry(customId);
   };
 
+  const handleSelectFromTree = (customId: string, preferredMode?: string) => {
+    setTargetIdentifier(customId);
+    fetchTelemetry(customId);
+    if (preferredMode && ["DIRECT", "BOOST_RANK", "GLOBAL", "RANDOM"].includes(preferredMode)) {
+      setMode(preferredMode as any);
+    }
+    setActiveTab("DECK");
+  };
+
   const handleExecute = async () => {
     setError("");
     setResult(null);
@@ -151,8 +164,53 @@ export default function SimulatorClient({
 
   return (
     <div className="space-y-8">
-      {/* 1. Mode Selector */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-3.5">
+      {/* Top Level View Mode Switcher: Interactive Network Tree vs Parameters Deck */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-100 dark:bg-[#070a14] p-1.5 rounded-2xl border border-slate-200 dark:border-slate-800">
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setActiveTab("TREE")}
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
+              activeTab === "TREE"
+                ? "bg-red-500 text-white shadow-md shadow-red-500/20"
+                : "text-slate-600 dark:text-[#94a3b8] hover:text-slate-900 dark:hover:text-white"
+            }`}
+          >
+            <GitBranch size={16} />
+            <span>Interactive Network Tree View</span>
+            <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-white/20 text-white font-mono font-bold">
+              TREE
+            </span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab("DECK")}
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
+              activeTab === "DECK"
+                ? "bg-red-500 text-white shadow-md shadow-red-500/20"
+                : "text-slate-600 dark:text-[#94a3b8] hover:text-slate-900 dark:hover:text-white"
+            }`}
+          >
+            <Sliders size={16} />
+            <span>Parameters Control Deck</span>
+          </button>
+        </div>
+
+        {targetIdentifier && (
+          <div className="hidden sm:flex items-center gap-2 text-xs pr-3 text-slate-500 dark:text-slate-400">
+            <span>Target Identifier:</span>
+            <strong className="text-[#d4af37] font-mono-num font-bold">{targetIdentifier}</strong>
+          </div>
+        )}
+      </div>
+
+      {activeTab === "TREE" ? (
+        <TreeView onSelectForForm={handleSelectFromTree} />
+      ) : (
+        <div className="space-y-8">
+          {/* 1. Mode Selector */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-3.5">
         {/* Mode: BOOST_RANK */}
         <button
           type="button"
@@ -701,6 +759,8 @@ export default function SimulatorClient({
               </div>
             </div>
           )}
+        </div>
+      )}
         </div>
       )}
     </div>

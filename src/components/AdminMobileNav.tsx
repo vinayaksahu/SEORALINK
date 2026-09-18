@@ -21,6 +21,7 @@ import {
   Zap,
   LifeBuoy,
   Database,
+  GitBranch,
 } from "lucide-react";
 
 interface AdminMobileNavProps {
@@ -60,7 +61,7 @@ export function AdminMobileNav({ fullName }: AdminMobileNavProps) {
     { href: "/admin/tickets", label: "Support Tickets", icon: LifeBuoy },
     { href: "/admin/users", label: "Member Directory", icon: Users },
     { href: "/admin/queue", label: "Queue Monitor", icon: GitCommit },
-    { href: "/admin/simulator", label: "User Generator", icon: Zap },
+    { href: "/admin/simulator", label: "Tree & Rank Engine", icon: GitBranch },
     { href: "/admin/backup", label: "Database Backup", icon: Database },
     { href: "/admin/settings", label: "System Settings", icon: Settings },
   ];
