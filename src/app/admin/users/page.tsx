@@ -60,7 +60,12 @@ export default async function AdminUsersPage({
   // Check rank pool cashouts for active users
   const rankWithdrawals = await db.withdrawalRequest.findMany({
     where: {
-      adminNote: { contains: "CASHOUT" },
+      OR: [
+        { feePercent: 20 },
+        { adminNote: { contains: "CASHOUT" } },
+        { adminNote: { contains: "RANK_EXIT" } },
+        { amount: 20480 },
+      ],
       status: { not: "REJECTED" },
     },
     select: { userId: true },

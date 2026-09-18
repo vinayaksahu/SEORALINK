@@ -32,7 +32,12 @@ export async function PATCH(
       const hasRankExit = await db.withdrawalRequest.findFirst({
         where: {
           userId: id,
-          adminNote: { contains: "CASHOUT" },
+          OR: [
+            { feePercent: 20 },
+            { adminNote: { contains: "CASHOUT" } },
+            { adminNote: { contains: "RANK_EXIT" } },
+            { amount: 20480 },
+          ],
           status: { not: "REJECTED" },
         },
       });

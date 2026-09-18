@@ -62,7 +62,12 @@ export async function processTierQueue(
     const userRankExit = await tx.withdrawalRequest.findFirst({
       where: {
         userId: matchedUser.id,
-        adminNote: { contains: "CASHOUT" },
+        OR: [
+          { feePercent: 20 },
+          { adminNote: { contains: "CASHOUT" } },
+          { adminNote: { contains: "RANK_EXIT" } },
+          { amount: 20480 },
+        ],
         status: { not: "REJECTED" },
       },
     });
@@ -140,7 +145,12 @@ export async function checkPendingRankPromotions(
   const userRankExit = await tx.withdrawalRequest.findFirst({
     where: {
       userId: user.id,
-      adminNote: { contains: "CASHOUT" },
+      OR: [
+        { feePercent: 20 },
+        { adminNote: { contains: "CASHOUT" } },
+        { adminNote: { contains: "RANK_EXIT" } },
+        { amount: 20480 },
+      ],
       status: { not: "REJECTED" },
     },
   });
@@ -272,7 +282,10 @@ export async function awardMentorshipOverride(
   const sponsorRankExit = await tx.withdrawalRequest.findFirst({
     where: {
       userId: mentee.sponsorId,
-      adminNote: { contains: "RANK_EXIT_CASHOUT" },
+      OR: [
+        { feePercent: 20 },
+        { adminNote: { contains: "RANK_EXIT" } },
+      ],
       status: { not: "REJECTED" },
     },
   });

@@ -33,12 +33,20 @@ export async function POST(
       );
     }
 
+    const originalNote = withdrawal.adminNote || "";
+    let finalNote = adminNote;
+    if (originalNote.includes("[")) {
+      finalNote = `${originalNote} | ${adminNote}`;
+    } else if (parseFloat(withdrawal.feePercent.toString()) === 20) {
+      finalNote = `[RANK_EXIT_CASHOUT] ${adminNote}`;
+    }
+
     await db.withdrawalRequest.update({
       where: { id },
       data: {
         status: "APPROVED",
         txHash,
-        adminNote,
+        adminNote: finalNote,
         processedAt: new Date(),
         processedById: session.userId,
       },

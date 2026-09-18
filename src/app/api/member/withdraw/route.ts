@@ -43,7 +43,12 @@ export async function POST(req: Request) {
         await tx.withdrawalRequest.findFirst({
           where: {
             userId: user.id,
-            adminNote: { contains: "CASHOUT" },
+            OR: [
+              { feePercent: 20 },
+              { adminNote: { contains: "CASHOUT" } },
+              { adminNote: { contains: "RANK_EXIT" } },
+              { amount: 20480 },
+            ],
             status: { not: "REJECTED" },
           },
         })
@@ -135,7 +140,12 @@ export async function POST(req: Request) {
       const existingRankWithdrawal = await tx.withdrawalRequest.findFirst({
         where: {
           userId: user.id,
-          adminNote: { contains: "CASHOUT" },
+          OR: [
+            { feePercent: 20 },
+            { adminNote: { contains: "CASHOUT" } },
+            { adminNote: { contains: "RANK_EXIT" } },
+            { amount: 20480 },
+          ],
           status: { not: "REJECTED" },
         },
       });
