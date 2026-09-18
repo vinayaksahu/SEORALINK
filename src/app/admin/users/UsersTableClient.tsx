@@ -15,7 +15,9 @@ import {
   User,
   ShieldCheck,
   Trophy,
-  Wallet
+  Wallet,
+  ExternalLink,
+  RefreshCw,
 } from "lucide-react";
 
 export interface UserItem {
@@ -49,6 +51,34 @@ export default function UsersTableClient({ initialUsers }: { initialUsers: UserI
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+
+  // Portal Impersonation State
+  const [impersonatingId, setImpersonatingId] = useState<string | null>(null);
+  const [impersonateError, setImpersonateError] = useState<string | null>(null);
+
+  const handleImpersonate = async (targetUser: UserItem) => {
+    try {
+      setImpersonatingId(targetUser.id);
+      setImpersonateError(null);
+
+      const res = await fetch("/api/admin/impersonate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ targetUserId: targetUser.id }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to switch to member portal");
+      }
+
+      // Hard redirect to load member portal layout and session cleanly
+      window.location.href = data.redirectUrl || "/member/dashboard";
+    } catch (err: any) {
+      setImpersonateError(err.message || "Failed to switch to user portal");
+      setImpersonatingId(null);
+    }
+  };
 
   const handleOpenEdit = (user: UserItem) => {
     setEditingUser(user);
@@ -127,34 +157,67 @@ export default function UsersTableClient({ initialUsers }: { initialUsers: UserI
   };
 
   return (
-    <div className="overflow-x-auto card-seoralink border-[#1e293b]">
-      <table className="w-full text-left font-mono-num text-xs">
-        <thead>
-          <tr className="border-b border-[#1e293b] text-[#94a3b8] bg-[#0b1120] text-[10px] uppercase tracking-wider">
-            <th className="py-3 px-4">Member ID</th>
-            <th className="py-3 px-4">Full Name</th>
-            <th className="py-3 px-4">Sponsor</th>
-            <th className="py-3 px-4">Rank Tier</th>
-            <th className="py-3 px-4">Directs</th>
-            <th className="py-3 px-4">Fund Wallet</th>
-            <th className="py-3 px-4">Commission Wallet</th>
-            <th className="py-3 px-4">Pool Wallet</th>
-            <th className="py-3 px-4">Status</th>
-            <th className="py-3 px-4">Joined</th>
-            <th className="py-3 px-4 text-right">Actions</th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-[#1e293b]/50">
-          {users.length === 0 ? (
-            <tr>
-              <td colSpan={11} className="text-center py-12 text-[#94a3b8] text-xs">
-                No members found matching your search.
-              </td>
+    <div className="space-y-3">
+      {impersonateError && (
+        <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-xl text-red-400 text-xs flex items-center justify-between">
+          <span>{impersonateError}</span>
+          <button
+            type="button"
+            onClick={() => setImpersonateError(null)}
+            className="text-red-400 hover:text-white"
+          >
+            <X size={14} />
+          </button>
+        </div>
+      )}
+
+      <div className="overflow-x-auto card-seoralink border-[#1e293b]">
+        <table className="w-full text-left font-mono-num text-xs">
+          <thead>
+            <tr className="border-b border-[#1e293b] text-[#94a3b8] bg-[#0b1120] text-[10px] uppercase tracking-wider">
+              <th className="py-3 px-4">Member ID</th>
+              <th className="py-3 px-4">Full Name</th>
+              <th className="py-3 px-4">Sponsor</th>
+              <th className="py-3 px-4">Rank Tier</th>
+              <th className="py-3 px-4">Directs</th>
+              <th className="py-3 px-4">Fund Wallet</th>
+              <th className="py-3 px-4">Commission Wallet</th>
+              <th className="py-3 px-4">Pool Wallet</th>
+              <th className="py-3 px-4">Status</th>
+              <th className="py-3 px-4">Joined</th>
+              <th className="py-3 px-4 text-right">Actions</th>
             </tr>
-          ) : (
-            users.map((u) => (
-              <tr key={u.id} className="hover:bg-[#0f172a]/40 transition-colors">
-                <td className="py-3 px-4 font-bold text-[#d4af37]">{u.customId}</td>
+          </thead>
+          <tbody className="divide-y divide-[#1e293b]/50">
+            {users.length === 0 ? (
+              <tr>
+                <td colSpan={11} className="text-center py-12 text-[#94a3b8] text-xs">
+                  No members found matching your search.
+                </td>
+              </tr>
+            ) : (
+              users.map((u) => (
+                <tr key={u.id} className="hover:bg-[#0f172a]/40 transition-colors">
+                  {/* 1st Column: Member ID with Switch to User Portal button */}
+                  <td className="py-3 px-4">
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold text-[#d4af37] font-mono">{u.customId}</span>
+                      <button
+                        type="button"
+                        onClick={() => handleImpersonate(u)}
+                        disabled={impersonatingId === u.id}
+                        className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold text-[#38bdf8] bg-[#38bdf8]/10 hover:bg-[#38bdf8]/20 border border-[#38bdf8]/30 transition-all cursor-pointer active:scale-95 disabled:opacity-50"
+                        title={`Open User Portal as ${u.fullName} (${u.customId})`}
+                      >
+                        {impersonatingId === u.id ? (
+                          <RefreshCw size={10} className="animate-spin" />
+                        ) : (
+                          <ExternalLink size={10} />
+                        )}
+                        <span>Portal</span>
+                      </button>
+                    </div>
+                  </td>
 
                 {/* Full Name, Email, Phone with Edit Button */}
                 <td className="py-3 px-4 min-w-[200px]">
@@ -255,6 +318,7 @@ export default function UsersTableClient({ initialUsers }: { initialUsers: UserI
           )}
         </tbody>
       </table>
+    </div>
 
       {/* ================= EDIT MEMBER PROFILE MODAL ================= */}
       {editingUser && (

@@ -1,5 +1,6 @@
 import React from "react";
 import Link from "next/link";
+import { cookies } from "next/headers";
 import { getSession } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { redirect } from "next/navigation";
@@ -16,6 +17,8 @@ import {
   LogOut,
   ShieldCheck,
   LifeBuoy,
+  ShieldAlert,
+  ArrowLeft,
 } from "lucide-react";
 import { MemberMobileNav } from "@/components/MemberMobileNav";
 import { LanguageSelector } from "@/components/LanguageSelector";
@@ -76,6 +79,9 @@ export default async function MemberLayout({
     { href: "/member/support", label: "Support Tickets", icon: LifeBuoy },
   ];
 
+  const cookieStore = await cookies();
+  const isImpersonating = Boolean(cookieStore.get("sl_admin_session")?.value);
+
   const serializedUser = {
     customId: user.customId,
     fullName: user.fullName,
@@ -89,13 +95,34 @@ export default async function MemberLayout({
 
   return (
     <div className="min-h-screen bg-[#040711] text-[#e2e8f0] flex flex-col selection:bg-[#d4af37] selection:text-black">
+      {/* Admin Impersonation Notice Banner */}
+      {isImpersonating && (
+        <div className="bg-gradient-to-r from-amber-600 via-red-600 to-amber-700 text-white text-xs font-bold px-3 sm:px-6 py-2 flex items-center justify-between shadow-xl sticky top-0 z-50 border-b border-white/20">
+          <div className="flex items-center gap-2">
+            <ShieldAlert size={16} className="shrink-0 animate-pulse text-amber-200" />
+            <span>
+              Admin Impersonation Active: Viewing portal as <strong className="underline text-white">{user.fullName}</strong> ({user.customId})
+            </span>
+          </div>
+          <form action="/api/admin/impersonate/exit" method="POST" className="m-0 p-0">
+            <button
+              type="submit"
+              className="bg-black/60 hover:bg-black/80 border border-white/40 text-white px-3 py-1 rounded-md text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow active:scale-95"
+            >
+              <ArrowLeft size={13} />
+              <span>Return to Admin Console</span>
+            </button>
+          </form>
+        </div>
+      )}
+
       {/* Main Container */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Top Header Bar */}
         <header className="sticky top-0 z-20 backdrop-blur-md bg-white/85 dark:bg-[#040711]/85 border-b border-slate-200 dark:border-[#d4af37]/20 px-3 sm:px-6 py-3 flex items-center justify-between gap-2">
           {/* Left: Navigation Drawer Button + Brand Logo */}
           <div className="flex items-center gap-2.5 sm:gap-4 shrink-0">
-            <MemberMobileNav user={serializedUser} />
+            <MemberMobileNav user={serializedUser} isImpersonating={isImpersonating} />
             <Link href="/member/dashboard" className="flex items-center shrink-0">
               <div className="sm:hidden">
                 <Logo size={28} showText={false} />

@@ -23,6 +23,8 @@ export async function POST(req: Request) {
   const isAdmin = await checkIsAdmin(token);
 
   cookieStore.delete("sl_session");
+  cookieStore.delete("sl_admin_session");
+  cookieStore.delete("sl_impersonating");
 
   const url = new URL(req.url);
   const redirectParam = url.searchParams.get("redirect");
@@ -53,6 +55,8 @@ export async function GET(req: Request) {
   const isAdmin = await checkIsAdmin(token);
 
   cookieStore.delete("sl_session");
+  cookieStore.delete("sl_admin_session");
+  cookieStore.delete("sl_impersonating");
 
   const url = new URL(req.url);
   const redirectParam = url.searchParams.get("redirect");

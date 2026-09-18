@@ -33,9 +33,10 @@ interface MemberMobileNavProps {
     status: string;
     role: string;
   };
+  isImpersonating?: boolean;
 }
 
-export function MemberMobileNav({ user }: MemberMobileNavProps) {
+export function MemberMobileNav({ user, isImpersonating }: MemberMobileNavProps) {
   const [isOpen, setIsOpen] = useState(false);
   const pathname = usePathname();
 
@@ -208,18 +209,35 @@ export function MemberMobileNav({ user }: MemberMobileNavProps) {
               );
             })}
 
-            {/* Admin console link if authorized */}
-            {(user.role === "ADMIN" || user.role === "SUPER_ADMIN") && (
+            {/* Return to Admin console if impersonating */}
+            {isImpersonating ? (
               <div className="pt-2">
-                <Link
-                  href="/admin"
-                  onClick={() => setIsOpen(false)}
-                  className="flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-bold text-[#d4af37] bg-[#d4af37]/5 hover:bg-[#d4af37]/15 border border-[#d4af37]/40 transition-all"
-                >
-                  <ShieldCheck size={16} />
-                  <span>Admin Console</span>
-                </Link>
+                <form action="/api/admin/impersonate/exit" method="POST" className="m-0 p-0">
+                  <button
+                    type="submit"
+                    className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-bold text-amber-300 bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/50 transition-all cursor-pointer"
+                  >
+                    <div className="flex items-center gap-2">
+                      <ShieldCheck size={16} className="text-amber-400" />
+                      <span>Return to Admin Console</span>
+                    </div>
+                  </button>
+                </form>
               </div>
+            ) : (
+              /* Regular Admin console link if authorized */
+              (user.role === "ADMIN" || user.role === "SUPER_ADMIN") && (
+                <div className="pt-2">
+                  <Link
+                    href="/admin"
+                    onClick={() => setIsOpen(false)}
+                    className="flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-bold text-[#d4af37] bg-[#d4af37]/5 hover:bg-[#d4af37]/15 border border-[#d4af37]/40 transition-all"
+                  >
+                    <ShieldCheck size={16} />
+                    <span>Admin Console</span>
+                  </Link>
+                </div>
+              )
             )}
           </nav>
         </div>

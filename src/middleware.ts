@@ -32,6 +32,30 @@ export async function middleware(request: NextRequest) {
   // 2. Protect /admin routes (except /adminlogin)
   if (pathname.startsWith("/admin") && pathname !== "/adminlogin") {
     if (!session || (session.role !== "ADMIN" && session.role !== "SUPER_ADMIN")) {
+      const adminToken = request.cookies.get("sl_admin_session")?.value;
+      if (adminToken) {
+        try {
+          const { payload: adminPayload } = await jwtVerify(adminToken, encodedKey, {
+            algorithms: ["HS256"],
+          });
+          if (adminPayload && (adminPayload.role === "ADMIN" || adminPayload.role === "SUPER_ADMIN")) {
+            const response = NextResponse.redirect(request.nextUrl);
+            response.cookies.set("sl_session", adminToken, {
+              httpOnly: true,
+              secure: process.env.NODE_ENV === "production",
+              sameSite: "lax",
+              path: "/",
+              maxAge: 60 * 60 * 24 * 7,
+            });
+            response.cookies.delete("sl_admin_session");
+            response.cookies.delete("sl_impersonating");
+            return response;
+          }
+        } catch {
+          // Token invalid, continue to redirect
+        }
+      }
+
       const adminLoginUrl = new URL("/adminlogin", request.url);
       return NextResponse.redirect(adminLoginUrl);
     }
