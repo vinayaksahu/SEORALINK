@@ -1,6 +1,7 @@
 import React from "react";
 import Link from "next/link";
 import { getSession } from "@/lib/auth";
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { Logo } from "@/components/Logo";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -32,6 +33,9 @@ export default async function AdminLayout({
     redirect("/adminlogin");
   }
 
+  const cookieStore = await cookies();
+  const isSuperImpersonating = Boolean(cookieStore.get("sl_super_session")?.value);
+
   const adminNav = [
     { href: "/admin", label: "Executive Overview", icon: LayoutDashboard },
     { href: "/admin/deposits", label: "Deposit Requests", icon: Wallet },
@@ -47,6 +51,27 @@ export default async function AdminLayout({
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-[#040711] text-slate-900 dark:text-[#e2e8f0] flex flex-col selection:bg-[#d4af37] selection:text-black">
+      {/* Super Root Impersonation Banner */}
+      {isSuperImpersonating && (
+        <div className="bg-gradient-to-r from-rose-950 via-amber-950 to-rose-950 border-b border-rose-500/40 text-amber-300 px-4 py-2 text-xs font-mono flex flex-wrap items-center justify-between gap-2 shadow-lg sticky top-0 z-30">
+          <div className="flex items-center gap-2">
+            <span className="w-2.5 h-2.5 rounded-full bg-rose-500 animate-ping shrink-0" />
+            <span>
+              <strong className="text-white uppercase tracking-wider">Super Root Master Console:</strong> Impersonating Branch Admin{" "}
+              <span className="text-amber-400 font-bold">{session.fullName} ({session.customId})</span>
+            </span>
+          </div>
+          <form action="/api/superadmin/impersonate/exit" method="POST">
+            <button
+              type="submit"
+              className="px-3 py-1 rounded-lg bg-rose-600 hover:bg-rose-500 text-white font-bold text-[11px] transition shadow cursor-pointer"
+            >
+              Exit to Super Root Admin &rarr;
+            </button>
+          </form>
+        </div>
+      )}
+
       {/* Main Container */}
       <div className="flex-1 flex flex-col min-w-0">
         <header className="sticky top-0 z-20 backdrop-blur-md bg-white/85 dark:bg-[#040711]/85 border-b border-red-500/20 px-4 sm:px-6 py-3.5 flex items-center justify-between gap-3">

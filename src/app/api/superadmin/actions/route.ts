@@ -222,23 +222,17 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: "ticketId and message are required." }, { status: 400 });
       }
 
-      await db.ticketMessage.create({
-        data: {
-          ticketId,
-          senderId: session.userId,
-          message: `[Super Root Admin]: ${message}`,
-          isAdmin: true,
-        },
-      });
-
       await db.supportTicket.update({
         where: { id: ticketId },
-        data: { status: "ANSWERED" },
+        data: {
+          adminReply: `[Super Root Admin]: ${message.trim()}`,
+          status: "RESOLVED",
+        },
       });
 
       return NextResponse.json({
         success: true,
-        message: "Reply sent to ticket.",
+        message: "Reply sent and ticket marked as Resolved.",
       });
     }
 

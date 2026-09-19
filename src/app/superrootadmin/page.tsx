@@ -18,7 +18,6 @@ import {
   CheckCircle2,
   AlertTriangle,
   X,
-  Tag,
   Settings,
   DollarSign,
   Eye,
@@ -28,6 +27,11 @@ import {
   LifeBuoy,
   ShieldCheck,
   Building2,
+  ExternalLink,
+  Zap,
+  Globe,
+  Sliders,
+  Check,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 
@@ -74,12 +78,13 @@ interface InspectData {
 
 export default function SuperRootAdminPage() {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<"admins" | "inspect" | "config" | "wallet">("admins");
+  const [activeTab, setActiveTab] = useState<"admins" | "inspect" | "search" | "config" | "wallet">("admins");
   const [stats, setStats] = useState<GlobalStats | null>(null);
   const [admins, setAdmins] = useState<AdminItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [refreshing, setRefreshing] = useState(false);
+  const [actionMsg, setActionMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
   // Inspector states
   const [selectedAdminId, setSelectedAdminId] = useState<string | null>(null);
@@ -87,8 +92,25 @@ export default function SuperRootAdminPage() {
   const [inspectLoading, setInspectLoading] = useState(false);
   const [inspectSubTab, setInspectSubTab] = useState<"members" | "queue" | "deposits" | "withdrawals" | "tickets">("members");
 
+  // Impersonation state
+  const [impersonatingId, setImpersonatingId] = useState<string | null>(null);
+
+  // Universal Search state
+  const [universalQuery, setUniversalQuery] = useState("");
+  const [universalUsers, setUniversalUsers] = useState<any[]>([]);
+  const [universalLoading, setUniversalLoading] = useState(false);
+
   // System Config states
-  const [configs, setConfigs] = useState<any[]>([]);
+  const [configForm, setConfigForm] = useState({
+    depositAddresses: "",
+    depositDistributionMode: "SINGLE",
+    primaryDepositAddress: "",
+    defaultNetwork: "USDT_BEP20",
+    otpRegistration: true,
+    otpForgotPassword: true,
+    otpWithdrawal: true,
+    otpProfileUpdate: false,
+  });
   const [configLoading, setConfigLoading] = useState(false);
   const [configSaving, setConfigSaving] = useState(false);
   const [configMsg, setConfigMsg] = useState<string | null>(null);
@@ -139,8 +161,8 @@ export default function SuperRootAdminPage() {
         setStats(statsData.stats);
         setAdmins(adminsData.admins || []);
       }
-    } catch (e) {
-      console.error(e);
+    } catch (err) {
+      console.error(err);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -148,19 +170,59 @@ export default function SuperRootAdminPage() {
   };
 
   const loadInspectData = async (adminId: string) => {
-    setSelectedAdminId(adminId);
-    setInspectLoading(true);
-    setActiveTab("inspect");
     try {
+      setInspectLoading(true);
+      setSelectedAdminId(adminId);
+      setActiveTab("inspect");
       const res = await fetch(`/api/superadmin/team-inspect?adminId=${adminId}`);
-      const data = await res.json();
       if (res.ok) {
+        const data = await res.json();
         setInspectData(data);
       }
-    } catch (e) {
-      console.error(e);
+    } catch (err) {
+      console.error(err);
     } finally {
       setInspectLoading(false);
+    }
+  };
+
+  const loadConfigs = async () => {
+    try {
+      setConfigLoading(true);
+      const res = await fetch("/api/superadmin/config");
+      if (res.ok) {
+        const data = await res.json();
+        const c = data.configs || {};
+        setConfigForm({
+          depositAddresses: c.USDT_DEPOSIT_ADDRESSES || "",
+          depositDistributionMode: c.DEPOSIT_DISTRIBUTION_MODE || "SINGLE",
+          primaryDepositAddress: c.USDT_DEPOSIT_ADDRESS || "",
+          defaultNetwork: c.DEFAULT_NETWORK || "USDT_BEP20",
+          otpRegistration: c.OTP_ENABLED_REGISTRATION !== "false",
+          otpForgotPassword: c.OTP_ENABLED_FORGOT_PASSWORD !== "false",
+          otpWithdrawal: c.OTP_ENABLED_WITHDRAWAL !== "false",
+          otpProfileUpdate: c.OTP_ENABLED_PROFILE_UPDATE === "true",
+        });
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setConfigLoading(false);
+    }
+  };
+
+  const loadUniversalUsers = async (q: string) => {
+    try {
+      setUniversalLoading(true);
+      const res = await fetch(`/api/superadmin/search?q=${encodeURIComponent(q)}`);
+      if (res.ok) {
+        const data = await res.json();
+        setUniversalUsers(data.users || []);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setUniversalLoading(false);
     }
   };
 
@@ -168,11 +230,37 @@ export default function SuperRootAdminPage() {
     loadAllData();
   }, []);
 
+  useEffect(() => {
+    if (activeTab === "config") {
+      loadConfigs();
+    } else if (activeTab === "search") {
+      loadUniversalUsers(universalQuery);
+    }
+  }, [activeTab]);
+
   const handleLogout = async () => {
     try {
       await fetch("/api/auth/logout", { method: "POST" });
-    } finally {
       router.push("/superrootadminlogin");
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleImpersonateAdmin = async (adminId: string) => {
+    try {
+      setImpersonatingId(adminId);
+      const res = await fetch("/api/superadmin/impersonate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ targetAdminId: adminId }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to impersonate admin");
+      window.location.href = data.redirectUrl || "/admin";
+    } catch (err: any) {
+      alert(`Impersonation error: ${err.message}`);
+      setImpersonatingId(null);
     }
   };
 
@@ -187,12 +275,15 @@ export default function SuperRootAdminPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(createForm),
       });
+
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to create admin");
 
       setShowCreateModal(false);
       setCreateForm({ fullName: "", customId: "", email: "", phone: "", password: "" });
       loadAllData();
+      setActionMsg({ type: "success", text: `Parallel Admin ${data.admin?.customId} created successfully!` });
+      setTimeout(() => setActionMsg(null), 3500);
     } catch (err: any) {
       setCreateError(err.message);
     } finally {
@@ -210,7 +301,11 @@ export default function SuperRootAdminPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ adminId: admin.id, action: "TOGGLE_STATUS" }),
       });
-      if (res.ok) loadAllData();
+      if (res.ok) {
+        loadAllData();
+        setActionMsg({ type: "success", text: `Admin ${admin.customId} status updated successfully.` });
+        setTimeout(() => setActionMsg(null), 3000);
+      }
     } catch (err) {
       console.error(err);
     }
@@ -245,6 +340,61 @@ export default function SuperRootAdminPage() {
       setPasswordMsg(err.message);
     } finally {
       setPasswordLoading(false);
+    }
+  };
+
+  const handleExecuteAction = async (action: string, payload: any) => {
+    try {
+      const res = await fetch("/api/superadmin/actions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action, ...payload }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Action failed");
+      setActionMsg({ type: "success", text: data.message || "Operation completed successfully." });
+      setTimeout(() => setActionMsg(null), 4000);
+      if (selectedAdminId) {
+        loadInspectData(selectedAdminId);
+      }
+    } catch (err: any) {
+      setActionMsg({ type: "error", text: err.message });
+      setTimeout(() => setActionMsg(null), 4000);
+    }
+  };
+
+  const handleSaveConfigs = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setConfigSaving(true);
+    setConfigMsg(null);
+    try {
+      const res = await fetch("/api/superadmin/config", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          configs: {
+            USDT_DEPOSIT_ADDRESSES: configForm.depositAddresses,
+            DEPOSIT_DISTRIBUTION_MODE: configForm.depositDistributionMode,
+            USDT_DEPOSIT_ADDRESS: configForm.primaryDepositAddress,
+            DEFAULT_NETWORK: configForm.defaultNetwork,
+            OTP_ENABLED_REGISTRATION: configForm.otpRegistration ? "true" : "false",
+            OTP_ENABLED_FORGOT_PASSWORD: configForm.otpForgotPassword ? "true" : "false",
+            OTP_ENABLED_WITHDRAWAL: configForm.otpWithdrawal ? "true" : "false",
+            OTP_ENABLED_PROFILE_UPDATE: configForm.otpProfileUpdate ? "true" : "false",
+          },
+        }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setConfigMsg("Global system configurations saved live successfully!");
+        setTimeout(() => setConfigMsg(null), 3500);
+      } else {
+        setConfigMsg(data.error || "Failed to save configuration");
+      }
+    } catch (err: any) {
+      setConfigMsg(err.message);
+    } finally {
+      setConfigSaving(false);
     }
   };
 
@@ -302,25 +452,39 @@ export default function SuperRootAdminPage() {
 
   return (
     <div className="min-h-screen bg-[#040711] text-slate-100 font-sans selection:bg-rose-500 selection:text-white">
-      {/* Top Root Bar */}
-      <header className="sticky top-0 z-30 bg-slate-900/95 backdrop-blur-xl border-b border-rose-500/20 px-4 sm:px-8 py-3.5 flex items-center justify-between shadow-2xl">
+      {/* Action Notification Toast */}
+      {actionMsg && (
+        <div
+          className={`fixed top-4 right-4 z-50 px-4 py-3 rounded-2xl shadow-2xl border text-xs font-bold font-mono flex items-center gap-2 animate-in slide-in-from-top ${
+            actionMsg.type === "success"
+              ? "bg-emerald-950 border-emerald-500 text-emerald-200"
+              : "bg-rose-950 border-rose-500 text-rose-200"
+          }`}
+        >
+          {actionMsg.type === "success" ? <CheckCircle2 className="w-4 h-4" /> : <AlertTriangle className="w-4 h-4" />}
+          <span>{actionMsg.text}</span>
+        </div>
+      )}
+
+      {/* Top Super Root Commander Bar */}
+      <header className="sticky top-0 z-30 bg-slate-950/90 backdrop-blur-xl border-b border-rose-500/20 px-4 sm:px-8 py-3.5 flex items-center justify-between shadow-2xl">
         <div className="flex items-center gap-3.5">
           <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-rose-500 to-amber-500 p-0.5 shadow-lg shadow-rose-500/20">
-            <div className="w-full h-full bg-[#040711] rounded-[10px] flex items-center justify-center">
+            <div className="w-full h-full bg-slate-950 rounded-[10px] flex items-center justify-center">
               <ShieldAlert className="w-5 h-5 text-rose-400" />
             </div>
           </div>
           <div>
             <div className="flex items-center gap-2">
               <h1 className="text-base font-black text-white tracking-wide">
-                SEORALINK <span className="text-rose-400 font-mono">SUPER ROOT</span>
+                SEORALINK <span className="text-rose-500 font-mono">SUPER ROOT ADMIN</span>
               </h1>
               <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-rose-500/20 text-rose-300 border border-rose-500/30">
                 MASTER COMMANDER
               </span>
             </div>
             <p className="text-[11px] text-slate-400 font-mono">
-              Signed in as: <span className="text-amber-400 font-bold">superrootadmin</span> &bull; 100% Zero-Knowledge Isolated Architecture
+              Signed in as: <span className="text-amber-400 font-bold">SUPER ROOT</span> (Zero-Knowledge Supervisor)
             </p>
           </div>
         </div>
@@ -329,72 +493,69 @@ export default function SuperRootAdminPage() {
           <button
             onClick={loadAllData}
             disabled={refreshing}
-            className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-800 bg-slate-900 hover:border-slate-700 text-xs font-semibold text-slate-300 transition cursor-pointer"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 text-xs font-mono border border-slate-800 transition cursor-pointer"
+            title="Refresh All Telemetry"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? "animate-spin text-rose-400" : ""}`} />
-            Refresh
+            <span className="hidden sm:inline">Refresh</span>
           </button>
-          <ThemeToggle variant="compact" size="sm" showLabels={false} />
+
+          <ThemeToggle />
+
           <button
             onClick={handleLogout}
-            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/30 text-rose-300 text-xs font-bold transition shadow-sm cursor-pointer"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 text-xs font-mono border border-rose-500/30 transition cursor-pointer"
           >
             <LogOut className="w-3.5 h-3.5" />
-            Logout
+            <span className="hidden sm:inline">Sign Out</span>
           </button>
         </div>
       </header>
 
       {/* Main Content Area */}
-      <main className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-8">
-        {/* Global Financial KPI Cards */}
-        <section className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="p-5 rounded-2xl bg-slate-900/80 border border-slate-800/80 backdrop-blur-sm relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-24 h-24 bg-rose-500/5 rounded-full blur-2xl pointer-events-none" />
-            <div className="flex items-center justify-between text-slate-400 text-xs font-medium mb-2 font-mono">
-              <span>PARALLEL ADMINS</span>
-              <Layers className="w-4 h-4 text-rose-400" />
+      <main className="p-4 sm:p-8 max-w-7xl mx-auto space-y-8">
+        {/* Global KPI Telemetry Cards */}
+        {stats && (
+          <section className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="bg-slate-900/80 border border-slate-800/80 rounded-2xl p-4 space-y-1 shadow-lg">
+              <div className="flex items-center justify-between text-slate-400">
+                <span className="text-[11px] font-mono font-bold uppercase tracking-wider">Sub-Admins</span>
+                <Layers className="w-4 h-4 text-amber-400" />
+              </div>
+              <p className="text-2xl font-black text-white font-mono">{stats.totalAdmins}</p>
+              <p className="text-[11px] text-slate-500 font-mono">Parallel Isolated Branches</p>
             </div>
-            <p className="text-2xl sm:text-3xl font-black text-white font-mono">{stats?.totalAdmins || 0}</p>
-            <p className="text-[11px] text-slate-500 mt-1 font-mono">Isolated Parallel Branches</p>
-          </div>
 
-          <div className="p-5 rounded-2xl bg-slate-900/80 border border-slate-800/80 backdrop-blur-sm relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-24 h-24 bg-cyan-500/5 rounded-full blur-2xl pointer-events-none" />
-            <div className="flex items-center justify-between text-slate-400 text-xs font-medium mb-2 font-mono">
-              <span>TOTAL MEMBERS</span>
-              <Users className="w-4 h-4 text-cyan-400" />
+            <div className="bg-slate-900/80 border border-slate-800/80 rounded-2xl p-4 space-y-1 shadow-lg">
+              <div className="flex items-center justify-between text-slate-400">
+                <span className="text-[11px] font-mono font-bold uppercase tracking-wider">Global Members</span>
+                <Users className="w-4 h-4 text-cyan-400" />
+              </div>
+              <p className="text-2xl font-black text-white font-mono">{stats.totalUsers}</p>
+              <p className="text-[11px] text-cyan-400 font-mono">{stats.activeUsers} Active Accounts</p>
             </div>
-            <p className="text-2xl sm:text-3xl font-black text-white font-mono">{stats?.totalUsers || 0}</p>
-            <p className="text-[11px] text-emerald-400 mt-1 font-mono">{stats?.activeUsers || 0} Active Members</p>
-          </div>
 
-          <div className="p-5 rounded-2xl bg-slate-900/80 border border-slate-800/80 backdrop-blur-sm relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/5 rounded-full blur-2xl pointer-events-none" />
-            <div className="flex items-center justify-between text-slate-400 text-xs font-medium mb-2 font-mono">
-              <span>PLATFORM DEPOSITS</span>
-              <Wallet className="w-4 h-4 text-emerald-400" />
+            <div className="bg-slate-900/80 border border-slate-800/80 rounded-2xl p-4 space-y-1 shadow-lg">
+              <div className="flex items-center justify-between text-slate-400">
+                <span className="text-[11px] font-mono font-bold uppercase tracking-wider">Total Approved Deposits</span>
+                <Wallet className="w-4 h-4 text-emerald-400" />
+              </div>
+              <p className="text-2xl font-black text-emerald-400 font-mono">${stats.totalApprovedDepositsUsdt.toFixed(2)}</p>
+              <p className="text-[11px] text-slate-500 font-mono">Across all branches</p>
             </div>
-            <p className="text-2xl sm:text-3xl font-black text-emerald-400 font-mono">
-              ${(stats?.totalApprovedDepositsUsdt || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
-            </p>
-            <p className="text-[11px] text-slate-500 mt-1 font-mono">Total USDT Inflow</p>
-          </div>
 
-          <div className="p-5 rounded-2xl bg-slate-900/80 border border-slate-800/80 backdrop-blur-sm relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-24 h-24 bg-amber-500/5 rounded-full blur-2xl pointer-events-none" />
-            <div className="flex items-center justify-between text-slate-400 text-xs font-medium mb-2 font-mono">
-              <span>RESERVE COLLECTED</span>
-              <TrendingUp className="w-4 h-4 text-amber-400" />
+            <div className="bg-slate-900/80 border border-slate-800/80 rounded-2xl p-4 space-y-1 shadow-lg">
+              <div className="flex items-center justify-between text-slate-400">
+                <span className="text-[11px] font-mono font-bold uppercase tracking-wider">Total Payouts &amp; Reserve</span>
+                <TrendingUp className="w-4 h-4 text-rose-400" />
+              </div>
+              <p className="text-2xl font-black text-rose-400 font-mono">${stats.totalProcessedWithdrawalsUsdt.toFixed(2)}</p>
+              <p className="text-[11px] text-amber-400 font-mono">Reserve: ${stats.totalReserveCollectedUsdt.toFixed(2)}</p>
             </div>
-            <p className="text-2xl sm:text-3xl font-black text-amber-400 font-mono">
-              ${(stats?.totalReserveCollectedUsdt || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
-            </p>
-            <p className="text-[11px] text-slate-500 mt-1 font-mono">From Processed Payouts</p>
-          </div>
-        </section>
+          </section>
+        )}
 
-        {/* Feature Navigation Tabs */}
+        {/* Master Navigation Tabs */}
         <section className="flex flex-wrap items-center gap-2 border-b border-slate-800 pb-3">
           <button
             onClick={() => setActiveTab("admins")}
@@ -427,6 +588,30 @@ export default function SuperRootAdminPage() {
           </button>
 
           <button
+            onClick={() => setActiveTab("search")}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition font-mono cursor-pointer ${
+              activeTab === "search"
+                ? "bg-rose-500/20 text-rose-300 border border-rose-500/40 shadow-lg shadow-rose-500/10"
+                : "text-slate-400 hover:text-white hover:bg-slate-900"
+            }`}
+          >
+            <Search className="w-4 h-4" />
+            Universal Member Search
+          </button>
+
+          <button
+            onClick={() => setActiveTab("config")}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition font-mono cursor-pointer ${
+              activeTab === "config"
+                ? "bg-rose-500/20 text-rose-300 border border-rose-500/40 shadow-lg shadow-rose-500/10"
+                : "text-slate-400 hover:text-white hover:bg-slate-900"
+            }`}
+          >
+            <Sliders className="w-4 h-4" />
+            Global System Config
+          </button>
+
+          <button
             onClick={() => setActiveTab("wallet")}
             className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition font-mono cursor-pointer ${
               activeTab === "wallet"
@@ -435,7 +620,7 @@ export default function SuperRootAdminPage() {
             }`}
           >
             <DollarSign className="w-4 h-4" />
-            Manual Fund Credit / Debit
+            Manual Balance Credit / Debit
           </button>
         </section>
 
@@ -496,7 +681,7 @@ export default function SuperRootAdminPage() {
                       <th className="py-3.5 px-4">Branch Size</th>
                       <th className="py-3.5 px-4">Branch Volume</th>
                       <th className="py-3.5 px-4">Status</th>
-                      <th className="py-3.5 px-4 text-right">Master Actions</th>
+                      <th className="py-3.5 px-4 text-right">Master Powers</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-800/60 font-sans">
@@ -551,14 +736,25 @@ export default function SuperRootAdminPage() {
 
                           <td className="py-3.5 px-4 text-right">
                             <div className="flex items-center justify-end gap-1.5">
+                              {/* Enter Branch / Impersonate */}
+                              <button
+                                onClick={() => handleImpersonateAdmin(adm.id)}
+                                disabled={impersonatingId === adm.id}
+                                className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 font-bold text-xs transition border border-amber-500/40 cursor-pointer shadow-sm"
+                                title="One-Click login to this Admin's portal directly"
+                              >
+                                <ExternalLink className="w-3.5 h-3.5" />
+                                {impersonatingId === adm.id ? "Entering..." : "Enter Portal"}
+                              </button>
+
                               {/* Inspect Branch Button */}
                               <button
                                 onClick={() => loadInspectData(adm.id)}
                                 className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-cyan-500/15 hover:bg-cyan-500/25 text-cyan-300 font-bold text-xs transition border border-cyan-500/30 cursor-pointer"
-                                title="Inspect this admin's isolated branch"
+                                title="Inspect this admin's isolated branch telemetry"
                               >
                                 <Eye className="w-3.5 h-3.5" />
-                                Inspect Team
+                                Inspect
                               </button>
 
                               {/* Reset Password */}
@@ -582,7 +778,7 @@ export default function SuperRootAdminPage() {
                                     ? "bg-rose-500/15 hover:bg-rose-500/25 text-rose-400"
                                     : "bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-400"
                                 }`}
-                                title={adm.status === "ACTIVE" ? "Block Admin" : "Unblock Admin"}
+                                title={adm.status === "ACTIVE" ? "Block Admin Branch" : "Unblock Admin Branch"}
                               >
                                 {adm.status === "ACTIVE" ? <Lock className="w-3.5 h-3.5" /> : <Unlock className="w-3.5 h-3.5" />}
                               </button>
@@ -605,7 +801,7 @@ export default function SuperRootAdminPage() {
               <div>
                 <button
                   onClick={() => setActiveTab("admins")}
-                  className="text-xs text-slate-400 hover:text-white flex items-center gap-1.5 mb-2 transition cursor-pointer"
+                  className="text-xs text-slate-400 hover:text-white flex items-center gap-1.5 mb-2 transition cursor-pointer font-mono"
                 >
                   <ArrowLeft className="w-3.5 h-3.5" /> Back to All Branches
                 </button>
@@ -615,7 +811,7 @@ export default function SuperRootAdminPage() {
                 </h2>
               </div>
 
-              {/* Branch Selector Dropdown */}
+              {/* Branch Selector Dropdown & Impersonate */}
               <div className="flex items-center gap-2">
                 <span className="text-xs text-slate-400 font-mono">Switch Branch:</span>
                 <select
@@ -629,6 +825,16 @@ export default function SuperRootAdminPage() {
                     </option>
                   ))}
                 </select>
+
+                {selectedAdminId && (
+                  <button
+                    onClick={() => handleImpersonateAdmin(selectedAdminId)}
+                    className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 font-bold text-xs border border-amber-500/40 cursor-pointer"
+                  >
+                    <ExternalLink className="w-3.5 h-3.5" />
+                    Enter Portal
+                  </button>
+                )}
               </div>
             </div>
 
@@ -708,12 +914,13 @@ export default function SuperRootAdminPage() {
                           <th className="py-3 px-4">Sponsor</th>
                           <th className="py-3 px-4">Wallets (Fund / Income)</th>
                           <th className="py-3 px-4">Joined</th>
+                          <th className="py-3 px-4 text-right">Action</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-800/60 font-mono">
                         {inspectData.members.length === 0 ? (
                           <tr>
-                            <td colSpan={6} className="text-center py-8 text-slate-500">
+                            <td colSpan={7} className="text-center py-8 text-slate-500">
                               No members registered in this branch yet.
                             </td>
                           </tr>
@@ -740,57 +947,16 @@ export default function SuperRootAdminPage() {
                               <td className="py-3 px-4 text-slate-500 text-[11px]">
                                 {new Date(m.createdAt).toLocaleDateString()}
                               </td>
-                            </tr>
-                          ))
-                        )}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
-
-                {/* Sub-tab 2: Queue */}
-                {inspectSubTab === "queue" && (
-                  <div className="bg-slate-900/80 border border-slate-800/80 rounded-2xl overflow-hidden shadow-xl">
-                    <table className="w-full text-left text-xs">
-                      <thead className="bg-slate-950/60 text-slate-400 uppercase font-mono tracking-wider border-b border-slate-800 text-[11px]">
-                        <tr>
-                          <th className="py-3 px-4">Tier</th>
-                          <th className="py-3 px-4">Queue Index</th>
-                          <th className="py-3 px-4">User</th>
-                          <th className="py-3 px-4">Children Placed</th>
-                          <th className="py-3 px-4">Status</th>
-                          <th className="py-3 px-4">Placed At</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-800/60 font-mono">
-                        {inspectData.queue.length === 0 ? (
-                          <tr>
-                            <td colSpan={6} className="text-center py-8 text-slate-500">
-                              No queue entries in this branch.
-                            </td>
-                          </tr>
-                        ) : (
-                          inspectData.queue.map((q) => (
-                            <tr key={q.id} className="hover:bg-slate-800/30">
-                              <td className="py-3 px-4 text-amber-400 font-bold">Tier {q.tier}</td>
-                              <td className="py-3 px-4 text-white">#{q.queueIndex}</td>
-                              <td className="py-3 px-4 font-sans text-slate-300">
-                                {q.user?.customId} ({q.user?.fullName})
-                              </td>
-                              <td className="py-3 px-4 text-cyan-400 font-bold">{q.childrenPlaced} / 2</td>
-                              <td className="py-3 px-4">
-                                <span
-                                  className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                                    q.status === "COMPLETED"
-                                      ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/30"
-                                      : "bg-amber-500/10 text-amber-400 border border-amber-500/30"
-                                  }`}
+                              <td className="py-3 px-4 text-right">
+                                <button
+                                  onClick={() => {
+                                    setAdjustTargetId(m.customId);
+                                    setActiveTab("wallet");
+                                  }}
+                                  className="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded text-[10px] font-mono cursor-pointer"
                                 >
-                                  {q.status}
-                                </span>
-                              </td>
-                              <td className="py-3 px-4 text-slate-500 text-[11px]">
-                                {new Date(q.createdAt).toLocaleDateString()}
+                                  Adjust Bal
+                                </button>
                               </td>
                             </tr>
                           ))
@@ -800,7 +966,75 @@ export default function SuperRootAdminPage() {
                   </div>
                 )}
 
-                {/* Sub-tab 3: Deposits */}
+                {/* Sub-tab 2: Queue with Trigger Processor */}
+                {inspectSubTab === "queue" && (
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between p-3.5 bg-slate-900 border border-slate-800 rounded-xl">
+                      <div>
+                        <p className="text-xs font-bold text-white font-mono">Tripod Single-Leg Queue Matching</p>
+                        <p className="text-[11px] text-slate-400">Force trigger 2:1 Tripod matches for this branch across all 13 tiers.</p>
+                      </div>
+                      <button
+                        onClick={() => handleExecuteAction("RUN_QUEUE", { branchAdminId: inspectData.admin.id })}
+                        className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 text-xs font-bold font-mono transition cursor-pointer shadow-sm"
+                      >
+                        <Zap className="w-3.5 h-3.5" />
+                        Run Tripod Queue Engine
+                      </button>
+                    </div>
+
+                    <div className="bg-slate-900/80 border border-slate-800/80 rounded-2xl overflow-hidden shadow-xl">
+                      <table className="w-full text-left text-xs">
+                        <thead className="bg-slate-950/60 text-slate-400 uppercase font-mono tracking-wider border-b border-slate-800 text-[11px]">
+                          <tr>
+                            <th className="py-3 px-4">Tier</th>
+                            <th className="py-3 px-4">Queue Index</th>
+                            <th className="py-3 px-4">User</th>
+                            <th className="py-3 px-4">Children Placed</th>
+                            <th className="py-3 px-4">Status</th>
+                            <th className="py-3 px-4">Placed At</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-800/60 font-mono">
+                          {inspectData.queue.length === 0 ? (
+                            <tr>
+                              <td colSpan={6} className="text-center py-8 text-slate-500">
+                                No queue entries in this branch.
+                              </td>
+                            </tr>
+                          ) : (
+                            inspectData.queue.map((q) => (
+                              <tr key={q.id} className="hover:bg-slate-800/30">
+                                <td className="py-3 px-4 text-amber-400 font-bold">Tier {q.tier}</td>
+                                <td className="py-3 px-4 text-white">#{q.queueIndex}</td>
+                                <td className="py-3 px-4 font-sans text-slate-300">
+                                  {q.user?.customId} ({q.user?.fullName})
+                                </td>
+                                <td className="py-3 px-4 text-cyan-400 font-bold">{q.childrenPlaced} / 2</td>
+                                <td className="py-3 px-4">
+                                  <span
+                                    className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                                      q.status === "COMPLETED"
+                                        ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/30"
+                                        : "bg-amber-500/10 text-amber-400 border border-amber-500/30"
+                                    }`}
+                                  >
+                                    {q.status}
+                                  </span>
+                                </td>
+                                <td className="py-3 px-4 text-slate-500 text-[11px]">
+                                  {new Date(q.createdAt).toLocaleDateString()}
+                                </td>
+                              </tr>
+                            ))
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+
+                {/* Sub-tab 3: Deposits with Approve/Reject */}
                 {inspectSubTab === "deposits" && (
                   <div className="bg-slate-900/80 border border-slate-800/80 rounded-2xl overflow-hidden shadow-xl">
                     <table className="w-full text-left text-xs">
@@ -811,12 +1045,13 @@ export default function SuperRootAdminPage() {
                           <th className="py-3 px-4">Tx Hash</th>
                           <th className="py-3 px-4">Status</th>
                           <th className="py-3 px-4">Date</th>
+                          <th className="py-3 px-4 text-right">Master Actions</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-800/60 font-mono">
                         {inspectData.deposits.length === 0 ? (
                           <tr>
-                            <td colSpan={5} className="text-center py-8 text-slate-500">
+                            <td colSpan={6} className="text-center py-8 text-slate-500">
                               No deposits recorded for this branch.
                             </td>
                           </tr>
@@ -829,12 +1064,43 @@ export default function SuperRootAdminPage() {
                               <td className="py-3 px-4 text-emerald-400 font-bold">${Number(d.amount).toFixed(2)} USDT</td>
                               <td className="py-3 px-4 text-slate-400 text-[11px] truncate max-w-xs">{d.txHash}</td>
                               <td className="py-3 px-4">
-                                <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-800 text-slate-300">
+                                <span
+                                  className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                                    d.status === "APPROVED"
+                                      ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/30"
+                                      : d.status === "PENDING"
+                                      ? "bg-amber-500/10 text-amber-400 border border-amber-500/30"
+                                      : "bg-rose-500/10 text-rose-400 border border-rose-500/30"
+                                  }`}
+                                >
                                   {d.status}
                                 </span>
                               </td>
                               <td className="py-3 px-4 text-slate-500 text-[11px]">
                                 {new Date(d.createdAt).toLocaleDateString()}
+                              </td>
+                              <td className="py-3 px-4 text-right">
+                                {d.status === "PENDING" ? (
+                                  <div className="flex items-center justify-end gap-1.5">
+                                    <button
+                                      onClick={() => handleExecuteAction("APPROVE_DEPOSIT", { depositId: d.id })}
+                                      className="px-2.5 py-1 rounded bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 text-[10px] font-bold cursor-pointer transition"
+                                    >
+                                      Approve
+                                    </button>
+                                    <button
+                                      onClick={() => {
+                                        const reason = prompt("Enter rejection reason:");
+                                        if (reason !== null) handleExecuteAction("REJECT_DEPOSIT", { depositId: d.id, reason });
+                                      }}
+                                      className="px-2.5 py-1 rounded bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/40 text-[10px] font-bold cursor-pointer transition"
+                                    >
+                                      Reject
+                                    </button>
+                                  </div>
+                                ) : (
+                                  <span className="text-[10px] text-slate-500">Finalized</span>
+                                )}
                               </td>
                             </tr>
                           ))
@@ -844,7 +1110,7 @@ export default function SuperRootAdminPage() {
                   </div>
                 )}
 
-                {/* Sub-tab 4: Withdrawals */}
+                {/* Sub-tab 4: Withdrawals with Approve/Reject */}
                 {inspectSubTab === "withdrawals" && (
                   <div className="bg-slate-900/80 border border-slate-800/80 rounded-2xl overflow-hidden shadow-xl">
                     <table className="w-full text-left text-xs">
@@ -856,12 +1122,13 @@ export default function SuperRootAdminPage() {
                           <th className="py-3 px-4">To Address</th>
                           <th className="py-3 px-4">Status</th>
                           <th className="py-3 px-4">Date</th>
+                          <th className="py-3 px-4 text-right">Master Actions</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-800/60 font-mono">
                         {inspectData.withdrawals.length === 0 ? (
                           <tr>
-                            <td colSpan={6} className="text-center py-8 text-slate-500">
+                            <td colSpan={7} className="text-center py-8 text-slate-500">
                               No withdrawals recorded for this branch.
                             </td>
                           </tr>
@@ -875,12 +1142,46 @@ export default function SuperRootAdminPage() {
                               <td className="py-3 px-4 text-amber-400">${Number(w.feeAmount).toFixed(2)}</td>
                               <td className="py-3 px-4 text-slate-400 text-[11px] truncate max-w-xs">{w.toAddress}</td>
                               <td className="py-3 px-4">
-                                <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-800 text-slate-300">
+                                <span
+                                  className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                                    w.status === "APPROVED"
+                                      ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/30"
+                                      : w.status === "PENDING"
+                                      ? "bg-amber-500/10 text-amber-400 border border-amber-500/30"
+                                      : "bg-rose-500/10 text-rose-400 border border-rose-500/30"
+                                  }`}
+                                >
                                   {w.status}
                                 </span>
                               </td>
                               <td className="py-3 px-4 text-slate-500 text-[11px]">
                                 {new Date(w.createdAt).toLocaleDateString()}
+                              </td>
+                              <td className="py-3 px-4 text-right">
+                                {w.status === "PENDING" ? (
+                                  <div className="flex items-center justify-end gap-1.5">
+                                    <button
+                                      onClick={() => {
+                                        const tx = prompt("Enter payout Tx Hash (optional):") || "";
+                                        handleExecuteAction("APPROVE_WITHDRAWAL", { withdrawalId: w.id, txHash: tx });
+                                      }}
+                                      className="px-2.5 py-1 rounded bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 text-[10px] font-bold cursor-pointer transition"
+                                    >
+                                      Pay
+                                    </button>
+                                    <button
+                                      onClick={() => {
+                                        const reason = prompt("Enter rejection reason (will refund full amount to user):");
+                                        if (reason !== null) handleExecuteAction("REJECT_WITHDRAWAL", { withdrawalId: w.id, reason });
+                                      }}
+                                      className="px-2.5 py-1 rounded bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/40 text-[10px] font-bold cursor-pointer transition"
+                                    >
+                                      Reject &amp; Refund
+                                    </button>
+                                  </div>
+                                ) : (
+                                  <span className="text-[10px] text-slate-500">Processed</span>
+                                )}
                               </td>
                             </tr>
                           ))
@@ -900,19 +1201,20 @@ export default function SuperRootAdminPage() {
                           <th className="py-3 px-4">Subject &amp; Category</th>
                           <th className="py-3 px-4">Status</th>
                           <th className="py-3 px-4">Created</th>
+                          <th className="py-3 px-4 text-right">Quick Action</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-800/60">
                         {inspectData.tickets.length === 0 ? (
                           <tr>
-                            <td colSpan={4} className="text-center py-8 text-slate-500 font-mono">
+                            <td colSpan={5} className="text-center py-8 text-slate-500 font-mono">
                               No support tickets in this branch.
                             </td>
                           </tr>
                         ) : (
                           inspectData.tickets.map((t) => (
                             <tr key={t.id} className="hover:bg-slate-800/30">
-                              <td className="py-3 px-4 text-white">
+                              <td className="py-3 px-4 text-white font-mono">
                                 {t.user?.customId} ({t.user?.fullName})
                               </td>
                               <td className="py-3 px-4">
@@ -927,6 +1229,27 @@ export default function SuperRootAdminPage() {
                               <td className="py-3 px-4 font-mono text-slate-500 text-[11px]">
                                 {new Date(t.createdAt).toLocaleDateString()}
                               </td>
+                              <td className="py-3 px-4 text-right font-mono">
+                                <div className="flex items-center justify-end gap-1.5">
+                                  <button
+                                    onClick={() => {
+                                      const reply = prompt("Enter Super Root reply to user:");
+                                      if (reply) handleExecuteAction("REPLY_TICKET", { ticketId: t.id, message: reply });
+                                    }}
+                                    className="px-2.5 py-1 rounded bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 border border-blue-500/40 text-[10px] font-bold cursor-pointer"
+                                  >
+                                    Reply
+                                  </button>
+                                  {t.status !== "CLOSED" && (
+                                    <button
+                                      onClick={() => handleExecuteAction("CLOSE_TICKET", { ticketId: t.id })}
+                                      className="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-400 text-[10px] font-bold cursor-pointer"
+                                    >
+                                      Close
+                                    </button>
+                                  )}
+                                </div>
+                              </td>
                             </tr>
                           ))
                         )}
@@ -939,7 +1262,259 @@ export default function SuperRootAdminPage() {
           </section>
         )}
 
-        {/* TAB 3: WALLET ADJUSTMENT */}
+        {/* TAB 3: UNIVERSAL MEMBER SEARCH */}
+        {activeTab === "search" && (
+          <section className="space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <h2 className="text-lg font-black text-white flex items-center gap-2">
+                  <Search className="w-5 h-5 text-rose-400" />
+                  Universal Member Directory (Cross-Branch Search)
+                </h2>
+                <p className="text-xs text-slate-400 mt-0.5">
+                  Search any user across all parallel branches by ID, name, email, or phone.
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  value={universalQuery}
+                  onChange={(e) => setUniversalQuery(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") loadUniversalUsers(universalQuery);
+                  }}
+                  placeholder="Search by SL ID, name, email..."
+                  className="px-3.5 py-2 rounded-xl bg-slate-900 border border-slate-800 text-xs text-white placeholder-slate-500 font-mono w-64 outline-none focus:border-rose-500"
+                />
+                <button
+                  onClick={() => loadUniversalUsers(universalQuery)}
+                  className="px-3.5 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold font-mono transition cursor-pointer"
+                >
+                  Search
+                </button>
+              </div>
+            </div>
+
+            <div className="bg-slate-900/80 border border-slate-800/80 rounded-2xl overflow-hidden shadow-xl">
+              <table className="w-full text-left text-xs">
+                <thead className="bg-slate-950/60 text-slate-400 uppercase font-mono tracking-wider border-b border-slate-800 text-[11px]">
+                  <tr>
+                    <th className="py-3 px-4">Member ID</th>
+                    <th className="py-3 px-4">Name &amp; Contact</th>
+                    <th className="py-3 px-4">Assigned Branch Admin</th>
+                    <th className="py-3 px-4">Sponsor</th>
+                    <th className="py-3 px-4">Tier &amp; Status</th>
+                    <th className="py-3 px-4">Wallets</th>
+                    <th className="py-3 px-4 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-800/60 font-mono">
+                  {universalLoading ? (
+                    <tr>
+                      <td colSpan={7} className="text-center py-10 text-slate-500">
+                        Searching across all branch databases...
+                      </td>
+                    </tr>
+                  ) : universalUsers.length === 0 ? (
+                    <tr>
+                      <td colSpan={7} className="text-center py-10 text-slate-500">
+                        No members found matching your search.
+                      </td>
+                    </tr>
+                  ) : (
+                    universalUsers.map((u) => (
+                      <tr key={u.id} className="hover:bg-slate-800/30">
+                        <td className="py-3 px-4 font-bold text-amber-400">{u.customId}</td>
+                        <td className="py-3 px-4 font-sans">
+                          <p className="font-bold text-white">{u.fullName}</p>
+                          <p className="text-slate-400 text-[11px] font-mono">{u.email}</p>
+                        </td>
+                        <td className="py-3 px-4">
+                          {u.assignedAdmin ? (
+                            <span className="px-2 py-0.5 rounded bg-rose-500/10 text-rose-300 border border-rose-500/30 text-[11px]">
+                              {u.assignedAdmin.customId} ({u.assignedAdmin.fullName})
+                            </span>
+                          ) : (
+                            <span className="text-slate-500">Unassigned</span>
+                          )}
+                        </td>
+                        <td className="py-3 px-4 text-slate-300 font-sans">
+                          {u.sponsor ? `${u.sponsor.customId} (${u.sponsor.fullName})` : "Root"}
+                        </td>
+                        <td className="py-3 px-4">
+                          <span className="px-2 py-0.5 rounded bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 text-[10px]">
+                            Tier {u.currentTier} &bull; {u.status}
+                          </span>
+                        </td>
+                        <td className="py-3 px-4">
+                          <p className="text-cyan-400 font-bold">Fund: ${Number(u.fundBalance).toFixed(2)}</p>
+                          <p className="text-emerald-400 font-bold">Income: ${Number(u.incomeBalance).toFixed(2)}</p>
+                        </td>
+                        <td className="py-3 px-4 text-right">
+                          <button
+                            onClick={() => {
+                              setAdjustTargetId(u.customId);
+                              setActiveTab("wallet");
+                            }}
+                            className="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 text-[11px] font-mono cursor-pointer"
+                          >
+                            Adjust Balance
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </section>
+        )}
+
+        {/* TAB 4: GLOBAL SYSTEM CONFIG */}
+        {activeTab === "config" && (
+          <section className="max-w-3xl bg-slate-900/80 border border-slate-800/80 rounded-3xl p-6 sm:p-8 space-y-6 shadow-2xl">
+            <div>
+              <h2 className="text-lg font-black text-white flex items-center gap-2">
+                <Sliders className="w-5 h-5 text-rose-400" />
+                Global Platform Configurations &amp; Parameters
+              </h2>
+              <p className="text-xs text-slate-400 mt-1">
+                Configure platform deposit wallets, blockchain parameters, and authentication OTP security switches.
+              </p>
+            </div>
+
+            {configMsg && (
+              <div className="p-3.5 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-xs font-semibold flex items-center gap-2 font-mono">
+                <Check className="w-4 h-4 shrink-0" />
+                <span>{configMsg}</span>
+              </div>
+            )}
+
+            <form onSubmit={handleSaveConfigs} className="space-y-6">
+              {/* Primary Deposit Wallet */}
+              <div className="space-y-4 border-b border-slate-800 pb-6">
+                <h3 className="text-xs font-mono font-bold uppercase tracking-wider text-amber-400">
+                  Official Deposit Wallet Configuration
+                </h3>
+
+                <div>
+                  <label className="block text-[11px] font-mono font-bold text-slate-300 uppercase tracking-wider mb-1.5">
+                    Primary USDT Deposit Address (BEP-20)
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={configForm.primaryDepositAddress}
+                    onChange={(e) => setConfigForm({ ...configForm, primaryDepositAddress: e.target.value })}
+                    placeholder="0x..."
+                    className="w-full px-4 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-xs text-white placeholder-slate-500 font-mono outline-none focus:border-rose-500"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-[11px] font-mono font-bold text-slate-300 uppercase tracking-wider mb-1.5">
+                      Default Blockchain Network
+                    </label>
+                    <input
+                      type="text"
+                      value={configForm.defaultNetwork}
+                      onChange={(e) => setConfigForm({ ...configForm, defaultNetwork: e.target.value })}
+                      placeholder="USDT_BEP20"
+                      className="w-full px-4 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-xs text-white font-mono outline-none focus:border-rose-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-mono font-bold text-slate-300 uppercase tracking-wider mb-1.5">
+                      Deposit Address Distribution Mode
+                    </label>
+                    <select
+                      value={configForm.depositDistributionMode}
+                      onChange={(e) => setConfigForm({ ...configForm, depositDistributionMode: e.target.value })}
+                      className="w-full px-4 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-xs text-white font-mono outline-none focus:border-rose-500"
+                    >
+                      <option value="SINGLE">Single Global Address</option>
+                      <option value="MULTI_USER">Multi-User Rotating Addresses</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              {/* Email OTP Toggles */}
+              <div className="space-y-4 border-b border-slate-800 pb-6">
+                <h3 className="text-xs font-mono font-bold uppercase tracking-wider text-amber-400">
+                  Email OTP Security Protocol Controls
+                </h3>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <label className="flex items-center justify-between p-3.5 rounded-xl bg-slate-950 border border-slate-800 cursor-pointer hover:border-slate-700 transition">
+                    <div>
+                      <p className="text-xs font-bold text-white">Registration OTP</p>
+                      <p className="text-[10px] text-slate-400">Require email OTP before sign up</p>
+                    </div>
+                    <input
+                      type="checkbox"
+                      checked={configForm.otpRegistration}
+                      onChange={(e) => setConfigForm({ ...configForm, otpRegistration: e.target.checked })}
+                      className="w-4 h-4 accent-rose-600 rounded cursor-pointer"
+                    />
+                  </label>
+
+                  <label className="flex items-center justify-between p-3.5 rounded-xl bg-slate-950 border border-slate-800 cursor-pointer hover:border-slate-700 transition">
+                    <div>
+                      <p className="text-xs font-bold text-white">Withdrawal OTP</p>
+                      <p className="text-[10px] text-slate-400">Require email OTP on payout requests</p>
+                    </div>
+                    <input
+                      type="checkbox"
+                      checked={configForm.otpWithdrawal}
+                      onChange={(e) => setConfigForm({ ...configForm, otpWithdrawal: e.target.checked })}
+                      className="w-4 h-4 accent-rose-600 rounded cursor-pointer"
+                    />
+                  </label>
+
+                  <label className="flex items-center justify-between p-3.5 rounded-xl bg-slate-950 border border-slate-800 cursor-pointer hover:border-slate-700 transition">
+                    <div>
+                      <p className="text-xs font-bold text-white">Forgot Password OTP</p>
+                      <p className="text-[10px] text-slate-400">Require OTP for password reset</p>
+                    </div>
+                    <input
+                      type="checkbox"
+                      checked={configForm.otpForgotPassword}
+                      onChange={(e) => setConfigForm({ ...configForm, otpForgotPassword: e.target.checked })}
+                      className="w-4 h-4 accent-rose-600 rounded cursor-pointer"
+                    />
+                  </label>
+
+                  <label className="flex items-center justify-between p-3.5 rounded-xl bg-slate-950 border border-slate-800 cursor-pointer hover:border-slate-700 transition">
+                    <div>
+                      <p className="text-xs font-bold text-white">Profile Update OTP</p>
+                      <p className="text-[10px] text-slate-400">Require OTP to change wallet address</p>
+                    </div>
+                    <input
+                      type="checkbox"
+                      checked={configForm.otpProfileUpdate}
+                      onChange={(e) => setConfigForm({ ...configForm, otpProfileUpdate: e.target.checked })}
+                      className="w-4 h-4 accent-rose-600 rounded cursor-pointer"
+                    />
+                  </label>
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                disabled={configSaving}
+                className="w-full py-3 rounded-xl bg-gradient-to-r from-rose-600 to-rose-700 hover:from-rose-500 hover:to-rose-600 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-rose-600/25 transition disabled:opacity-50 cursor-pointer font-mono"
+              >
+                {configSaving ? "Saving Live Configurations..." : "Save Global Configurations"}
+              </button>
+            </form>
+          </section>
+        )}
+
+        {/* TAB 5: WALLET ADJUSTMENT */}
         {activeTab === "wallet" && (
           <section className="max-w-2xl bg-slate-900/80 border border-slate-800/80 rounded-3xl p-6 sm:p-8 space-y-6 shadow-2xl">
             <div>
@@ -1063,7 +1638,7 @@ export default function SuperRootAdminPage() {
                 onClick={() => setShowCreateModal(false)}
                 className="text-slate-400 hover:text-white p-1 cursor-pointer"
               >
-                <X className="w-5 h-5" />
+                <X className="w-4 h-4" />
               </button>
             </div>
 
