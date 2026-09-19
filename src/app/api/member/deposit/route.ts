@@ -19,6 +19,18 @@ export async function POST(req: Request) {
       );
     }
 
+    const currentUser = await db.user.findUnique({
+      where: { id: session.userId },
+      select: { status: true },
+    });
+
+    if (currentUser?.status === "ACTIVE") {
+      return NextResponse.json(
+        { error: "Your account is already activated. Deposits are disabled for active IDs." },
+        { status: 403 }
+      );
+    }
+
     const { amount, txHash, network, depositAddress } = await req.json();
 
     const amountNum = parseFloat(amount);

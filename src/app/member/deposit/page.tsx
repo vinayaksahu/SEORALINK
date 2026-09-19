@@ -1,9 +1,10 @@
 import React from "react";
+import Link from "next/link";
 import { getSession } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { redirect } from "next/navigation";
 import DepositFormClient from "./DepositFormClient";
-import { Wallet, Clock, CheckCircle2, XCircle, ShieldAlert } from "lucide-react";
+import { Wallet, Clock, CheckCircle2, XCircle, ShieldAlert, Zap } from "lucide-react";
 import { isUserSystemExited } from "@/lib/userStatus";
 
 export default async function MemberDepositPage() {
@@ -11,6 +12,13 @@ export default async function MemberDepositPage() {
   if (!session) redirect("/login");
 
   const isSystemExited = await isUserSystemExited(session.userId);
+
+  const currentUser = await db.user.findUnique({
+    where: { id: session.userId },
+    select: { id: true, status: true, customId: true },
+  });
+
+  const isActivated = currentUser?.status === "ACTIVE";
 
   // Fetch user deposits
   const deposits = await db.depositRequest.findMany({
@@ -96,7 +104,7 @@ export default async function MemberDepositPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
-        {/* Deposit Submission Form Component or System Exit Notice */}
+        {/* Deposit Submission Form Component or Disabled Notices */}
         {isSystemExited ? (
           <div className="card-seoralink p-6 border-2 border-purple-500/50 bg-purple-500/10 space-y-4">
             <div className="flex items-center gap-3">
@@ -113,6 +121,62 @@ export default async function MemberDepositPage() {
             <p className="text-xs text-[#cbd5e1] leading-relaxed">
               This member account has executed the single-exit rank cashout protocol and has officially concluded its participation in the SEORALINK network. Under system exit rules, fund deposits are permanently disabled for retired IDs.
             </p>
+          </div>
+        ) : isActivated ? (
+          <div className="card-seoralink p-6 border-2 border-emerald-500/40 bg-[#070e1b] space-y-5 shadow-xl">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center shrink-0">
+                <CheckCircle2 size={26} className="text-emerald-400" />
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-white flex items-center gap-2">
+                  <span>ID Already Activated</span>
+                  <span className="text-[9px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 px-2 py-0.5 rounded-full font-bold uppercase">
+                    Active ID
+                  </span>
+                </h3>
+                <p className="text-[11px] text-[#94a3b8] mt-0.5">
+                  Deposit option is disabled for active member accounts.
+                </p>
+              </div>
+            </div>
+
+            <div className="p-4 rounded-xl bg-[#0b1325] border border-[#1e293b] space-y-3">
+              <div className="flex items-center justify-between text-xs pb-2 border-b border-[#1e293b]">
+                <span className="text-[#94a3b8]">Member ID:</span>
+                <span className="text-[#d4af37] font-mono font-bold">{currentUser?.customId}</span>
+              </div>
+              <div className="flex items-center justify-between text-xs pb-2 border-b border-[#1e293b]">
+                <span className="text-[#94a3b8]">Account Status:</span>
+                <span className="text-emerald-400 font-bold flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                  ACTIVE
+                </span>
+              </div>
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-[#94a3b8]">Activation Protocol:</span>
+                <span className="text-white font-mono font-bold">$10.00 USDT Micro-Entry (Completed)</span>
+              </div>
+            </div>
+
+            <p className="text-xs text-[#cbd5e1] leading-relaxed">
+              Aapka account already successfully activated hai. SEORALINK protocol ke mutabik ek ID ko sirf ek baar <strong>$10 Micro-Entry</strong> fee se activate karna hota hai. Active members ko extra deposits karne ki permission ya zaroorat nahi hoti.
+            </p>
+
+            <div className="flex flex-wrap items-center gap-3 pt-1">
+              <Link
+                href="/member/dashboard"
+                className="btn-primary text-xs font-bold px-4 py-2.5 flex items-center gap-1.5"
+              >
+                Go to Dashboard &rarr;
+              </Link>
+              <Link
+                href="/member/team"
+                className="px-4 py-2.5 text-xs font-bold rounded-lg border border-[#1e293b] hover:border-slate-600 text-[#cbd5e1] hover:text-white transition-colors"
+              >
+                View Downline Team
+              </Link>
+            </div>
           </div>
         ) : (
           <DepositFormClient

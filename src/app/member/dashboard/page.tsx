@@ -221,9 +221,15 @@ export default async function MemberDashboardPage() {
           </div>
           <div className="flex justify-between items-center text-[10px] text-[#94a3b8]">
             <span>For Node Activations</span>
-            <Link href="/member/deposit" className="text-[#38bdf8] font-bold hover:underline">
-              Deposit &rarr;
-            </Link>
+            {user.status !== "ACTIVE" ? (
+              <Link href="/member/deposit" className="text-[#38bdf8] font-bold hover:underline">
+                Deposit &rarr;
+              </Link>
+            ) : (
+              <span className="text-emerald-400 font-bold px-1.5 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20">
+                Activated
+              </span>
+            )}
           </div>
         </div>
 

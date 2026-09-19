@@ -183,13 +183,15 @@ export default async function MemberLayout({
               </span>
             </Link>
 
-            {/* Deposit CTA */}
-            <Link
-              href="/member/deposit"
-              className="btn-primary text-[11px] font-bold px-3 py-1.5 hidden sm:inline-block"
-            >
-              + Deposit
-            </Link>
+            {/* Deposit CTA - Only for unactivated users */}
+            {user.status !== "ACTIVE" && (
+              <Link
+                href="/member/deposit"
+                className="btn-primary text-[11px] font-bold px-3 py-1.5 hidden sm:inline-block"
+              >
+                + Deposit
+              </Link>
+            )}
           </div>
         </header>
 
