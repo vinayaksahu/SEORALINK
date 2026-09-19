@@ -220,7 +220,8 @@ export async function PATCH(req: NextRequest) {
       );
     }
 
-    const { adminId, action, newPassword } = await req.json();
+    const body = await req.json();
+    const { adminId, action, newPassword, fullName, email, phone, customId, password } = body;
     if (!adminId) {
       return NextResponse.json({ error: "adminId is required." }, { status: 400 });
     }
@@ -267,7 +268,6 @@ export async function PATCH(req: NextRequest) {
     }
 
     if (action === "UPDATE_PROFILE") {
-      const { fullName, email, phone, customId, password } = await req.json();
       const updateData: any = {};
 
       if (fullName && fullName.trim()) {
