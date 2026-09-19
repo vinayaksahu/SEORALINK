@@ -19,6 +19,7 @@ import {
   LifeBuoy,
   Database,
   GitBranch,
+  UserCheck,
 } from "lucide-react";
 import { AdminMobileNav } from "@/components/AdminMobileNav";
 import { LanguageSelector } from "@/components/LanguageSelector";
@@ -47,6 +48,7 @@ export default async function AdminLayout({
     { href: "/admin/simulator", label: "Simulation Engine", icon: Zap },
     { href: "/admin/backup", label: "Database Backup", icon: Database },
     { href: "/admin/settings", label: "System Settings", icon: Settings },
+    { href: "/admin/profile", label: "My Profile", icon: UserCheck },
   ];
 
   return (

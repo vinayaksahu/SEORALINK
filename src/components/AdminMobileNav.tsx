@@ -22,6 +22,7 @@ import {
   LifeBuoy,
   Database,
   GitBranch,
+  UserCheck,
 } from "lucide-react";
 
 interface AdminMobileNavProps {
@@ -65,6 +66,7 @@ export function AdminMobileNav({ fullName }: AdminMobileNavProps) {
     { href: "/admin/simulator", label: "Simulation Engine", icon: Zap },
     { href: "/admin/backup", label: "Database Backup", icon: Database },
     { href: "/admin/settings", label: "System Settings", icon: Settings },
+    { href: "/admin/profile", label: "My Profile", icon: UserCheck },
   ];
 
   return (
