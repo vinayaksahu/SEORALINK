@@ -16,20 +16,43 @@ export async function POST(req: Request) {
 
     const trimmed = identifier.trim();
 
-    // Find user by customId or email
+    // Find user by customId or email (with alias support for superrootadmin)
+    const orConditions: any[] = [
+      { customId: { equals: trimmed, mode: "insensitive" } },
+      { email: { equals: trimmed.toLowerCase(), mode: "insensitive" } },
+      { referralCode: { equals: trimmed, mode: "insensitive" } },
+    ];
+
+    if (
+      portal === "super_root" ||
+      trimmed.toLowerCase() === "superrootadmin" ||
+      trimmed.toLowerCase() === "superroot"
+    ) {
+      if (
+        trimmed.toLowerCase() === "superrootadmin" ||
+        trimmed.toLowerCase() === "superroot" ||
+        trimmed.toLowerCase() === "superroot@seoralink.com"
+      ) {
+        orConditions.push({ customId: "SUPERROOT" });
+        orConditions.push({ email: "superroot@seoralink.com" });
+        orConditions.push({ role: "SUPER_ROOT_ADMIN" });
+      }
+    }
+
     const user = await db.user.findFirst({
       where: {
-        OR: [
-          { customId: { equals: trimmed, mode: "insensitive" } },
-          { email: { equals: trimmed.toLowerCase(), mode: "insensitive" } },
-          { referralCode: { equals: trimmed, mode: "insensitive" } },
-        ],
+        OR: orConditions,
       },
     });
 
     if (!user) {
       return NextResponse.json(
-        { error: "Invalid Member ID or password" },
+        {
+          error:
+            portal === "super_root"
+              ? "Invalid Super Root Identifier or password"
+              : "Invalid Member ID or password",
+        },
         { status: 401 }
       );
     }
@@ -107,7 +130,12 @@ export async function POST(req: Request) {
     const passwordMatch = await comparePassword(password, user.passwordHash);
     if (!passwordMatch) {
       return NextResponse.json(
-        { error: "Invalid Member ID or password" },
+        {
+          error:
+            portal === "super_root"
+              ? "Invalid Super Root Identifier or password"
+              : "Invalid Member ID or password",
+        },
         { status: 401 }
       );
     }
