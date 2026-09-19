@@ -59,6 +59,7 @@ export default async function MemberWithdrawPage() {
           isInactive={isInactive}
           hasWithdrawnRankPool={hasWithdrawnRankPool}
           savedAddress={user.usdtAddress || ""}
+          userEmail={user.email}
         />
 
         {/* Withdrawal History Table */}

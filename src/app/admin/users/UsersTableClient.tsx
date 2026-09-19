@@ -31,6 +31,7 @@ export interface UserItem {
   fullName: string;
   email: string;
   phone: string | null;
+  usdtAddress?: string | null;
   status: string;
   isSystemExited?: boolean;
   currentTier: number;
@@ -54,6 +55,7 @@ export default function UsersTableClient({ initialUsers }: { initialUsers: UserI
   const [editFullName, setEditFullName] = useState("");
   const [editEmail, setEditEmail] = useState("");
   const [editPhone, setEditPhone] = useState("");
+  const [editUsdtAddress, setEditUsdtAddress] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -240,12 +242,14 @@ export default function UsersTableClient({ initialUsers }: { initialUsers: UserI
     setEditFullName(user.fullName);
     setEditEmail(user.email);
     setEditPhone(user.phone || "");
+    setEditUsdtAddress(user.usdtAddress || "");
     setError("");
     setSuccess("");
   };
 
   const handleCloseEdit = () => {
     setEditingUser(null);
+    setEditUsdtAddress("");
     setError("");
     setSuccess("");
   };
@@ -267,6 +271,14 @@ export default function UsersTableClient({ initialUsers }: { initialUsers: UserI
       return;
     }
 
+    if (editUsdtAddress.trim()) {
+      const cleanAddr = editUsdtAddress.trim();
+      if (!cleanAddr.startsWith("0x") || cleanAddr.length !== 42) {
+        setError("Please enter a valid BNB Smart Chain (BEP-20) address starting with 0x (42 characters).");
+        return;
+      }
+    }
+
     setLoading(true);
 
     try {
@@ -277,6 +289,7 @@ export default function UsersTableClient({ initialUsers }: { initialUsers: UserI
           fullName: editFullName.trim(),
           email: editEmail.trim(),
           phone: editPhone.trim() || null,
+          usdtAddress: editUsdtAddress.trim() || null,
         }),
       });
 
@@ -294,6 +307,7 @@ export default function UsersTableClient({ initialUsers }: { initialUsers: UserI
                 fullName: editFullName.trim(),
                 email: editEmail.trim(),
                 phone: editPhone.trim() || null,
+                usdtAddress: editUsdtAddress.trim() || null,
               }
             : u
         )
@@ -666,6 +680,24 @@ export default function UsersTableClient({ initialUsers }: { initialUsers: UserI
                   onChange={(e) => setEditPhone(e.target.value)}
                   placeholder="+91 98765 43210 (optional)"
                   className="w-full bg-[#070a14] border border-[#1e293b] text-white rounded-lg px-3.5 py-2 text-xs focus:outline-none focus:border-[#d4af37]"
+                />
+              </div>
+
+              {/* USDT BEP-20 Address */}
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-[#cbd5e1] uppercase tracking-wider flex items-center justify-between">
+                  <span className="flex items-center gap-1.5">
+                    <Wallet size={13} className="text-[#38bdf8]" />
+                    USDT Wallet Address (BEP-20)
+                  </span>
+                  <span className="text-[10px] text-[#38bdf8] font-mono">0x... (42 chars)</span>
+                </label>
+                <input
+                  type="text"
+                  value={editUsdtAddress}
+                  onChange={(e) => setEditUsdtAddress(e.target.value)}
+                  placeholder="0x... (BNB Smart Chain BEP-20)"
+                  className="w-full bg-[#070a14] border border-[#1e293b] text-white rounded-lg px-3.5 py-2 text-xs font-mono focus:outline-none focus:border-[#38bdf8]"
                 />
               </div>
 

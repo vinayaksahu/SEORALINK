@@ -3,7 +3,20 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { TIER_NAMES, TIER_VALUES, NET_CASHOUT_VALUES, RATES } from "@/lib/constants";
-import { ArrowUpRight, ArrowRight, AlertCircle, CheckCircle2, ShieldAlert, Trophy, AlertTriangle } from "lucide-react";
+import {
+  ArrowUpRight,
+  ArrowRight,
+  AlertCircle,
+  CheckCircle2,
+  ShieldAlert,
+  Trophy,
+  AlertTriangle,
+  KeyRound,
+  Mail,
+  X,
+  Shield,
+  RefreshCw,
+} from "lucide-react";
 
 interface WithdrawFormClientProps {
   incomeBalance: number;
@@ -12,6 +25,7 @@ interface WithdrawFormClientProps {
   isInactive?: boolean;
   hasWithdrawnRankPool?: boolean;
   savedAddress?: string;
+  userEmail?: string;
 }
 
 export default function WithdrawFormClient({
@@ -21,6 +35,7 @@ export default function WithdrawFormClient({
   isInactive = false,
   hasWithdrawnRankPool = false,
   savedAddress = "",
+  userEmail = "",
 }: WithdrawFormClientProps) {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<"COMMISSION" | "RANK_EXIT">("COMMISSION");
@@ -41,6 +56,21 @@ export default function WithdrawFormClient({
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
+  // OTP Verification Modal State
+  const [showOtpModal, setShowOtpModal] = useState(false);
+  const [otpCode, setOtpCode] = useState("");
+  const [otpSending, setOtpSending] = useState(false);
+  const [otpError, setOtpError] = useState("");
+  const [otpCooldown, setOtpCooldown] = useState(0);
+  const [pendingPayload, setPendingPayload] = useState<any>(null);
+
+  React.useEffect(() => {
+    if (otpCooldown > 0) {
+      const timer = setTimeout(() => setOtpCooldown(otpCooldown - 1), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [otpCooldown]);
+
   const isUltima = currentTier === 12;
   const rankGross = TIER_VALUES[currentTier];
   const rankNet = NET_CASHOUT_VALUES[currentTier];
@@ -52,6 +82,43 @@ export default function WithdrawFormClient({
   const commFeePercent = RATES.COMMISSION_DEDUCTION_PERCENT; // 10%
   const commFeeAmount = (numCommAmount * commFeePercent) / 100;
   const commNetAmount = Math.max(0, numCommAmount - commFeeAmount);
+
+  const sendWithdrawalOtp = async () => {
+    setOtpSending(true);
+    setOtpError("");
+    try {
+      const res = await fetch("/api/auth/otp/send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ purpose: "WITHDRAWAL" }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to send withdrawal OTP code.");
+      }
+      setOtpCooldown(60);
+    } catch (err: any) {
+      setOtpError(err.message || "Failed to send verification code.");
+    } finally {
+      setOtpSending(false);
+    }
+  };
+
+  const executeWithdrawal = async (payloadWithOtp: any) => {
+    const res = await fetch("/api/member/withdraw", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payloadWithOtp),
+    });
+
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data.error || "Withdrawal request failed");
+    }
+
+    setSuccess(data.message || "Withdrawal request submitted successfully!");
+    router.refresh();
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -104,21 +171,43 @@ export default function WithdrawFormClient({
         network: "USDT_BEP20",
       };
 
-      const res = await fetch("/api/member/withdraw", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
+      // Check if WITHDRAWAL OTP is enabled in system settings
+      const statusRes = await fetch("/api/auth/otp/status?purpose=WITHDRAWAL");
+      const statusData = await statusRes.json();
 
-      const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.error || "Withdrawal request failed");
+      if (statusData.enabled) {
+        setPendingPayload(payload);
+        setShowOtpModal(true);
+        setOtpCode("");
+        setOtpError("");
+        await sendWithdrawalOtp();
+        setLoading(false);
+        return;
       }
 
-      setSuccess(data.message || "Withdrawal request submitted successfully!");
-      router.refresh();
+      // If OTP disabled by admin, execute directly
+      await executeWithdrawal(payload);
     } catch (err: any) {
       setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleConfirmOtpWithdrawal = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!otpCode || otpCode.trim().length !== 6) {
+      setOtpError("Please enter the complete 6-digit OTP verification code.");
+      return;
+    }
+    setLoading(true);
+    setOtpError("");
+    try {
+      await executeWithdrawal({ ...pendingPayload, otpCode: otpCode.trim() });
+      setShowOtpModal(false);
+      setPendingPayload(null);
+    } catch (err: any) {
+      setOtpError(err.message);
     } finally {
       setLoading(false);
     }
@@ -436,6 +525,123 @@ export default function WithdrawFormClient({
           </button>
         )}
       </form>
+
+      {/* OTP Verification Modal */}
+      {showOtpModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fadeIn">
+          <div className="bg-[#0e1726] border border-[#d4af37]/40 rounded-2xl w-full max-w-md p-6 space-y-5 shadow-2xl relative">
+            <button
+              type="button"
+              onClick={() => {
+                setShowOtpModal(false);
+                setPendingPayload(null);
+                setOtpError("");
+              }}
+              className="absolute top-4 right-4 text-[#94a3b8] hover:text-white transition-colors"
+            >
+              <X size={20} />
+            </button>
+
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-[#d4af37]/10 border border-[#d4af37]/30 flex items-center justify-center text-[#d4af37]">
+                <Shield size={22} />
+              </div>
+              <div>
+                <h3 className="text-base font-extrabold text-white">Withdrawal Authorization</h3>
+                <p className="text-[11px] text-[#94a3b8]">Security Verification Required</p>
+              </div>
+            </div>
+
+            <div className="p-3.5 rounded-xl bg-[#0b1120] border border-[#1e293b] space-y-1.5 text-xs">
+              <div className="flex justify-between text-[#94a3b8]">
+                <span>Type:</span>
+                <span className="font-bold text-white">
+                  {pendingPayload?.category === "RANK_EXIT" ? "Rank Pool Cashout" : "Commission Payout"}
+                </span>
+              </div>
+              <div className="flex justify-between text-[#94a3b8]">
+                <span>Gross Amount:</span>
+                <span className="font-bold text-[#d4af37] font-mono-num">${pendingPayload?.amount} USDT</span>
+              </div>
+              <div className="flex justify-between text-[#94a3b8]">
+                <span>Destination (BEP-20):</span>
+                <span className="font-mono text-white text-[11px] truncate max-w-[200px]" title={pendingPayload?.toAddress}>
+                  {pendingPayload?.toAddress}
+                </span>
+              </div>
+            </div>
+
+            <div className="space-y-1.5 text-xs text-[#cbd5e1] leading-relaxed">
+              <p>
+                A 6-digit one-time security passcode (OTP) has been dispatched to your registered email:
+              </p>
+              <div className="flex items-center gap-1.5 text-[#38bdf8] font-bold text-xs">
+                <Mail size={14} />
+                <span>{userEmail || "your registered email"}</span>
+              </div>
+            </div>
+
+            {otpError && (
+              <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-xs flex items-start gap-2">
+                <AlertCircle size={16} className="flex-shrink-0 mt-0.5" />
+                <span>{otpError}</span>
+              </div>
+            )}
+
+            <form onSubmit={handleConfirmOtpWithdrawal} className="space-y-4">
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-[#cbd5e1] uppercase tracking-wider flex items-center justify-between">
+                  <span>6-Digit Verification Code</span>
+                  <button
+                    type="button"
+                    onClick={sendWithdrawalOtp}
+                    disabled={otpCooldown > 0 || otpSending}
+                    className="text-[11px] text-[#d4af37] hover:underline disabled:text-[#64748b] disabled:no-underline font-semibold flex items-center gap-1"
+                  >
+                    {otpSending && <RefreshCw size={12} className="animate-spin" />}
+                    {otpCooldown > 0 ? `Resend code in ${otpCooldown}s` : "Resend code"}
+                  </button>
+                </label>
+                <div className="relative">
+                  <KeyRound size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#94a3b8]" />
+                  <input
+                    type="text"
+                    maxLength={6}
+                    autoFocus
+                    required
+                    value={otpCode}
+                    onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ""))}
+                    placeholder="123456"
+                    className="w-full bg-[#0b1120] border border-[#d4af37]/40 text-white rounded-lg pl-10 pr-4 py-2.5 text-base font-mono-num font-extrabold tracking-widest text-center focus:outline-none focus:border-[#d4af37]"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowOtpModal(false);
+                    setPendingPayload(null);
+                    setOtpError("");
+                  }}
+                  className="py-2.5 rounded-lg border border-[#1e293b] text-[#94a3b8] hover:text-white font-bold text-xs"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={loading || otpCode.length !== 6}
+                  className="btn-primary py-2.5 text-xs font-extrabold flex items-center justify-center gap-1.5 disabled:opacity-50"
+                >
+                  {loading ? "Verifying..." : "Confirm & Payout"}
+                  {!loading && <ArrowRight size={14} />}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

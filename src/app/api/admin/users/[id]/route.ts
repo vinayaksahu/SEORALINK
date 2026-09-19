@@ -15,7 +15,7 @@ export async function PATCH(
 
     const { id } = await params;
     const body = await req.json();
-    const { action, status, fullName, email, phone } = body;
+    const { action, status, fullName, email, phone, usdtAddress } = body;
 
     // Check if target user exists
     const existingUser = await db.user.findUnique({
@@ -117,12 +117,24 @@ export async function PATCH(
       }
     }
 
+    const cleanAddress = usdtAddress && typeof usdtAddress === "string" ? usdtAddress.trim() : null;
+    if (cleanAddress) {
+      if (!cleanAddress.startsWith("0x") || cleanAddress.length !== 42) {
+        return NextResponse.json(
+          { error: "Please provide a valid BNB Smart Chain (BEP-20) address starting with 0x (42 characters)" },
+          { status: 400 }
+        );
+      }
+    }
+
     const updated = await db.user.update({
       where: { id },
       data: {
         fullName: fullName.trim(),
         email: trimmedEmail,
         phone: phone ? phone.trim() : null,
+        usdtAddress: cleanAddress || null,
+        usdtNetwork: "USDT_BEP20",
       },
     });
 
@@ -135,6 +147,7 @@ export async function PATCH(
         fullName: updated.fullName,
         email: updated.email,
         phone: updated.phone,
+        usdtAddress: updated.usdtAddress,
       },
     });
   } catch (error: any) {

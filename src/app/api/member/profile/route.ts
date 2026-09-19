@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { validateAndConsumeOtp } from "@/lib/otp";
 
 export async function GET() {
   try {
@@ -117,6 +118,27 @@ export async function PATCH(req: Request) {
       if (!cleanAddress.startsWith("0x") || cleanAddress.length !== 42) {
         return NextResponse.json(
           { error: "Please provide a valid BNB Smart Chain (BEP-20) address starting with 0x (42 characters)." },
+          { status: 400 }
+        );
+      }
+    }
+
+    // 5. Verify OTP if sensitive details changed (Name, Email, Phone, or USDT Address)
+    const isNameChanged = fullName.trim() !== existingUser.fullName;
+    const isEmailChanged = trimmedEmail !== existingUser.email.toLowerCase();
+    const isPhoneChanged = (cleanPhone || "") !== (existingUser.phone || "");
+    const isAddressChanged = (cleanAddress || "") !== (existingUser.usdtAddress || "");
+
+    if (isNameChanged || isEmailChanged || isPhoneChanged || isAddressChanged) {
+      const otpValidation = await validateAndConsumeOtp({
+        email: existingUser.email,
+        code: body.otpCode,
+        purpose: "PROFILE_UPDATE",
+      });
+
+      if (!otpValidation.success) {
+        return NextResponse.json(
+          { error: otpValidation.error || "Profile update OTP code is invalid or expired. Please verify with the 6-digit code sent to your email." },
           { status: 400 }
         );
       }

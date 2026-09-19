@@ -20,6 +20,9 @@ import {
   Sparkles,
   Globe,
   ChevronDown,
+  KeyRound,
+  Shield,
+  X,
 } from "lucide-react";
 import { COUNTRIES, DEFAULT_COUNTRY, type Country } from "@/lib/countries";
 
@@ -85,6 +88,21 @@ export default function ProfileFormClient({ user: initialUser }: ProfileFormClie
   const [copiedLink, setCopiedLink] = useState(false);
   const [copiedAddress, setCopiedAddress] = useState(false);
 
+  // Profile Update OTP State
+  const [showOtpModal, setShowOtpModal] = useState(false);
+  const [otpCode, setOtpCode] = useState("");
+  const [otpSending, setOtpSending] = useState(false);
+  const [otpError, setOtpError] = useState("");
+  const [otpCooldown, setOtpCooldown] = useState(0);
+  const [pendingProfilePayload, setPendingProfilePayload] = useState<any>(null);
+
+  React.useEffect(() => {
+    if (otpCooldown > 0) {
+      const timer = setTimeout(() => setOtpCooldown(otpCooldown - 1), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [otpCooldown]);
+
   const appUrl = typeof window !== "undefined" ? window.location.origin : "https://seoralink.com";
   const referralLink = `${appUrl}/register?ref=${user.customId}`;
 
@@ -107,6 +125,55 @@ export default function ProfileFormClient({ user: initialUser }: ProfileFormClie
     } catch (e) {
       console.error(e);
     }
+  };
+
+  const sendProfileOtp = async () => {
+    setOtpSending(true);
+    setOtpError("");
+    try {
+      const res = await fetch("/api/auth/otp/send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ purpose: "PROFILE_UPDATE" }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to send profile verification code.");
+      }
+      setOtpCooldown(60);
+    } catch (err: any) {
+      setOtpError(err.message || "Failed to dispatch verification OTP.");
+    } finally {
+      setOtpSending(false);
+    }
+  };
+
+  const executeProfileUpdate = async (payloadWithOtp: any) => {
+    const res = await fetch("/api/member/profile", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payloadWithOtp),
+    });
+
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data.error || "Failed to update profile settings.");
+    }
+
+    setUser((prev) => ({
+      ...prev,
+      fullName: payloadWithOtp.fullName,
+      email: payloadWithOtp.email,
+      phone: payloadWithOtp.phone,
+      usdtAddress: payloadWithOtp.usdtAddress,
+      usdtNetwork: payloadWithOtp.usdtNetwork,
+    }));
+
+    setSuccess(data.message || "Profile updated successfully!");
+    router.refresh();
+    setTimeout(() => {
+      setSuccess("");
+    }, 3500);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -132,46 +199,66 @@ export default function ProfileFormClient({ user: initialUser }: ProfileFormClie
       }
     }
 
+    const fullPhone = phoneDigits.trim()
+      ? `${selectedCountry.dialCode} ${phoneDigits.trim()}`
+      : null;
+
+    const payload = {
+      fullName: fullName.trim(),
+      email: email.trim(),
+      phone: fullPhone,
+      usdtAddress: usdtAddress.trim() || null,
+      usdtNetwork,
+    };
+
+    const isNameChanged = fullName.trim() !== (user.fullName || "");
+    const isEmailChanged = email.trim().toLowerCase() !== (user.email || "").toLowerCase();
+    const isPhoneChanged = (fullPhone || "") !== (user.phone || "");
+    const isAddressChanged = (usdtAddress.trim() || "") !== (user.usdtAddress || "");
+    const isSensitiveChanged = isNameChanged || isEmailChanged || isPhoneChanged || isAddressChanged;
+
     setLoading(true);
 
     try {
-      const fullPhone = phoneDigits.trim()
-        ? `${selectedCountry.dialCode} ${phoneDigits.trim()}`
-        : null;
+      if (isSensitiveChanged) {
+        // Check if PROFILE_UPDATE OTP is enabled in system settings
+        const statusRes = await fetch("/api/auth/otp/status?purpose=PROFILE_UPDATE");
+        const statusData = await statusRes.json();
 
-      const res = await fetch("/api/member/profile", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          fullName: fullName.trim(),
-          email: email.trim(),
-          phone: fullPhone,
-          usdtAddress: usdtAddress.trim() || null,
-          usdtNetwork,
-        }),
-      });
-
-      const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.error || "Failed to update profile settings.");
+        if (statusData.enabled) {
+          setPendingProfilePayload(payload);
+          setShowOtpModal(true);
+          setOtpCode("");
+          setOtpError("");
+          await sendProfileOtp();
+          setLoading(false);
+          return;
+        }
       }
 
-      setUser((prev) => ({
-        ...prev,
-        fullName: fullName.trim(),
-        email: email.trim(),
-        phone: fullPhone,
-        usdtAddress: usdtAddress.trim() || null,
-        usdtNetwork,
-      }));
-
-      setSuccess(data.message || "Profile updated successfully!");
-      router.refresh();
-      setTimeout(() => {
-        setSuccess("");
-      }, 3500);
+      // If OTP not required or disabled, proceed directly
+      await executeProfileUpdate(payload);
     } catch (err: any) {
       setError(err.message || "Something went wrong while saving changes.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleConfirmOtpProfile = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!otpCode || otpCode.trim().length !== 6) {
+      setOtpError("Please enter the 6-digit OTP verification code.");
+      return;
+    }
+    setLoading(true);
+    setOtpError("");
+    try {
+      await executeProfileUpdate({ ...pendingProfilePayload, otpCode: otpCode.trim() });
+      setShowOtpModal(false);
+      setPendingProfilePayload(null);
+    } catch (err: any) {
+      setOtpError(err.message);
     } finally {
       setLoading(false);
     }
@@ -598,6 +685,107 @@ export default function ProfileFormClient({ user: initialUser }: ProfileFormClie
           </div>
         </div>
       </form>
+
+      {/* Profile Update OTP Verification Modal */}
+      {showOtpModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fadeIn">
+          <div className="bg-[#0e1726] border border-[#d4af37]/40 rounded-2xl w-full max-w-md p-6 space-y-5 shadow-2xl relative">
+            <button
+              type="button"
+              onClick={() => {
+                setShowOtpModal(false);
+                setPendingProfilePayload(null);
+                setOtpError("");
+              }}
+              className="absolute top-4 right-4 text-[#94a3b8] hover:text-white transition-colors"
+            >
+              <X size={20} />
+            </button>
+
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-[#d4af37]/10 border border-[#d4af37]/30 flex items-center justify-center text-[#d4af37]">
+                <Shield size={22} />
+              </div>
+              <div>
+                <h3 className="text-base font-extrabold text-white">Profile Security Authorization</h3>
+                <p className="text-[11px] text-[#94a3b8]">Sensitive Information Verification</p>
+              </div>
+            </div>
+
+            <div className="p-3.5 rounded-xl bg-[#0b1120] border border-[#1e293b] space-y-1.5 text-xs text-[#94a3b8]">
+              <p className="text-white font-semibold">
+                You are updating sensitive account credentials (Name, Email, Phone, or USDT Payout Address).
+              </p>
+              <div className="pt-1 text-[#cbd5e1] leading-relaxed">
+                For account safety, enter the 6-digit one-time passcode (OTP) dispatched to your current email:
+              </div>
+              <div className="flex items-center gap-1.5 text-[#38bdf8] font-bold text-xs pt-1">
+                <Mail size={14} />
+                <span>{user.email}</span>
+              </div>
+            </div>
+
+            {otpError && (
+              <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-xs flex items-start gap-2">
+                <AlertCircle size={16} className="flex-shrink-0 mt-0.5" />
+                <span>{otpError}</span>
+              </div>
+            )}
+
+            <form onSubmit={handleConfirmOtpProfile} className="space-y-4">
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-[#cbd5e1] uppercase tracking-wider flex items-center justify-between">
+                  <span>6-Digit Verification Code</span>
+                  <button
+                    type="button"
+                    onClick={sendProfileOtp}
+                    disabled={otpCooldown > 0 || otpSending}
+                    className="text-[11px] text-[#d4af37] hover:underline disabled:text-[#64748b] disabled:no-underline font-semibold flex items-center gap-1"
+                  >
+                    {otpSending && <RefreshCw size={12} className="animate-spin" />}
+                    {otpCooldown > 0 ? `Resend code in ${otpCooldown}s` : "Resend code"}
+                  </button>
+                </label>
+                <div className="relative">
+                  <KeyRound size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#94a3b8]" />
+                  <input
+                    type="text"
+                    maxLength={6}
+                    autoFocus
+                    required
+                    value={otpCode}
+                    onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ""))}
+                    placeholder="123456"
+                    className="w-full bg-[#0b1120] border border-[#d4af37]/40 text-white rounded-lg pl-10 pr-4 py-2.5 text-base font-mono-num font-extrabold tracking-widest text-center focus:outline-none focus:border-[#d4af37]"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowOtpModal(false);
+                    setPendingProfilePayload(null);
+                    setOtpError("");
+                  }}
+                  className="py-2.5 rounded-lg border border-[#1e293b] text-[#94a3b8] hover:text-white font-bold text-xs"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={loading || otpCode.length !== 6}
+                  className="btn-primary py-2.5 text-xs font-extrabold flex items-center justify-center gap-1.5 disabled:opacity-50"
+                >
+                  {loading ? "Verifying..." : "Verify & Save"}
+                  {!loading && <CheckCircle2 size={14} />}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
