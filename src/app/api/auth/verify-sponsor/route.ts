@@ -17,6 +17,10 @@ export async function GET(req: Request) {
         { referralCode: code },
         { email: code.toLowerCase() },
       ],
+      NOT: [
+        { role: "SUPER_ROOT_ADMIN" },
+        { customId: "SUPERROOT" },
+      ],
     },
     select: {
       id: true,

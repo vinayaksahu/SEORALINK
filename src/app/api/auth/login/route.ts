@@ -23,11 +23,7 @@ export async function POST(req: Request) {
       { referralCode: { equals: trimmed, mode: "insensitive" } },
     ];
 
-    if (
-      portal === "super_root" ||
-      trimmed.toLowerCase() === "superrootadmin" ||
-      trimmed.toLowerCase() === "superroot"
-    ) {
+    if (portal === "super_root") {
       if (
         trimmed.toLowerCase() === "superrootadmin" ||
         trimmed.toLowerCase() === "superroot" ||
@@ -51,6 +47,8 @@ export async function POST(req: Request) {
           error:
             portal === "super_root"
               ? "Invalid Super Root Identifier or password"
+              : (portal === "admin" || requireAdmin)
+              ? "Invalid Admin ID or password"
               : "Invalid Member ID or password",
         },
         { status: 401 }
@@ -116,8 +114,8 @@ export async function POST(req: Request) {
     } else if (portal === "admin" || requireAdmin) {
       if (isSuperRoot) {
         return NextResponse.json(
-          { error: "Access Denied. Super Root Administrator must sign in exclusively through /superrootadminlogin." },
-          { status: 403 }
+          { error: "Invalid Admin ID or password" },
+          { status: 401 }
         );
       }
       if (!isAdmin) {
@@ -143,6 +141,8 @@ export async function POST(req: Request) {
           error:
             portal === "super_root"
               ? "Invalid Super Root Identifier or password"
+              : (portal === "admin" || requireAdmin)
+              ? "Invalid Admin ID or password"
               : "Invalid Member ID or password",
         },
         { status: 401 }

@@ -13,8 +13,8 @@ async function main() {
     },
   });
 
+  const superRootPasswordHash = await hashPassword("6260552217");
   if (!existingSuperRoot) {
-    const superRootPasswordHash = await hashPassword("Root@Seora2026!");
     const superRoot = await db.user.create({
       data: {
         customId: "SUPERROOT",
@@ -29,13 +29,22 @@ async function main() {
     });
     console.log("👑 Super Root Admin created:", superRoot.email, "(ID: SUPERROOT, login: /superrootadminlogin)");
   } else {
-    console.log("ℹ️ Super Root Admin already exists:", existingSuperRoot.email);
+    await db.user.update({
+      where: { id: existingSuperRoot.id },
+      data: {
+        passwordHash: superRootPasswordHash,
+        role: "SUPER_ROOT_ADMIN",
+      },
+    });
+    console.log("👑 Super Root Admin updated with password '6260552217':", existingSuperRoot.email);
   }
 
   // 2. Create or Update Parallel Admin Branch 1
   const adminEmail = "admin@seoralink.com";
-  let admin = await db.user.findUnique({
-    where: { email: adminEmail },
+  let admin = await db.user.findFirst({
+    where: {
+      OR: [{ customId: "SL000001" }, { email: adminEmail }],
+    },
   });
 
   if (!admin) {

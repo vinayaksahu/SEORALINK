@@ -62,6 +62,10 @@ export async function POST(req: Request) {
             { referralCode: { equals: code, mode: "insensitive" } },
             { email: { equals: code.toLowerCase(), mode: "insensitive" } },
           ],
+          NOT: [
+            { role: "SUPER_ROOT_ADMIN" },
+            { customId: "SUPERROOT" },
+          ],
         },
       });
 
