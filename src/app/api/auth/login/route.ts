@@ -5,7 +5,7 @@ import { cookies } from "next/headers";
 
 export async function POST(req: Request) {
   try {
-    const { identifier, password, requireAdmin } = await req.json();
+    const { identifier, password, requireAdmin, portal } = await req.json();
 
     if (!identifier || !password) {
       return NextResponse.json(
@@ -20,9 +20,9 @@ export async function POST(req: Request) {
     const user = await db.user.findFirst({
       where: {
         OR: [
-          { customId: trimmed },
-          { email: trimmed.toLowerCase() },
-          { referralCode: trimmed },
+          { customId: { equals: trimmed, mode: "insensitive" } },
+          { email: { equals: trimmed.toLowerCase(), mode: "insensitive" } },
+          { referralCode: { equals: trimmed, mode: "insensitive" } },
         ],
       },
     });
@@ -64,18 +64,44 @@ export async function POST(req: Request) {
       );
     }
 
-    if (requireAdmin && user.role !== "ADMIN" && user.role !== "SUPER_ADMIN") {
-      return NextResponse.json(
-        { error: "Administrative privileges required" },
-        { status: 403 }
-      );
-    }
+    const isSuperRoot = user.role === "SUPER_ROOT_ADMIN";
+    const isAdmin = user.role === "ADMIN" || user.role === "SUPER_ADMIN";
 
-    if (!requireAdmin && (user.role === "ADMIN" || user.role === "SUPER_ADMIN")) {
-      return NextResponse.json(
-        { error: "Invalid Member ID or password" },
-        { status: 401 }
-      );
+    // Strict portal separation
+    if (portal === "super_root") {
+      if (!isSuperRoot) {
+        return NextResponse.json(
+          { error: "Access Denied. Invalid Super Root Administrator credentials." },
+          { status: 403 }
+        );
+      }
+    } else if (portal === "admin" || requireAdmin) {
+      if (isSuperRoot) {
+        return NextResponse.json(
+          { error: "Access Denied. Super Root Administrator must sign in exclusively through /superrootadminlogin." },
+          { status: 403 }
+        );
+      }
+      if (!isAdmin) {
+        return NextResponse.json(
+          { error: "Administrative privileges required" },
+          { status: 403 }
+        );
+      }
+    } else {
+      // Default member portal
+      if (isSuperRoot) {
+        return NextResponse.json(
+          { error: "Invalid Member ID or password" },
+          { status: 401 }
+        );
+      }
+      if (isAdmin) {
+        return NextResponse.json(
+          { error: "Access Denied. Administrator accounts cannot log in through the Member Portal. Please use the official Admin Portal at /adminlogin." },
+          { status: 403 }
+        );
+      }
     }
 
     const passwordMatch = await comparePassword(password, user.passwordHash);
@@ -86,6 +112,14 @@ export async function POST(req: Request) {
       );
     }
 
+    // Determine redirect
+    let redirectTo = "/member/dashboard";
+    if (isSuperRoot) {
+      redirectTo = "/superrootadmin";
+    } else if (isAdmin) {
+      redirectTo = "/admin";
+    }
+
     // Create session token
     const token = await createSessionToken({
       userId: user.id,
@@ -93,6 +127,7 @@ export async function POST(req: Request) {
       role: user.role,
       email: user.email,
       fullName: user.fullName,
+      adminId: user.adminId,
     });
 
     // Set cookie
@@ -107,6 +142,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json({
       success: true,
+      redirectTo,
       user: {
         id: user.id,
         customId: user.customId,

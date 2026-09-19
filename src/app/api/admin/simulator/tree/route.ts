@@ -38,8 +38,12 @@ export async function GET(req: Request) {
     const { searchParams } = new URL(req.url);
     const rootId = searchParams.get("rootId");
 
-    // 1. Fetch all users in the system
+    // 1. Fetch all users in the system belonging to this admin's branch
     const allUsers = await db.user.findMany({
+      where: {
+        adminId: session.userId,
+        role: "USER",
+      },
       orderBy: { createdAt: "asc" },
       select: {
         id: true,

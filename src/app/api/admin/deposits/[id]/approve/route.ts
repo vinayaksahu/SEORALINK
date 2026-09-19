@@ -22,7 +22,7 @@ export async function POST(
         include: { user: true },
       });
 
-      if (!deposit) {
+      if (!deposit || deposit.user.adminId !== session.userId) {
         throw new Error("Deposit request not found");
       }
 

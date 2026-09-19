@@ -15,6 +15,11 @@ export default async function AdminWithdrawalsPage() {
   }
 
   const rawWithdrawals = await db.withdrawalRequest.findMany({
+    where: {
+      user: {
+        adminId: session.userId,
+      },
+    },
     orderBy: { createdAt: "desc" },
     include: {
       user: {

@@ -10,24 +10,37 @@ import Decimal from "decimal.js";
  */
 export async function processTierQueue(
   tier: number,
+  branchAdminId?: string | null,
   externalTx?: Prisma.TransactionClient
 ): Promise<number> {
   const tx = externalTx || db;
   let matchesProcessed = 0;
 
   while (true) {
-    // 1. Find the front-most WAITING entry in this tier
+    // 1. Find the front-most WAITING entry in this tier for this branch
+    const whereFront: any = { tier, status: "WAITING" };
+    if (branchAdminId !== undefined) {
+      whereFront.adminId = branchAdminId;
+    }
+
     const frontEntry = await tx.queueEntry.findFirst({
-      where: { tier, status: "WAITING" },
+      where: whereFront,
       orderBy: { queueIndex: "asc" },
       include: { user: true },
     });
 
     if (!frontEntry) break;
 
-    // 2. Count total entries in this tier
+    const targetBranchId = frontEntry.adminId ?? branchAdminId ?? null;
+
+    // 2. Count total entries in this tier for this branch
+    const whereCount: any = { tier };
+    if (targetBranchId !== undefined) {
+      whereCount.adminId = targetBranchId;
+    }
+
     const totalEntriesInTier = await tx.queueEntry.count({
-      where: { tier },
+      where: whereCount,
     });
 
     // 3. Condition for 2:1 Tripod match: total >= 2 * frontIndex + 3
@@ -91,13 +104,19 @@ export async function processTierQueue(
         await awardMentorshipOverride(matchedUser, nextTier, tx);
 
         // Add to next tier queue (100% roll-forward)
+        const nextQueueCountWhere: any = { tier: nextTier };
+        if (targetBranchId !== undefined) {
+          nextQueueCountWhere.adminId = targetBranchId;
+        }
+
         const nextQueueIndex = await tx.queueEntry.count({
-          where: { tier: nextTier },
+          where: nextQueueCountWhere,
         });
 
         await tx.queueEntry.create({
           data: {
             userId: matchedUser.id,
+            adminId: targetBranchId,
             tier: nextTier,
             queueIndex: nextQueueIndex,
             childrenPlaced: 0,
@@ -106,7 +125,7 @@ export async function processTierQueue(
         });
 
         // Trigger queue processing on next tier (cascading velocity)
-        await processTierQueue(nextTier, tx);
+        await processTierQueue(nextTier, targetBranchId, tx);
       }
     } else if (tier === 12) {
       // Completed Tier 12 Ultima! Rank queue finishes, user stays ACTIVE for lifetime direct & override benefits
@@ -156,6 +175,8 @@ export async function checkPendingRankPromotions(
   });
   if (userRankExit) return;
 
+  const branchAdminId = user.adminId ?? null;
+
   // 1. Tier 0 (Junior) Promotion: If user has at least 2 directs, promote to Tier 1 (Zen)
   if (user.currentTier === 0 && user.directCount >= REQUIRED_DIRECTS[1]) {
     // Complete or record Tier 0 queue entry
@@ -172,10 +193,13 @@ export async function checkPendingRankPromotions(
         });
       }
     } else {
-      const tier0Count = await tx.queueEntry.count({ where: { tier: 0 } });
+      const tier0Count = await tx.queueEntry.count({
+        where: { tier: 0, ...(branchAdminId !== null ? { adminId: branchAdminId } : {}) },
+      });
       await tx.queueEntry.create({
         data: {
           userId: user.id,
+          adminId: branchAdminId,
           tier: 0,
           queueIndex: tier0Count,
           childrenPlaced: 2,
@@ -200,10 +224,13 @@ export async function checkPendingRankPromotions(
     });
 
     if (!inTier1) {
-      const tier1Count = await tx.queueEntry.count({ where: { tier: 1 } });
+      const tier1Count = await tx.queueEntry.count({
+        where: { tier: 1, ...(branchAdminId !== null ? { adminId: branchAdminId } : {}) },
+      });
       await tx.queueEntry.create({
         data: {
           userId: user.id,
+          adminId: branchAdminId,
           tier: 1,
           queueIndex: tier1Count,
           childrenPlaced: 0,
@@ -211,7 +238,7 @@ export async function checkPendingRankPromotions(
         },
       });
 
-      await processTierQueue(1, tx);
+      await processTierQueue(1, branchAdminId, tx);
     }
     return;
   }
@@ -239,12 +266,13 @@ export async function checkPendingRankPromotions(
       await awardMentorshipOverride(user, targetNextTier, tx);
 
       const nextQueueIndex = await tx.queueEntry.count({
-        where: { tier: targetNextTier },
+        where: { tier: targetNextTier, ...(branchAdminId !== null ? { adminId: branchAdminId } : {}) },
       });
 
       await tx.queueEntry.create({
         data: {
           userId: user.id,
+          adminId: branchAdminId,
           tier: targetNextTier,
           queueIndex: nextQueueIndex,
           childrenPlaced: 0,
@@ -252,7 +280,7 @@ export async function checkPendingRankPromotions(
         },
       });
 
-      await processTierQueue(targetNextTier, tx);
+      await processTierQueue(targetNextTier, branchAdminId, tx);
     }
   }
 }

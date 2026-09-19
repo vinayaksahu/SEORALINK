@@ -1,4 +1,4 @@
-﻿import React from "react";
+import React from "react";
 import { getSession } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
@@ -16,6 +16,11 @@ export default async function AdminTicketsPage() {
   }
 
   const rawTickets = await db.supportTicket.findMany({
+    where: {
+      user: {
+        adminId: session.userId,
+      },
+    },
     include: {
       user: {
         select: {

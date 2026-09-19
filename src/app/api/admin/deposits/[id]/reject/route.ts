@@ -18,9 +18,10 @@ export async function POST(
 
     const deposit = await db.depositRequest.findUnique({
       where: { id },
+      include: { user: true },
     });
 
-    if (!deposit) {
+    if (!deposit || deposit.user.adminId !== session.userId) {
       return NextResponse.json({ error: "Deposit request not found" }, { status: 404 });
     }
 

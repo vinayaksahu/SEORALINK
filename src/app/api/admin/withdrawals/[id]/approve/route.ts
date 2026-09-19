@@ -22,7 +22,7 @@ export async function POST(
       include: { user: true },
     });
 
-    if (!withdrawal) {
+    if (!withdrawal || withdrawal.user.adminId !== session.userId) {
       return NextResponse.json({ error: "Withdrawal request not found" }, { status: 404 });
     }
 

@@ -49,21 +49,31 @@ export async function POST(req: Request) {
       );
     }
 
-    // Resolve sponsor if provided
+    // Resolve sponsor and assigned admin branch
     let sponsorId: string | null = null;
+    let assignedAdminId: string | null = null;
+
     if (sponsorCode && sponsorCode.trim()) {
       const code = sponsorCode.trim();
       const sponsor = await db.user.findFirst({
         where: {
           OR: [
-            { customId: code },
-            { referralCode: code },
-            { email: code.toLowerCase() },
+            { customId: { equals: code, mode: "insensitive" } },
+            { referralCode: { equals: code, mode: "insensitive" } },
+            { email: { equals: code.toLowerCase(), mode: "insensitive" } },
           ],
         },
       });
 
       if (sponsor) {
+        // Prevent registering under Super Root Admin
+        if (sponsor.role === "SUPER_ROOT_ADMIN") {
+          return NextResponse.json(
+            { error: "Invalid sponsor referral code. Please check and try again." },
+            { status: 400 }
+          );
+        }
+
         // Check if sponsor has exited system under Single-Exit protocol
         const isSponsorExited = await isUserSystemExited(sponsor.id);
         if (isSponsorExited) {
@@ -74,6 +84,11 @@ export async function POST(req: Request) {
         }
 
         sponsorId = sponsor.id;
+        if (sponsor.role === "ADMIN" || sponsor.role === "SUPER_ADMIN") {
+          assignedAdminId = sponsor.id;
+        } else {
+          assignedAdminId = sponsor.adminId || null;
+        }
       } else {
         return NextResponse.json(
           { error: "Invalid sponsor referral code. Please check and try again." },
@@ -82,7 +97,20 @@ export async function POST(req: Request) {
       }
     }
 
-    // Generate unique customId
+    // If no sponsor or unassigned, assign to default active Admin branch
+    if (!assignedAdminId) {
+      const defaultAdmin = await db.user.findFirst({
+        where: {
+          role: { in: ["ADMIN", "SUPER_ADMIN"] },
+          NOT: { role: "SUPER_ROOT_ADMIN" },
+          status: "ACTIVE",
+        },
+        orderBy: { createdAt: "asc" },
+      });
+      assignedAdminId = defaultAdmin?.id || null;
+    }
+
+    // Generate completely random unique customId (SL + 6 random digits)
     let customId = generateCustomId();
     while (await db.user.findUnique({ where: { customId } })) {
       customId = generateCustomId();
@@ -101,6 +129,7 @@ export async function POST(req: Request) {
         phone: phone ? phone.trim() : null,
         passwordHash,
         sponsorId,
+        adminId: assignedAdminId,
         status: "INACTIVE", // Account pending $10 activation
         currentTier: 0,
       },
@@ -113,6 +142,7 @@ export async function POST(req: Request) {
       role: user.role,
       email: user.email,
       fullName: user.fullName,
+      adminId: user.adminId,
     });
 
     // Set HTTP-only cookie

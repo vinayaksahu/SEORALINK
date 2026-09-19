@@ -7,6 +7,7 @@ datasource db {
 }
 
 enum UserRole {
+  SUPER_ROOT_ADMIN
   SUPER_ADMIN
   ADMIN
   USER
@@ -58,6 +59,10 @@ model User {
   sponsor            User?               @relation("ReferralTree", fields: [sponsorId], references: [id])
   directs            User[]              @relation("ReferralTree")
 
+  adminId            String?             // Root branch admin ID this user belongs to
+  assignedAdmin      User?               @relation("AdminTeamMembers", fields: [adminId], references: [id])
+  teamMembers        User[]              @relation("AdminTeamMembers")
+
   usdtAddress        String?
   usdtNetwork        String?             @default("USDT_BEP20")
 
@@ -81,6 +86,7 @@ model User {
   @@index([customId])
   @@index([email])
   @@index([sponsorId])
+  @@index([adminId])
   @@index([currentTier])
   @@index([status])
 }
@@ -89,6 +95,7 @@ model QueueEntry {
   id               String       @id @default(cuid())
   userId           String
   user             User         @relation(fields: [userId], references: [id])
+  adminId          String?      // Isolated parallel admin branch ID
   tier             Int          // 0 to 12
   queueIndex       Int          // Sequential index in tier queue
   childrenPlaced   Int          @default(0) // 0, 1, or 2 (Tripod matching)
@@ -98,9 +105,11 @@ model QueueEntry {
   upgradedAt       DateTime?
   createdAt        DateTime     @default(now())
 
-  @@unique([tier, queueIndex])
+  @@index([adminId, tier, queueIndex])
+  @@index([adminId, tier, status])
   @@index([userId, tier])
   @@index([tier, status])
+  @@index([tier, queueIndex])
 }
 
 model LedgerEntry {

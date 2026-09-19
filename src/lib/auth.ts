@@ -8,9 +8,10 @@ const encodedKey = new TextEncoder().encode(secretKey);
 export interface SessionPayload {
   userId: string;
   customId: string;
-  role: "USER" | "ADMIN" | "SUPER_ADMIN";
+  role: "USER" | "ADMIN" | "SUPER_ADMIN" | "SUPER_ROOT_ADMIN";
   email: string;
   fullName: string;
+  adminId?: string | null;
 }
 
 export async function hashPassword(password: string): Promise<string> {

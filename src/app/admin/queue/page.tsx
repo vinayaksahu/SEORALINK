@@ -15,9 +15,9 @@ export default async function AdminQueuePage() {
   // Aggregate stats per tier
   const tierStats = await Promise.all(
     TIER_NAMES.map(async (name, tier) => {
-      const totalNodes = await db.queueEntry.count({ where: { tier } });
-      const waitingNodes = await db.queueEntry.count({ where: { tier, status: "WAITING" } });
-      const completedNodes = await db.queueEntry.count({ where: { tier, status: "COMPLETED" } });
+      const totalNodes = await db.queueEntry.count({ where: { adminId: session.userId, tier } });
+      const waitingNodes = await db.queueEntry.count({ where: { adminId: session.userId, tier, status: "WAITING" } });
+      const completedNodes = await db.queueEntry.count({ where: { adminId: session.userId, tier, status: "COMPLETED" } });
 
       return {
         tier,

@@ -1,7 +1,7 @@
 import React from "react";
 import Link from "next/link";
 import { getSession } from "@/lib/auth";
-import { db } from "@/lib/db";
+import { db, withDbRetry } from "@/lib/db";
 import { redirect } from "next/navigation";
 import { TIER_NAMES, TIER_VALUES } from "@/lib/constants";
 import { Users, Search, Zap } from "lucide-react";
@@ -30,47 +30,50 @@ export default async function AdminUsersPage({
     ];
   }
 
-  const users = await db.user.findMany({
-    where: whereClause,
-    orderBy: { createdAt: "desc" },
-    select: {
-      id: true,
-      customId: true,
-      fullName: true,
-      email: true,
-      phone: true,
-      usdtAddress: true,
-      role: true,
-      status: true,
-      currentTier: true,
-      directCount: true,
-      fundBalance: true,
-      incomeBalance: true,
-      totalEarned: true,
-      createdAt: true,
-      sponsor: {
+  const [users, rankWithdrawals] = await withDbRetry(async () => {
+    return await Promise.all([
+      db.user.findMany({
+        where: whereClause,
+        orderBy: { createdAt: "desc" },
         select: {
+          id: true,
           customId: true,
           fullName: true,
+          email: true,
+          phone: true,
+          usdtAddress: true,
+          role: true,
+          status: true,
+          currentTier: true,
+          directCount: true,
+          fundBalance: true,
+          incomeBalance: true,
+          totalEarned: true,
+          createdAt: true,
+          sponsor: {
+            select: {
+              customId: true,
+              fullName: true,
+            },
+          },
         },
-      },
-    },
-    take: 50,
+        take: 50,
+      }),
+      db.withdrawalRequest.findMany({
+        where: {
+          OR: [
+            { feePercent: 20 },
+            { adminNote: { contains: "CASHOUT" } },
+            { adminNote: { contains: "RANK_EXIT" } },
+            { amount: 20480 },
+          ],
+          status: { not: "REJECTED" },
+        },
+        select: { userId: true },
+      }),
+    ]);
   });
 
-  // Check rank pool cashouts for active users
-  const rankWithdrawals = await db.withdrawalRequest.findMany({
-    where: {
-      OR: [
-        { feePercent: 20 },
-        { adminNote: { contains: "CASHOUT" } },
-        { adminNote: { contains: "RANK_EXIT" } },
-        { amount: 20480 },
-      ],
-      status: { not: "REJECTED" },
-    },
-    select: { userId: true },
-  });
   const rankWithdrawnUserIds = new Set(rankWithdrawals.map((w) => w.userId));
 
   const mappedUsers = users.map((u) => {
@@ -83,18 +86,18 @@ export default async function AdminUsersPage({
     return {
       id: u.id,
       customId: u.customId,
-      fullName: u.fullName,
+      fullName: u.fullName || "Member",
       email: u.email,
       phone: u.phone,
       usdtAddress: u.usdtAddress || "",
       status: u.status,
       isSystemExited: hasWithdrawn,
-      currentTier: u.currentTier,
-      directCount: u.directCount,
-      fundBalance: u.fundBalance.toString(),
-      incomeBalance: u.incomeBalance.toString(),
+      currentTier: u.currentTier || 0,
+      directCount: u.directCount || 0,
+      fundBalance: (u.fundBalance ?? 0).toString(),
+      incomeBalance: (u.incomeBalance ?? 0).toString(),
       poolBalance,
-      createdAt: u.createdAt.toISOString(),
+      createdAt: u.createdAt ? new Date(u.createdAt).toISOString() : new Date().toISOString(),
       sponsor: u.sponsor
         ? {
             customId: u.sponsor.customId,

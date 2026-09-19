@@ -97,13 +97,20 @@ export async function activateUserAccount(userId: string): Promise<ActivationRes
     }
 
     // 5. Enter Global Single-Leg Tier 0 (Junior) Queue
+    const branchAdminId = user.adminId ?? null;
+    const tier0CountWhere: any = { tier: 0 };
+    if (branchAdminId !== null) {
+      tier0CountWhere.adminId = branchAdminId;
+    }
+
     const tier0Index = await tx.queueEntry.count({
-      where: { tier: 0 },
+      where: tier0CountWhere,
     });
 
     await tx.queueEntry.create({
       data: {
         userId: user.id,
+        adminId: branchAdminId,
         tier: 0,
         queueIndex: tier0Index,
         childrenPlaced: 0,
@@ -112,7 +119,7 @@ export async function activateUserAccount(userId: string): Promise<ActivationRes
     });
 
     // 6. Process Queue matching
-    await processTierQueue(0, tx);
+    await processTierQueue(0, branchAdminId, tx);
 
     return {
       success: true,
@@ -222,19 +229,29 @@ export async function adminActivateUserAccount(userId: string): Promise<Activati
     }
 
     // 5. Enter Global Single-Leg Tier 0 (Junior) Queue
+    const branchAdminId = user.adminId ?? null;
     const existingEntry = await tx.queueEntry.findFirst({
-      where: { userId: user.id, tier: 0 },
+      where: {
+        userId: user.id,
+        tier: 0,
+        ...(branchAdminId !== null ? { adminId: branchAdminId } : {}),
+      },
     });
 
     let tier0Index = 0;
     if (!existingEntry) {
+      const countWhere: any = { tier: 0 };
+      if (branchAdminId !== null) {
+        countWhere.adminId = branchAdminId;
+      }
       tier0Index = await tx.queueEntry.count({
-        where: { tier: 0 },
+        where: countWhere,
       });
 
       await tx.queueEntry.create({
         data: {
           userId: user.id,
+          adminId: branchAdminId,
           tier: 0,
           queueIndex: tier0Index,
           childrenPlaced: 0,
@@ -246,7 +263,7 @@ export async function adminActivateUserAccount(userId: string): Promise<Activati
     }
 
     // 6. Process Queue matching
-    await processTierQueue(0, tx);
+    await processTierQueue(0, branchAdminId, tx);
 
     return {
       success: true,

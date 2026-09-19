@@ -20,17 +20,42 @@ export async function proxy(request: NextRequest) {
     }
   }
 
-  // 1. Protect /member routes
+  // 1. Protect /superrootadmin routes (except /superrootadminlogin)
+  if (pathname.startsWith("/superrootadmin") && pathname !== "/superrootadminlogin") {
+    if (!session || session.role !== "SUPER_ROOT_ADMIN") {
+      const superRootLoginUrl = new URL("/superrootadminlogin", request.url);
+      return NextResponse.redirect(superRootLoginUrl);
+    }
+  }
+
+  // 2. Prevent logged-in superrootadmin from hitting /superrootadminlogin
+  if (pathname === "/superrootadminlogin") {
+    if (session && session.role === "SUPER_ROOT_ADMIN") {
+      return NextResponse.redirect(new URL("/superrootadmin", request.url));
+    }
+  }
+
+  // 3. Protect /member routes
   if (pathname.startsWith("/member")) {
     if (!session) {
       const loginUrl = new URL("/login", request.url);
       loginUrl.searchParams.set("redirect", pathname);
       return NextResponse.redirect(loginUrl);
     }
+    if (session.role === "SUPER_ROOT_ADMIN") {
+      return NextResponse.redirect(new URL("/superrootadmin", request.url));
+    }
+    if (session.role === "ADMIN" || session.role === "SUPER_ADMIN") {
+      return NextResponse.redirect(new URL("/admin", request.url));
+    }
   }
 
-  // 2. Protect /admin routes (except /adminlogin)
+  // 4. Protect /admin routes (except /adminlogin)
   if (pathname.startsWith("/admin") && pathname !== "/adminlogin") {
+    if (session && session.role === "SUPER_ROOT_ADMIN") {
+      return NextResponse.redirect(new URL("/superrootadmin", request.url));
+    }
+
     if (!session || (session.role !== "ADMIN" && session.role !== "SUPER_ADMIN")) {
       const adminToken = request.cookies.get("sl_admin_session")?.value;
       if (adminToken) {
@@ -61,9 +86,12 @@ export async function proxy(request: NextRequest) {
     }
   }
 
-  // 3. Prevent logged-in users from hitting /login or /register
+  // 5. Prevent logged-in users from hitting /login or /register
   if (pathname === "/login" || pathname === "/register") {
     if (session) {
+      if (session.role === "SUPER_ROOT_ADMIN") {
+        return NextResponse.redirect(new URL("/superrootadmin", request.url));
+      }
       if (session.role === "ADMIN" || session.role === "SUPER_ADMIN") {
         return NextResponse.redirect(new URL("/admin", request.url));
       }
@@ -71,10 +99,15 @@ export async function proxy(request: NextRequest) {
     }
   }
 
-  // 4. Prevent logged-in admins from hitting /adminlogin (redirect directly to /admin)
+  // 6. Prevent logged-in admins from hitting /adminlogin (redirect directly to /admin or /superrootadmin)
   if (pathname === "/adminlogin") {
-    if (session && (session.role === "ADMIN" || session.role === "SUPER_ADMIN")) {
-      return NextResponse.redirect(new URL("/admin", request.url));
+    if (session) {
+      if (session.role === "SUPER_ROOT_ADMIN") {
+        return NextResponse.redirect(new URL("/superrootadmin", request.url));
+      }
+      if (session.role === "ADMIN" || session.role === "SUPER_ADMIN") {
+        return NextResponse.redirect(new URL("/admin", request.url));
+      }
     }
   }
 
@@ -84,5 +117,14 @@ export async function proxy(request: NextRequest) {
 export default proxy;
 
 export const config = {
-  matcher: ["/member/:path*", "/admin/:path*", "/login", "/register", "/adminlogin"],
+  matcher: [
+    "/member/:path*",
+    "/admin/:path*",
+    "/superrootadmin/:path*",
+    "/superrootadmin",
+    "/superrootadminlogin",
+    "/login",
+    "/register",
+    "/adminlogin",
+  ],
 };

@@ -17,13 +17,13 @@ export async function PATCH(
     const body = await req.json();
     const { action, status, fullName, email, phone, usdtAddress } = body;
 
-    // Check if target user exists
+    // Check if target user exists and belongs to this admin's branch
     const existingUser = await db.user.findUnique({
       where: { id },
     });
 
-    if (!existingUser) {
-      return NextResponse.json({ error: "Member not found" }, { status: 404 });
+    if (!existingUser || existingUser.adminId !== session.userId || existingUser.role !== "USER") {
+      return NextResponse.json({ error: "Member not found or access denied" }, { status: 404 });
     }
 
     // --- Administrative Status Actions (Activate / Block / Unblock) ---
@@ -64,8 +64,8 @@ export async function PATCH(
       }
 
       if (targetAction === "BLOCK" || targetAction === "BLOCKED") {
-        if (existingUser.id === session.userId || existingUser.role === "ADMIN" || existingUser.role === "SUPER_ADMIN") {
-          return NextResponse.json({ error: "Cannot block an administrator account" }, { status: 400 });
+        if (existingUser.id === session.userId) {
+          return NextResponse.json({ error: "Cannot block your own administrator account" }, { status: 400 });
         }
 
         await db.user.update({

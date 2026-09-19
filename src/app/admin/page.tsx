@@ -20,19 +20,23 @@ export default async function AdminOverviewPage() {
     redirect("/adminlogin");
   }
 
+  const adminId = session.userId;
+  const userFilter = { adminId, role: "USER" as const };
+  const userRelationFilter = { user: { adminId } };
+
   // Aggregate stats
-  const totalUsers = await db.user.count();
-  const activeUsers = await db.user.count({ where: { status: "ACTIVE" } });
+  const totalUsers = await db.user.count({ where: userFilter });
+  const activeUsers = await db.user.count({ where: { ...userFilter, status: "ACTIVE" } });
   
-  const pendingDeposits = await db.depositRequest.count({ where: { status: "PENDING" } });
+  const pendingDeposits = await db.depositRequest.count({ where: { ...userRelationFilter, status: "PENDING" } });
   const approvedDeposits = await db.depositRequest.aggregate({
-    where: { status: "APPROVED" },
+    where: { ...userRelationFilter, status: "APPROVED" },
     _sum: { amount: true },
   });
 
-  const pendingWithdrawals = await db.withdrawalRequest.count({ where: { status: "PENDING" } });
+  const pendingWithdrawals = await db.withdrawalRequest.count({ where: { ...userRelationFilter, status: "PENDING" } });
   const processedWithdrawals = await db.withdrawalRequest.aggregate({
-    where: { status: "APPROVED" },
+    where: { ...userRelationFilter, status: "APPROVED" },
     _sum: { amount: true, feeAmount: true, netAmount: true },
   });
 

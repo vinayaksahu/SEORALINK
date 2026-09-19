@@ -11,9 +11,11 @@ export default async function AdminTreePage() {
     redirect("/adminlogin");
   }
 
-  const totalUsersCount = await db.user.count();
+  const totalUsersCount = await db.user.count({
+    where: { adminId: session.userId, role: "USER" },
+  });
   const activeQueuesCount = await db.queueEntry.count({
-    where: { status: "WAITING" },
+    where: { adminId: session.userId, status: "WAITING" },
   });
 
   return (

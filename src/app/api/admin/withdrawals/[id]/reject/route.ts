@@ -24,7 +24,7 @@ export async function POST(
         include: { user: true },
       });
 
-      if (!withdrawal) {
+      if (!withdrawal || withdrawal.user.adminId !== session.userId) {
         throw new Error("Withdrawal request not found");
       }
 

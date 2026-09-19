@@ -15,6 +15,11 @@ export default async function AdminDepositsPage() {
   }
 
   const rawDeposits = await db.depositRequest.findMany({
+    where: {
+      user: {
+        adminId: session.userId,
+      },
+    },
     orderBy: { createdAt: "desc" },
     include: {
       user: {
