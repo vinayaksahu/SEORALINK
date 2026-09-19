@@ -192,6 +192,18 @@ export default async function MemberLayout({
                 + Deposit
               </Link>
             )}
+
+            {/* Admin Console shortcut for admin users */}
+            {(user.role === "ADMIN" || user.role === "SUPER_ADMIN") && (
+              <Link
+                href="/admin"
+                className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-[#d4af37] bg-[#d4af37]/10 hover:bg-[#d4af37]/20 border border-[#d4af37]/40 transition-all"
+                title="Return to Admin Console"
+              >
+                <ShieldCheck size={14} />
+                <span>Admin Console</span>
+              </Link>
+            )}
           </div>
         </header>
 

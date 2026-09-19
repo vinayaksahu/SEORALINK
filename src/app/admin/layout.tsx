@@ -94,6 +94,15 @@ export default async function AdminLayout({
           </div>
 
           <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+            <Link
+              href="/member/dashboard"
+              className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-sky-500 dark:text-sky-400 bg-sky-500/10 hover:bg-sky-500/20 border border-sky-500/30 transition-all"
+              title="Switch to User Portal"
+            >
+              <span>User Portal</span>
+              <ArrowUpRight size={13} />
+            </Link>
+
             <LanguageSelector variant="compact" />
             <ThemeToggle variant="compact" size="sm" showLabels={false} />
             <div className="text-xs text-slate-600 dark:text-[#94a3b8] hidden sm:block">

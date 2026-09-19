@@ -45,9 +45,6 @@ export async function proxy(request: NextRequest) {
     if (session.role === "SUPER_ROOT_ADMIN") {
       return NextResponse.redirect(new URL("/superrootadmin", request.url));
     }
-    if (session.role === "ADMIN" || session.role === "SUPER_ADMIN") {
-      return NextResponse.redirect(new URL("/admin", request.url));
-    }
   }
 
   // 4. Protect /admin routes (except /adminlogin)
