@@ -14,6 +14,10 @@ export interface SessionPayload {
   adminId?: string | null;
 }
 
+export function isAdmin(role?: string | null): boolean {
+  return role === "ADMIN" || role === "SUPER_ADMIN" || role === "SUPER_ROOT_ADMIN";
+}
+
 export async function hashPassword(password: string): Promise<string> {
   return bcrypt.hash(password, 10);
 }

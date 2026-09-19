@@ -1,21 +1,33 @@
 import React from "react";
-import { getSession } from "@/lib/auth";
-import { db } from "@/lib/db";
+import { getSession, isAdmin } from "@/lib/auth";
+import { db, withDbRetry } from "@/lib/db";
 import { redirect } from "next/navigation";
 import TreeView from "../simulator/TreeView";
 import { GitBranch, Users, GitCommit } from "lucide-react";
 
 export default async function AdminTreePage() {
   const session = await getSession();
-  if (!session || (session.role !== "ADMIN" && session.role !== "SUPER_ADMIN")) {
+  if (!session || !isAdmin(session.role)) {
     redirect("/adminlogin");
   }
 
-  const totalUsersCount = await db.user.count({
-    where: { adminId: session.userId, role: "USER" },
-  });
-  const activeQueuesCount = await db.queueEntry.count({
-    where: { adminId: session.userId, status: "WAITING" },
+  const isSuper = session.role === "SUPER_ROOT_ADMIN" || session.role === "SUPER_ADMIN";
+
+  const [totalUsersCount, activeQueuesCount] = await withDbRetry(async () => {
+    return await Promise.all([
+      db.user.count({
+        where: {
+          customId: { not: "SUPERROOT" },
+          ...(isSuper ? {} : { OR: [{ adminId: session.userId }, { adminId: null }] }),
+        },
+      }),
+      db.queueEntry.count({
+        where: {
+          status: "WAITING",
+          ...(isSuper ? {} : { OR: [{ adminId: session.userId }, { adminId: null }] }),
+        },
+      }),
+    ]);
   });
 
   return (

@@ -26,9 +26,9 @@ function createPrismaClient(): PrismaClient {
 
   const pool = new Pool({
     connectionString,
-    max: isServerless ? 2 : 10,
-    idleTimeoutMillis: 15000,
-    connectionTimeoutMillis: 25000, // 25s to allow Neon cold-start wakeups
+    max: isServerless ? 10 : 20,
+    idleTimeoutMillis: 30000,
+    connectionTimeoutMillis: 30000, // 30s to allow Neon cold-start wakeups
     ...(isSSL ? { ssl: { rejectUnauthorized: false } } : {}),
   });
 
@@ -49,7 +49,7 @@ globalForPrisma.prisma = db;
 /**
  * Executes a database operation with automatic retry for transient serverless cold-start connection timeouts
  */
-export async function withDbRetry<T>(operation: () => Promise<T>, retries = 2, delayMs = 600): Promise<T> {
+export async function withDbRetry<T>(operation: () => Promise<T>, retries = 3, initialDelayMs = 800): Promise<T> {
   let lastError: any;
   for (let attempt = 0; attempt <= retries; attempt++) {
     try {
@@ -63,11 +63,21 @@ export async function withDbRetry<T>(operation: () => Promise<T>, retries = 2, d
         msg.includes("slots are reserved") ||
         msg.includes("can't reach database") ||
         msg.includes("closed") ||
-        msg.includes("econnreset");
+        msg.includes("econnreset") ||
+        msg.includes("econnrefused") ||
+        msg.includes("socket") ||
+        msg.includes("terminated") ||
+        msg.includes("broken pipe") ||
+        msg.includes("57p01") ||
+        msg.includes("08006") ||
+        msg.includes("08001") ||
+        msg.includes("prismaclientinitializationerror") ||
+        msg.includes("prepared statement");
 
       if (attempt < retries && isTransient) {
-        console.warn(`[withDbRetry] Transient DB glitch on attempt ${attempt + 1}. Retrying in ${delayMs}ms...`);
-        await new Promise((resolve) => setTimeout(resolve, delayMs));
+        const delay = initialDelayMs * (attempt + 1);
+        console.warn(`[withDbRetry] Transient DB glitch on attempt ${attempt + 1}/${retries}. Retrying in ${delay}ms... (Error: ${err?.message})`);
+        await new Promise((resolve) => setTimeout(resolve, delay));
         continue;
       }
       throw err;

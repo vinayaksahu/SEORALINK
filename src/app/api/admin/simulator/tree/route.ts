@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { getSession } from "@/lib/auth";
-import { db } from "@/lib/db";
+import { getSession, isAdmin } from "@/lib/auth";
+import { db, withDbRetry } from "@/lib/db";
 import { TIER_NAMES, REQUIRED_DIRECTS } from "@/lib/constants";
 
 export interface TreeNodeData {
@@ -31,63 +31,80 @@ export interface TreeNodeData {
 export async function GET(req: Request) {
   try {
     const session = await getSession();
-    if (!session || (session.role !== "ADMIN" && session.role !== "SUPER_ADMIN")) {
+    if (!session || !isAdmin(session.role)) {
       return NextResponse.json({ error: "Administrative privileges required" }, { status: 403 });
     }
 
     const { searchParams } = new URL(req.url);
     const rootId = searchParams.get("rootId");
 
-    // 1. Fetch all users in the system belonging to this admin's branch
-    const allUsers = await db.user.findMany({
-      where: {
-        adminId: session.userId,
-        role: "USER",
-      },
-      orderBy: { createdAt: "asc" },
-      select: {
-        id: true,
-        customId: true,
-        fullName: true,
-        email: true,
-        role: true,
-        status: true,
-        currentTier: true,
-        directCount: true,
-        sponsorId: true,
-        createdAt: true,
-        sponsor: {
+    const isSuper = session.role === "SUPER_ROOT_ADMIN" || session.role === "SUPER_ADMIN";
+
+    const userWhere: any = {};
+    if (!isSuper) {
+      userWhere.OR = [
+        { adminId: session.userId },
+        { adminId: null },
+      ];
+    }
+    // Exclude SUPERROOT from the tree view as it is purely an internal system operator
+    userWhere.customId = { not: "SUPERROOT" };
+
+    // Fetch all users, rank exits, and waiting queues with retry
+    const [allUsers, rankExits, waitingQueuesCount] = await withDbRetry(async () => {
+      return await Promise.all([
+        db.user.findMany({
+          where: userWhere,
+          orderBy: { createdAt: "asc" },
           select: {
             id: true,
             customId: true,
             fullName: true,
+            email: true,
+            role: true,
+            status: true,
+            currentTier: true,
+            directCount: true,
+            sponsorId: true,
+            createdAt: true,
+            sponsor: {
+              select: {
+                id: true,
+                customId: true,
+                fullName: true,
+              },
+            },
+            queueEntries: {
+              where: { status: "WAITING" },
+              orderBy: { queueIndex: "asc" },
+              take: 1,
+              select: {
+                tier: true,
+                queueIndex: true,
+                childrenPlaced: true,
+              },
+            },
           },
-        },
-        queueEntries: {
-          where: { status: "WAITING" },
-          orderBy: { queueIndex: "asc" },
-          take: 1,
-          select: {
-            tier: true,
-            queueIndex: true,
-            childrenPlaced: true,
+        }),
+        db.withdrawalRequest.findMany({
+          where: {
+            OR: [
+              { feePercent: 20 },
+              { adminNote: { contains: "CASHOUT" } },
+              { adminNote: { contains: "RANK_EXIT" } },
+              { amount: 20480 },
+            ],
+            status: { not: "REJECTED" },
           },
-        },
-      },
-    });
-
-    // 2. Fetch all rank exit cashout withdrawals to accurately flag exited members
-    const rankExits = await db.withdrawalRequest.findMany({
-      where: {
-        OR: [
-          { feePercent: 20 },
-          { adminNote: { contains: "CASHOUT" } },
-          { adminNote: { contains: "RANK_EXIT" } },
-          { amount: 20480 },
-        ],
-        status: { not: "REJECTED" },
-      },
-      select: { userId: true },
+          select: { userId: true },
+        }),
+        db.queueEntry.count({
+          where: {
+            status: "WAITING",
+            ...(isSuper ? {} : { OR: [{ adminId: session.userId }, { adminId: null }] }),
+          },
+        }),
+      ]);
     });
     const rankExitUserIds = new Set(rankExits.map((w) => w.userId));
 
@@ -153,11 +170,6 @@ export async function GET(req: Request) {
         }
       });
     }
-
-    // 5. Total waiting queue count
-    const waitingQueuesCount = await db.queueEntry.count({
-      where: { status: "WAITING" },
-    });
 
     return NextResponse.json({
       roots,

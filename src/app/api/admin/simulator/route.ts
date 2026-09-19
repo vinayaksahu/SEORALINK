@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
-import { getSession } from "@/lib/auth";
+import { getSession, isAdmin } from "@/lib/auth";
 import { runDummyUserSimulation } from "@/lib/simulator";
 
 export async function POST(req: Request) {
   try {
     const session = await getSession();
-    if (!session || (session.role !== "ADMIN" && session.role !== "SUPER_ADMIN")) {
+    if (!session || !isAdmin(session.role)) {
       return NextResponse.json({ error: "Administrative privileges required" }, { status: 403 });
     }
 

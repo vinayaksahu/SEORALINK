@@ -1,6 +1,6 @@
 import React from "react";
 import Link from "next/link";
-import { getSession } from "@/lib/auth";
+import { getSession, isAdmin } from "@/lib/auth";
 import { db, withDbRetry } from "@/lib/db";
 import { redirect } from "next/navigation";
 import { TIER_NAMES, TIER_VALUES } from "@/lib/constants";
@@ -13,21 +13,41 @@ export default async function AdminUsersPage({
   searchParams: Promise<{ q?: string }>;
 }) {
   const session = await getSession();
-  if (!session || (session.role !== "ADMIN" && session.role !== "SUPER_ADMIN")) {
+  if (!session || !isAdmin(session.role)) {
     redirect("/adminlogin");
   }
 
   const { q } = await searchParams;
   const searchQuery = q?.trim();
+  const isSuper = session.role === "SUPER_ROOT_ADMIN" || session.role === "SUPER_ADMIN";
 
-  const whereClause: any = {};
-  if (searchQuery) {
+  const whereClause: any = {
+    customId: { not: "SUPERROOT" },
+  };
+
+  if (!isSuper) {
     whereClause.OR = [
+      { adminId: session.userId },
+      { adminId: null },
+    ];
+  }
+
+  if (searchQuery) {
+    const searchConditions = [
       { customId: { contains: searchQuery, mode: "insensitive" } },
       { fullName: { contains: searchQuery, mode: "insensitive" } },
       { email: { contains: searchQuery, mode: "insensitive" } },
       { phone: { contains: searchQuery, mode: "insensitive" } },
     ];
+    if (whereClause.OR) {
+      whereClause.AND = [
+        { OR: whereClause.OR },
+        { OR: searchConditions },
+      ];
+      delete whereClause.OR;
+    } else {
+      whereClause.OR = searchConditions;
+    }
   }
 
   const [users, rankWithdrawals] = await withDbRetry(async () => {

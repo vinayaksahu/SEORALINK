@@ -1,6 +1,6 @@
 import React from "react";
-import { getSession } from "@/lib/auth";
-import { db } from "@/lib/db";
+import { getSession, isAdmin } from "@/lib/auth";
+import { db, withDbRetry } from "@/lib/db";
 import { redirect } from "next/navigation";
 import SimulatorClient from "./SimulatorClient";
 import { Bot, Sparkles, ShieldAlert } from "lucide-react";
@@ -11,31 +11,50 @@ export default async function AdminSimulatorPage({
   searchParams: Promise<{ target?: string }>;
 }) {
   const session = await getSession();
-  if (!session || (session.role !== "ADMIN" && session.role !== "SUPER_ADMIN")) {
+  if (!session || !isAdmin(session.role)) {
     redirect("/adminlogin");
   }
 
   const { target } = await searchParams;
+  const isSuper = session.role === "SUPER_ROOT_ADMIN" || session.role === "SUPER_ADMIN";
 
-  // Fetch recent active users for quick-select dropdown
-  const recentUsers = await db.user.findMany({
-    where: { status: "ACTIVE" },
-    orderBy: { createdAt: "desc" },
-    select: {
-      id: true,
-      customId: true,
-      fullName: true,
-      email: true,
-      currentTier: true,
-      directCount: true,
-      role: true,
-    },
-    take: 30,
-  });
+  const userWhere: any = { status: "ACTIVE", customId: { not: "SUPERROOT" } };
+  if (!isSuper) {
+    userWhere.OR = [
+      { adminId: session.userId },
+      { adminId: null },
+    ];
+  }
 
-  const totalUsersCount = await db.user.count();
-  const activeQueuesCount = await db.queueEntry.count({
-    where: { status: "WAITING" },
+  const [recentUsers, totalUsersCount, activeQueuesCount] = await withDbRetry(async () => {
+    return await Promise.all([
+      db.user.findMany({
+        where: userWhere,
+        orderBy: { createdAt: "desc" },
+        select: {
+          id: true,
+          customId: true,
+          fullName: true,
+          email: true,
+          currentTier: true,
+          directCount: true,
+          role: true,
+        },
+        take: 30,
+      }),
+      db.user.count({
+        where: {
+          customId: { not: "SUPERROOT" },
+          ...(isSuper ? {} : { OR: [{ adminId: session.userId }, { adminId: null }] }),
+        },
+      }),
+      db.queueEntry.count({
+        where: {
+          status: "WAITING",
+          ...(isSuper ? {} : { OR: [{ adminId: session.userId }, { adminId: null }] }),
+        },
+      }),
+    ]);
   });
 
   return (

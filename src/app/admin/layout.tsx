@@ -1,6 +1,6 @@
 import React from "react";
 import Link from "next/link";
-import { getSession } from "@/lib/auth";
+import { getSession, isAdmin } from "@/lib/auth";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { Logo } from "@/components/Logo";
@@ -29,7 +29,7 @@ export default async function AdminLayout({
   children: React.ReactNode;
 }) {
   const session = await getSession();
-  if (!session || (session.role !== "ADMIN" && session.role !== "SUPER_ADMIN")) {
+  if (!session || !isAdmin(session.role)) {
     redirect("/adminlogin");
   }
 

@@ -257,6 +257,7 @@ export async function runDummyUserSimulation(options: SimulatorOptions): Promise
         role: "USER",
         status: "INACTIVE",
         sponsorId,
+        adminId: targetUser?.adminId || masterAdmin?.id || null,
         fundBalance: autoActivate ? new Decimal(10.0) : new Decimal(0.0),
         incomeBalance: new Decimal(0.0),
         currentTier: 0,
