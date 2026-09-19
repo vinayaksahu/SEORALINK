@@ -5,7 +5,8 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Logo } from "@/components/Logo";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { Lock, Mail, User as UserIcon, Phone, Users, ArrowRight, AlertCircle, CheckCircle } from "lucide-react";
+import { Lock, Mail, User as UserIcon, Phone, Users, ArrowRight, AlertCircle, CheckCircle, Globe, ChevronDown } from "lucide-react";
+import { COUNTRIES, DEFAULT_COUNTRY, type Country } from "@/lib/countries";
 
 function RegisterForm() {
   const router = useRouter();
@@ -13,7 +14,8 @@ function RegisterForm() {
 
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
+  const [selectedCountry, setSelectedCountry] = useState<Country>(DEFAULT_COUNTRY);
+  const [phoneDigits, setPhoneDigits] = useState("");
   const [password, setPassword] = useState("");
   const [sponsorCode, setSponsorCode] = useState("");
   const [sponsorName, setSponsorName] = useState("");
@@ -60,13 +62,17 @@ function RegisterForm() {
     setLoading(true);
 
     try {
+      const fullPhone = phoneDigits.trim()
+        ? `${selectedCountry.dialCode} ${phoneDigits.trim()}`
+        : undefined;
+
       const res = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           fullName,
           email,
-          phone,
+          phone: fullPhone,
           password,
           sponsorCode: sponsorCode.trim(),
         }),
@@ -177,20 +183,74 @@ function RegisterForm() {
               </div>
             </div>
 
-            {/* Phone */}
+            {/* Country Selection */}
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-[#cbd5e1] uppercase tracking-wider">
-                Phone Number (Optional)
+              <label className="text-xs font-bold text-[#cbd5e1] uppercase tracking-wider flex items-center justify-between">
+                <span>Select Country</span>
+                <span className="text-[11px] text-[#d4af37] font-semibold flex items-center gap-1.5">
+                  <span className="text-sm leading-none">{selectedCountry.flag}</span>
+                  <span className="font-mono">{selectedCountry.dialCode}</span>
+                </span>
               </label>
               <div className="relative">
-                <Phone size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#64748b]" />
+                <Globe size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#64748b] pointer-events-none" />
+                <select
+                  value={selectedCountry.code}
+                  onChange={(e) => {
+                    const found = COUNTRIES.find((c) => c.code === e.target.value) || DEFAULT_COUNTRY;
+                    setSelectedCountry(found);
+                  }}
+                  className="w-full bg-[#0b1120] border border-[#d4af37]/30 text-white rounded-lg pl-10 pr-10 py-2.5 text-xs font-medium focus:outline-none focus:border-[#d4af37] cursor-pointer appearance-none transition-colors hover:border-[#d4af37]/60"
+                >
+                  {COUNTRIES.map((c) => (
+                    <option key={c.code} value={c.code} className="bg-[#0b1120] text-white py-1">
+                      {c.flag} {c.name} ({c.dialCode})
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown size={14} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#64748b] pointer-events-none" />
+              </div>
+            </div>
+
+            {/* Phone Number (Optional) with Auto-Selected Country Code */}
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-[#cbd5e1] uppercase tracking-wider flex items-center justify-between">
+                <span>Phone Number (Optional)</span>
+                <span className="text-[10px] text-[#94a3b8] font-normal">
+                  Enter 10-digit number
+                </span>
+              </label>
+              <div className="relative flex items-center">
+                {/* Auto-selected Country Dial Code Badge */}
+                <div className="absolute left-1.5 top-1/2 -translate-y-1/2 flex items-center gap-1.5 bg-[#151f33] border border-[#d4af37]/40 px-2.5 py-1.5 rounded-md text-xs font-bold text-[#d4af37] pointer-events-none select-none z-10">
+                  <span className="text-sm leading-none">{selectedCountry.flag}</span>
+                  <span className="font-mono tracking-tight">{selectedCountry.dialCode}</span>
+                </div>
                 <input
                   type="tel"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  placeholder="+82 10-1234-5678"
-                  className="w-full bg-[#0b1120] border border-[#d4af37]/30 text-white rounded-lg pl-10 pr-4 py-2.5 text-xs font-medium focus:outline-none focus:border-[#d4af37]"
+                  value={phoneDigits}
+                  maxLength={15}
+                  onChange={(e) => {
+                    // Allow only digits, space, and hyphen
+                    const cleaned = e.target.value.replace(/[^0-9\s-]/g, "");
+                    setPhoneDigits(cleaned);
+                  }}
+                  placeholder="10-1234-5678"
+                  style={{ paddingLeft: `${selectedCountry.dialCode.length > 3 ? "94px" : "86px"}` }}
+                  className="w-full bg-[#0b1120] border border-[#d4af37]/30 text-white rounded-lg pr-4 py-2.5 text-xs font-medium focus:outline-none focus:border-[#d4af37]"
                 />
+              </div>
+              <div className="flex items-center justify-between text-[10.5px] text-[#94a3b8] pt-0.5">
+                <span>
+                  Code <strong className="text-[#d4af37]">{selectedCountry.dialCode}</strong> is auto-applied
+                </span>
+                {phoneDigits.replace(/\D/g, "").length > 0 && (
+                  <span className={`font-mono font-bold ${
+                    phoneDigits.replace(/\D/g, "").length === 10 ? "text-emerald-400" : "text-amber-400"
+                  }`}>
+                    {phoneDigits.replace(/\D/g, "").length}/10 digits
+                  </span>
+                )}
               </div>
             </div>
 

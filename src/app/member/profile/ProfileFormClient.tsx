@@ -18,7 +18,10 @@ import {
   Share2,
   ExternalLink,
   Sparkles,
+  Globe,
+  ChevronDown,
 } from "lucide-react";
+import { COUNTRIES, DEFAULT_COUNTRY, type Country } from "@/lib/countries";
 
 interface ProfileFormClientProps {
   user: {
@@ -51,7 +54,28 @@ export default function ProfileFormClient({ user: initialUser }: ProfileFormClie
   // Form State
   const [fullName, setFullName] = useState(initialUser.fullName || "");
   const [email, setEmail] = useState(initialUser.email || "");
-  const [phone, setPhone] = useState(initialUser.phone || "");
+
+  const initialCountry = (() => {
+    if (initialUser.phone) {
+      const match = COUNTRIES.find((c) => initialUser.phone?.startsWith(c.dialCode));
+      if (match) return match;
+    }
+    return DEFAULT_COUNTRY;
+  })();
+
+  const initialDigits = (() => {
+    if (initialUser.phone) {
+      const match = COUNTRIES.find((c) => initialUser.phone?.startsWith(c.dialCode));
+      if (match) {
+        return initialUser.phone.slice(match.dialCode.length).trim();
+      }
+      return initialUser.phone;
+    }
+    return "";
+  })();
+
+  const [selectedCountry, setSelectedCountry] = useState<Country>(initialCountry);
+  const [phoneDigits, setPhoneDigits] = useState(initialDigits);
   const [usdtAddress, setUsdtAddress] = useState(initialUser.usdtAddress || "");
   const [usdtNetwork, setUsdtNetwork] = useState(initialUser.usdtNetwork || "USDT_BEP20");
 
@@ -111,13 +135,17 @@ export default function ProfileFormClient({ user: initialUser }: ProfileFormClie
     setLoading(true);
 
     try {
+      const fullPhone = phoneDigits.trim()
+        ? `${selectedCountry.dialCode} ${phoneDigits.trim()}`
+        : null;
+
       const res = await fetch("/api/member/profile", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           fullName: fullName.trim(),
           email: email.trim(),
-          phone: phone.trim() || null,
+          phone: fullPhone,
           usdtAddress: usdtAddress.trim() || null,
           usdtNetwork,
         }),
@@ -132,7 +160,7 @@ export default function ProfileFormClient({ user: initialUser }: ProfileFormClie
         ...prev,
         fullName: fullName.trim(),
         email: email.trim(),
-        phone: phone.trim() || null,
+        phone: fullPhone,
         usdtAddress: usdtAddress.trim() || null,
         usdtNetwork,
       }));
@@ -293,23 +321,80 @@ export default function ProfileFormClient({ user: initialUser }: ProfileFormClie
                   </p>
                 </div>
 
+                {/* Country Selection */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-[#cbd5e1] uppercase tracking-wider flex items-center justify-between">
+                    <span className="flex items-center gap-1.5">
+                      <Globe size={13} className="text-emerald-400" />
+                      <span>Select Country</span>
+                    </span>
+                    <span className="text-[11px] text-[#d4af37] font-semibold flex items-center gap-1.5">
+                      <span className="text-sm leading-none">{selectedCountry.flag}</span>
+                      <span className="font-mono">{selectedCountry.dialCode}</span>
+                    </span>
+                  </label>
+                  <div className="relative">
+                    <select
+                      value={selectedCountry.code}
+                      onChange={(e) => {
+                        const found = COUNTRIES.find((c) => c.code === e.target.value) || DEFAULT_COUNTRY;
+                        setSelectedCountry(found);
+                      }}
+                      className="w-full bg-[#070a14] border border-[#1e293b] text-white rounded-lg px-3.5 pr-9 py-2.5 text-xs focus:outline-none focus:border-[#d4af37] transition-all cursor-pointer appearance-none hover:border-[#d4af37]/40"
+                    >
+                      {COUNTRIES.map((c) => (
+                        <option key={c.code} value={c.code} className="bg-[#0b1120] text-white py-1">
+                          {c.flag} {c.name} ({c.dialCode})
+                        </option>
+                      ))}
+                    </select>
+                    <ChevronDown size={14} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#64748b] pointer-events-none" />
+                  </div>
+                </div>
+
                 {/* Phone Number */}
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-[#cbd5e1] uppercase tracking-wider flex items-center gap-1.5">
-                    <Phone size={13} className="text-emerald-400" />
-                    <span>Phone Number</span>
-                    <span className="text-[10px] text-[#64748b] font-normal lowercase">(optional)</span>
+                  <label className="text-xs font-bold text-[#cbd5e1] uppercase tracking-wider flex items-center justify-between">
+                    <span className="flex items-center gap-1.5">
+                      <Phone size={13} className="text-emerald-400" />
+                      <span>Phone Number</span>
+                      <span className="text-[10px] text-[#64748b] font-normal lowercase">(optional)</span>
+                    </span>
+                    <span className="text-[10px] text-[#94a3b8] font-normal">
+                      Enter 10-digit number
+                    </span>
                   </label>
-                  <input
-                    type="tel"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    placeholder="+91 98765 43210"
-                    className="w-full bg-[#070a14] border border-[#1e293b] text-white rounded-lg px-3.5 py-2.5 text-xs focus:outline-none focus:border-[#d4af37] transition-all font-mono"
-                  />
-                  <p className="text-[10px] text-[#64748b]">
-                    Direct phone or WhatsApp contact for sponsor &amp; support communication.
-                  </p>
+                  <div className="relative flex items-center">
+                    {/* Auto-selected country dial code badge */}
+                    <div className="absolute left-1.5 top-1/2 -translate-y-1/2 flex items-center gap-1.5 bg-[#151f33] border border-[#d4af37]/40 px-2.5 py-1.5 rounded-md text-xs font-bold text-[#d4af37] pointer-events-none select-none z-10">
+                      <span className="text-sm leading-none">{selectedCountry.flag}</span>
+                      <span className="font-mono tracking-tight">{selectedCountry.dialCode}</span>
+                    </div>
+                    <input
+                      type="tel"
+                      value={phoneDigits}
+                      maxLength={15}
+                      onChange={(e) => {
+                        const cleaned = e.target.value.replace(/[^0-9\s-]/g, "");
+                        setPhoneDigits(cleaned);
+                      }}
+                      placeholder="10-1234-5678"
+                      style={{ paddingLeft: `${selectedCountry.dialCode.length > 3 ? "94px" : "86px"}` }}
+                      className="w-full bg-[#070a14] border border-[#1e293b] text-white rounded-lg pr-4 py-2.5 text-xs focus:outline-none focus:border-[#d4af37] transition-all font-mono"
+                    />
+                  </div>
+                  <div className="flex items-center justify-between text-[10px] text-[#64748b] pt-0.5">
+                    <span>
+                      Country code <strong className="text-[#d4af37]">{selectedCountry.dialCode}</strong> is auto-applied.
+                    </span>
+                    {phoneDigits.replace(/\D/g, "").length > 0 && (
+                      <span className={`font-mono font-bold ${
+                        phoneDigits.replace(/\D/g, "").length === 10 ? "text-emerald-400" : "text-amber-400"
+                      }`}>
+                        {phoneDigits.replace(/\D/g, "").length}/10 digits
+                      </span>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
