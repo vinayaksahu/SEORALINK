@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getSession } from "@/lib/auth";
+import { getSession, hashPassword } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { validateAndConsumeOtp } from "@/lib/otp";
 
@@ -67,7 +67,7 @@ export async function PATCH(req: Request) {
     }
 
     const body = await req.json();
-    const { fullName, email, phone, usdtAddress, usdtNetwork } = body;
+    const { fullName, email, phone, usdtAddress, usdtNetwork, newPassword } = body;
 
     const existingUser = await db.user.findUnique({
       where: { id: session.userId },
@@ -123,13 +123,26 @@ export async function PATCH(req: Request) {
       }
     }
 
-    // 5. Verify OTP if sensitive details changed (Name, Email, Phone, or USDT Address)
+    // 5. Validate New Password if provided
+    let passwordHashToUpdate: string | undefined = undefined;
+    if (newPassword && typeof newPassword === "string" && newPassword.trim().length > 0) {
+      if (newPassword.trim().length < 6) {
+        return NextResponse.json(
+          { error: "New password must be at least 6 characters long." },
+          { status: 400 }
+        );
+      }
+      passwordHashToUpdate = await hashPassword(newPassword.trim());
+    }
+
+    // 6. Verify OTP if sensitive details changed (Name, Email, Phone, USDT Address, or Password)
     const isNameChanged = fullName.trim() !== existingUser.fullName;
     const isEmailChanged = trimmedEmail !== existingUser.email.toLowerCase();
     const isPhoneChanged = (cleanPhone || "") !== (existingUser.phone || "");
     const isAddressChanged = (cleanAddress || "") !== (existingUser.usdtAddress || "");
+    const isPasswordChanged = Boolean(passwordHashToUpdate);
 
-    if (isNameChanged || isEmailChanged || isPhoneChanged || isAddressChanged) {
+    if (isNameChanged || isEmailChanged || isPhoneChanged || isAddressChanged || isPasswordChanged) {
       const otpValidation = await validateAndConsumeOtp({
         email: existingUser.email,
         code: body.otpCode,
@@ -145,15 +158,21 @@ export async function PATCH(req: Request) {
     }
 
     // Update user profile
+    const updateData: any = {
+      fullName: fullName.trim(),
+      email: trimmedEmail,
+      phone: cleanPhone || null,
+      usdtAddress: cleanAddress || null,
+      usdtNetwork: cleanNetwork,
+    };
+
+    if (passwordHashToUpdate) {
+      updateData.passwordHash = passwordHashToUpdate;
+    }
+
     const updated = await db.user.update({
       where: { id: session.userId },
-      data: {
-        fullName: fullName.trim(),
-        email: trimmedEmail,
-        phone: cleanPhone || null,
-        usdtAddress: cleanAddress || null,
-        usdtNetwork: cleanNetwork,
-      },
+      data: updateData,
       select: {
         id: true,
         customId: true,

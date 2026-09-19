@@ -23,6 +23,9 @@ import {
   KeyRound,
   Shield,
   X,
+  Lock,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 import { COUNTRIES, DEFAULT_COUNTRY, type Country } from "@/lib/countries";
 
@@ -81,6 +84,11 @@ export default function ProfileFormClient({ user: initialUser }: ProfileFormClie
   const [phoneDigits, setPhoneDigits] = useState(initialDigits);
   const [usdtAddress, setUsdtAddress] = useState(initialUser.usdtAddress || "");
   const [usdtNetwork, setUsdtNetwork] = useState(initialUser.usdtNetwork || "USDT_BEP20");
+
+  // Password Reset State
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -169,6 +177,8 @@ export default function ProfileFormClient({ user: initialUser }: ProfileFormClie
       usdtNetwork: payloadWithOtp.usdtNetwork,
     }));
 
+    setNewPassword("");
+    setConfirmPassword("");
     setSuccess(data.message || "Profile updated successfully!");
     router.refresh();
     setTimeout(() => {
@@ -199,6 +209,17 @@ export default function ProfileFormClient({ user: initialUser }: ProfileFormClie
       }
     }
 
+    if (newPassword) {
+      if (newPassword.length < 6) {
+        setError("New password must be at least 6 characters long.");
+        return;
+      }
+      if (newPassword !== confirmPassword) {
+        setError("New password and confirm password do not match.");
+        return;
+      }
+    }
+
     const fullPhone = phoneDigits.trim()
       ? `${selectedCountry.dialCode} ${phoneDigits.trim()}`
       : null;
@@ -209,13 +230,15 @@ export default function ProfileFormClient({ user: initialUser }: ProfileFormClie
       phone: fullPhone,
       usdtAddress: usdtAddress.trim() || null,
       usdtNetwork,
+      newPassword: newPassword.trim() || undefined,
     };
 
     const isNameChanged = fullName.trim() !== (user.fullName || "");
     const isEmailChanged = email.trim().toLowerCase() !== (user.email || "").toLowerCase();
     const isPhoneChanged = (fullPhone || "") !== (user.phone || "");
     const isAddressChanged = (usdtAddress.trim() || "") !== (user.usdtAddress || "");
-    const isSensitiveChanged = isNameChanged || isEmailChanged || isPhoneChanged || isAddressChanged;
+    const isPasswordChanged = Boolean(newPassword);
+    const isSensitiveChanged = isNameChanged || isEmailChanged || isPhoneChanged || isAddressChanged || isPasswordChanged;
 
     setLoading(true);
 
@@ -562,6 +585,77 @@ export default function ProfileFormClient({ user: initialUser }: ProfileFormClie
                   </p>
                 </div>
               </div>
+            </div>
+
+            {/* 3. Account Security & Password Reset Card */}
+            <div className="card-seoralink p-5 space-y-4 border-[#1e293b]">
+              <div className="flex items-center gap-2.5 border-b border-[#1e293b] pb-3.5">
+                <div className="p-2 rounded-lg bg-amber-500/10 text-amber-400">
+                  <KeyRound size={18} />
+                </div>
+                <div>
+                  <h2 className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
+                    <span>Account Security &amp; Password Reset</span>
+                    <span className="text-[9px] bg-amber-500/15 text-amber-300 px-2 py-0.5 rounded-full font-bold border border-amber-500/30">
+                      Optional
+                    </span>
+                  </h2>
+                  <p className="text-[11px] text-[#94a3b8]">
+                    Change your member login password. Leave blank if you wish to keep your current password.
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-[#cbd5e1] uppercase tracking-wider flex items-center gap-1.5">
+                    <Lock size={13} className="text-amber-400" />
+                    <span>New Password</span>
+                  </label>
+                  <div className="relative">
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      placeholder="Min 6 characters"
+                      className="w-full bg-[#070a14] border border-[#1e293b] text-white rounded-lg pl-3.5 pr-10 py-2.5 text-xs font-mono focus:outline-none focus:border-amber-400 transition-all"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-[#64748b] hover:text-white p-1 cursor-pointer"
+                    >
+                      {showPassword ? <EyeOff size={14} /> : <Eye size={14} />}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-[#cbd5e1] uppercase tracking-wider flex items-center gap-1.5">
+                    <Lock size={13} className="text-amber-400" />
+                    <span>Confirm New Password</span>
+                  </label>
+                  <div className="relative">
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      placeholder="Re-enter new password"
+                      className="w-full bg-[#070a14] border border-[#1e293b] text-white rounded-lg pl-3.5 pr-10 py-2.5 text-xs font-mono focus:outline-none focus:border-amber-400 transition-all"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-[#64748b] hover:text-white p-1 cursor-pointer"
+                    >
+                      {showPassword ? <EyeOff size={14} /> : <Eye size={14} />}
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <p className="text-[10px] text-[#64748b]">
+                Password must be at least 6 characters long. If OTP verification is enabled, an OTP will be dispatched to your registered email upon saving.
+              </p>
             </div>
 
             {/* Submit Action Bar */}

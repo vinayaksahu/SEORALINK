@@ -412,19 +412,26 @@ export default function AdminProfileClient({ admin: initialAdmin }: AdminProfile
           </div>
 
           {/* Change Password Section */}
-          <div className="border-t border-slate-100 dark:border-slate-800 pt-6">
-            <h4 className="text-xs font-mono font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2 flex items-center gap-2">
-              <KeyRound size={14} className="text-amber-500" />
-              Update Master Security Password (Optional)
-            </h4>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">
-              Leave both fields blank if you do not wish to change your current password.
+          {/* Password Reset Section Card */}
+          <div className="border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/40 rounded-2xl p-5 space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-200/60 dark:border-slate-800/80 pb-3">
+              <h4 className="text-xs font-mono font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200 flex items-center gap-2">
+                <KeyRound size={15} className="text-amber-500" />
+                <span>Security &amp; Password Reset</span>
+              </h4>
+              <span className="text-[10px] font-mono px-2.5 py-0.5 rounded-full bg-amber-500/10 text-amber-500 dark:text-amber-400 border border-amber-500/20 font-bold">
+                Optional
+              </span>
+            </div>
+            <p className="text-xs text-slate-500 dark:text-slate-400">
+              Enter a new password below to reset your administrative credentials. Leave both fields blank if you wish to keep your existing password.
             </p>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-xs font-mono font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">
-                  New Password
+                <label className="block text-xs font-mono font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                  <Lock size={13} className="text-amber-500" />
+                  <span>New Password</span>
                 </label>
                 <div className="relative">
                   <input
@@ -432,12 +439,12 @@ export default function AdminProfileClient({ admin: initialAdmin }: AdminProfile
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
                     placeholder="Min 6 characters"
-                    className="w-full px-4 py-3 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 text-xs font-mono text-slate-900 dark:text-white outline-none focus:border-amber-500 dark:focus:border-[#d4af37] transition pr-10"
+                    className="w-full px-4 py-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs font-mono text-slate-900 dark:text-white outline-none focus:border-amber-500 dark:focus:border-[#d4af37] transition pr-10"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-white p-1"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-white p-1 cursor-pointer"
                   >
                     {showPassword ? <EyeOff size={14} /> : <Eye size={14} />}
                   </button>
@@ -445,8 +452,9 @@ export default function AdminProfileClient({ admin: initialAdmin }: AdminProfile
               </div>
 
               <div>
-                <label className="block text-xs font-mono font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">
-                  Confirm New Password
+                <label className="block text-xs font-mono font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                  <Lock size={13} className="text-amber-500" />
+                  <span>Confirm New Password</span>
                 </label>
                 <div className="relative">
                   <input
@@ -454,18 +462,21 @@ export default function AdminProfileClient({ admin: initialAdmin }: AdminProfile
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     placeholder="Re-enter new password"
-                    className="w-full px-4 py-3 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 text-xs font-mono text-slate-900 dark:text-white outline-none focus:border-amber-500 dark:focus:border-[#d4af37] transition pr-10"
+                    className="w-full px-4 py-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs font-mono text-slate-900 dark:text-white outline-none focus:border-amber-500 dark:focus:border-[#d4af37] transition pr-10"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-white p-1"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-white p-1 cursor-pointer"
                   >
                     {showPassword ? <EyeOff size={14} /> : <Eye size={14} />}
                   </button>
                 </div>
               </div>
             </div>
+            <p className="text-[11px] text-slate-400 font-mono">
+              Minimum 6 characters. If OTP verification is enabled, a security code will be sent to your email to authorize the password reset.
+            </p>
           </div>
 
           <div className="pt-4 flex justify-end">
