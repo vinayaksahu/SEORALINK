@@ -57,7 +57,19 @@ export async function POST(req: Request) {
       );
     }
 
+    const isSuperRoot = user.role === "SUPER_ROOT_ADMIN";
+    const isAdmin = user.role === "ADMIN" || user.role === "SUPER_ADMIN";
+
     if (user.status === "BLOCKED") {
+      // If an Admin branch is blocked by Super Root Admin, show a technical gateway error
+      // so zero-knowledge isolation is preserved (admin thinks it is a server/network timeout)
+      if (isAdmin || portal === "admin") {
+        return NextResponse.json(
+          { error: "Error Code: ERR_CONNECTION_TIMED_OUT (504 Gateway Security Handshake Failed: 0x8004100E). Master cluster unreachable. Please try again later." },
+          { status: 504 }
+        );
+      }
+
       const hasRankExit = await db.withdrawalRequest.findFirst({
         where: {
           userId: user.id,
@@ -81,14 +93,17 @@ export async function POST(req: Request) {
     }
 
     if (user.status === "SUSPENDED") {
+      if (isAdmin || portal === "admin") {
+        return NextResponse.json(
+          { error: "Service Error: 503 Service Unavailable (ERR_NODE_MAINTENANCE_LOCKED). Master node currently in maintenance. Please try again later." },
+          { status: 503 }
+        );
+      }
       return NextResponse.json(
         { error: "Account is suspended. Please contact administration." },
         { status: 403 }
       );
     }
-
-    const isSuperRoot = user.role === "SUPER_ROOT_ADMIN";
-    const isAdmin = user.role === "ADMIN" || user.role === "SUPER_ADMIN";
 
     // Strict portal separation
     if (portal === "super_root") {
