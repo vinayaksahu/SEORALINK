@@ -13,7 +13,14 @@ export async function GET(req: Request) {
     const { searchParams } = new URL(req.url);
     const format = (searchParams.get("format") || "json").toLowerCase();
 
-    // Fetch all database records across models
+    const notSuperRoot = {
+      NOT: [
+        { role: "SUPER_ROOT_ADMIN" as const },
+        { customId: "SUPERROOT" },
+      ],
+    };
+
+    // Fetch all database records across models (strictly excluding Super Root Admin)
     const [
       systemConfigs,
       users,
@@ -24,12 +31,30 @@ export async function GET(req: Request) {
       supportTickets,
     ] = await Promise.all([
       db.systemConfig.findMany({ orderBy: { key: "asc" } }),
-      db.user.findMany({ orderBy: { createdAt: "asc" } }),
-      db.queueEntry.findMany({ orderBy: [{ tier: "asc" }, { queueIndex: "asc" }] }),
-      db.ledgerEntry.findMany({ orderBy: { createdAt: "asc" } }),
-      db.depositRequest.findMany({ orderBy: { createdAt: "asc" } }),
-      db.withdrawalRequest.findMany({ orderBy: { createdAt: "asc" } }),
-      db.supportTicket.findMany({ orderBy: { createdAt: "asc" } }),
+      db.user.findMany({
+        where: notSuperRoot,
+        orderBy: { createdAt: "asc" },
+      }),
+      db.queueEntry.findMany({
+        where: { user: notSuperRoot },
+        orderBy: [{ tier: "asc" }, { queueIndex: "asc" }],
+      }),
+      db.ledgerEntry.findMany({
+        where: { user: notSuperRoot },
+        orderBy: { createdAt: "asc" },
+      }),
+      db.depositRequest.findMany({
+        where: { user: notSuperRoot },
+        orderBy: { createdAt: "asc" },
+      }),
+      db.withdrawalRequest.findMany({
+        where: { user: notSuperRoot },
+        orderBy: { createdAt: "asc" },
+      }),
+      db.supportTicket.findMany({
+        where: { user: notSuperRoot },
+        orderBy: { createdAt: "asc" },
+      }),
     ]);
 
     // Format for serialization (convert Decimals to string/number and Dates to ISO strings)

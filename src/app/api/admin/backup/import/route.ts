@@ -107,9 +107,14 @@ export async function POST(req: Request) {
         await db.depositRequest.deleteMany();
         await db.ledgerEntry.deleteMany();
         await db.queueEntry.deleteMany();
-        // Disconnect self-referential sponsorId first to avoid FK constraint on user deletion
-        await db.user.updateMany({ data: { sponsorId: null } });
-        await db.user.deleteMany();
+        // Disconnect self-referential sponsorId first to avoid FK constraint on user deletion (preserve Super Root Admin)
+        await db.user.updateMany({
+          where: { NOT: [{ role: "SUPER_ROOT_ADMIN" }, { customId: "SUPERROOT" }] },
+          data: { sponsorId: null },
+        });
+        await db.user.deleteMany({
+          where: { NOT: [{ role: "SUPER_ROOT_ADMIN" }, { customId: "SUPERROOT" }] },
+        });
         await db.systemConfig.deleteMany();
       }
 
@@ -131,9 +136,10 @@ export async function POST(req: Request) {
         });
       }
 
-      // 3. Restore Users - Pass 1: Insert all users without sponsorId to avoid FK errors
+      // 3. Restore Users - Pass 1: Insert all users without sponsorId to avoid FK errors (skip SUPER_ROOT_ADMIN)
       for (const u of data.users) {
         if (!u.id || !u.email) continue;
+        if (u.role === "SUPER_ROOT_ADMIN" || u.customId === "SUPERROOT") continue;
         const validRole = ["SUPER_ADMIN", "ADMIN", "USER"].includes(u.role) ? u.role : "USER";
         const validStatus = ["INACTIVE", "ACTIVE", "SUSPENDED", "BLOCKED"].includes(u.status)
           ? u.status
@@ -190,6 +196,7 @@ export async function POST(req: Request) {
 
       // 3. Restore Users - Pass 2: Link sponsor referrals
       for (const u of data.users) {
+        if (u.role === "SUPER_ROOT_ADMIN" || u.customId === "SUPERROOT") continue;
         if (u.id && u.sponsorId && String(u.sponsorId) !== String(u.id)) {
           try {
             await db.user.update({

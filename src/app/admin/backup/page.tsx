@@ -11,6 +11,13 @@ export default async function AdminBackupPage() {
     redirect("/adminlogin");
   }
 
+  const notSuperRoot = {
+    NOT: [
+      { role: "SUPER_ROOT_ADMIN" as const },
+      { customId: "SUPERROOT" },
+    ],
+  };
+
   const [
     totalUsers,
     totalQueues,
@@ -20,12 +27,12 @@ export default async function AdminBackupPage() {
     totalTickets,
     totalConfigs,
   ] = await Promise.all([
-    db.user.count(),
-    db.queueEntry.count(),
-    db.ledgerEntry.count(),
-    db.depositRequest.count(),
-    db.withdrawalRequest.count(),
-    db.supportTicket.count(),
+    db.user.count({ where: notSuperRoot }),
+    db.queueEntry.count({ where: { user: notSuperRoot } }),
+    db.ledgerEntry.count({ where: { user: notSuperRoot } }),
+    db.depositRequest.count({ where: { user: notSuperRoot } }),
+    db.withdrawalRequest.count({ where: { user: notSuperRoot } }),
+    db.supportTicket.count({ where: { user: notSuperRoot } }),
     db.systemConfig.count(),
   ]);
 
