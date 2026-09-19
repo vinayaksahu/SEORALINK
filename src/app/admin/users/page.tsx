@@ -19,18 +19,19 @@ export default async function AdminUsersPage({
 
   const { q } = await searchParams;
   const searchQuery = q?.trim();
-  const isSuper = session.role === "SUPER_ROOT_ADMIN" || session.role === "SUPER_ADMIN";
+
+  // Branch isolation: Each admin must ONLY see their own branch members + their own account.
+  // Cross-admins, other parallel branches, and Super Root Admin are strictly invisible.
+  const branchFilter = [
+    { adminId: session.userId },
+    { id: session.userId },
+  ];
 
   const whereClause: any = {
     customId: { not: "SUPERROOT" },
+    NOT: { role: "SUPER_ROOT_ADMIN" },
+    OR: branchFilter,
   };
-
-  if (!isSuper) {
-    whereClause.OR = [
-      { adminId: session.userId },
-      { adminId: null },
-    ];
-  }
 
   if (searchQuery) {
     const searchConditions = [
@@ -39,15 +40,11 @@ export default async function AdminUsersPage({
       { email: { contains: searchQuery, mode: "insensitive" } },
       { phone: { contains: searchQuery, mode: "insensitive" } },
     ];
-    if (whereClause.OR) {
-      whereClause.AND = [
-        { OR: whereClause.OR },
-        { OR: searchConditions },
-      ];
-      delete whereClause.OR;
-    } else {
-      whereClause.OR = searchConditions;
-    }
+    whereClause.AND = [
+      { OR: branchFilter },
+      { OR: searchConditions },
+    ];
+    delete whereClause.OR;
   }
 
   const [users, rankWithdrawals] = await withDbRetry(async () => {

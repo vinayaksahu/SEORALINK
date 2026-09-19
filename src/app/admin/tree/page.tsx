@@ -11,20 +11,19 @@ export default async function AdminTreePage() {
     redirect("/adminlogin");
   }
 
-  const isSuper = session.role === "SUPER_ROOT_ADMIN" || session.role === "SUPER_ADMIN";
-
   const [totalUsersCount, activeQueuesCount] = await withDbRetry(async () => {
     return await Promise.all([
       db.user.count({
         where: {
           customId: { not: "SUPERROOT" },
-          ...(isSuper ? {} : { OR: [{ adminId: session.userId }, { adminId: null }] }),
+          NOT: { role: "SUPER_ROOT_ADMIN" },
+          OR: [{ adminId: session.userId }, { id: session.userId }],
         },
       }),
       db.queueEntry.count({
         where: {
           status: "WAITING",
-          ...(isSuper ? {} : { OR: [{ adminId: session.userId }, { adminId: null }] }),
+          adminId: session.userId,
         },
       }),
     ]);

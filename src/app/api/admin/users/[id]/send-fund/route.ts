@@ -44,11 +44,13 @@ export async function POST(
             status: true,
             fundBalance: true,
             incomeBalance: true,
+            adminId: true,
+            role: true,
           },
         });
 
-        if (!user) {
-          throw new Error("Target member not found");
+        if (!user || user.adminId !== session.userId || user.role !== "USER") {
+          throw new Error("Target member not found or does not belong to your network");
         }
 
         const formattedAmount = amountDec.toFixed(2);

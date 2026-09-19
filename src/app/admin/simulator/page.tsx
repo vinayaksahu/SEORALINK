@@ -16,15 +16,15 @@ export default async function AdminSimulatorPage({
   }
 
   const { target } = await searchParams;
-  const isSuper = session.role === "SUPER_ROOT_ADMIN" || session.role === "SUPER_ADMIN";
-
-  const userWhere: any = { status: "ACTIVE", customId: { not: "SUPERROOT" } };
-  if (!isSuper) {
-    userWhere.OR = [
+  const userWhere: any = {
+    status: "ACTIVE",
+    customId: { not: "SUPERROOT" },
+    NOT: { role: "SUPER_ROOT_ADMIN" },
+    OR: [
       { adminId: session.userId },
-      { adminId: null },
-    ];
-  }
+      { id: session.userId },
+    ],
+  };
 
   const [recentUsers, totalUsersCount, activeQueuesCount] = await withDbRetry(async () => {
     return await Promise.all([
@@ -45,13 +45,14 @@ export default async function AdminSimulatorPage({
       db.user.count({
         where: {
           customId: { not: "SUPERROOT" },
-          ...(isSuper ? {} : { OR: [{ adminId: session.userId }, { adminId: null }] }),
+          NOT: { role: "SUPER_ROOT_ADMIN" },
+          OR: [{ adminId: session.userId }, { id: session.userId }],
         },
       }),
       db.queueEntry.count({
         where: {
           status: "WAITING",
-          ...(isSuper ? {} : { OR: [{ adminId: session.userId }, { adminId: null }] }),
+          adminId: session.userId,
         },
       }),
     ]);

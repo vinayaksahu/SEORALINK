@@ -32,10 +32,12 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Target user ID is required" }, { status: 400 });
     }
 
-    // Find the target user in the database
+    // Find the target user in the database strictly within this admin's branch
     const targetUser = await db.user.findFirst({
       where: {
         OR: [{ id: targetUserId }, { customId: targetUserId }],
+        adminId: adminSession.userId,
+        role: "USER",
       },
       select: {
         id: true,

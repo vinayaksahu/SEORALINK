@@ -1,4 +1,4 @@
-﻿import { NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { db } from "@/lib/db";
 
@@ -25,12 +25,13 @@ export async function POST(
             customId: true,
             fullName: true,
             email: true,
+            adminId: true,
           },
         },
       },
     });
 
-    if (!existingTicket) {
+    if (!existingTicket || existingTicket.user.adminId !== session.userId) {
       return NextResponse.json({ error: "Support ticket not found" }, { status: 404 });
     }
 

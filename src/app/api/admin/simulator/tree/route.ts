@@ -38,17 +38,14 @@ export async function GET(req: Request) {
     const { searchParams } = new URL(req.url);
     const rootId = searchParams.get("rootId");
 
-    const isSuper = session.role === "SUPER_ROOT_ADMIN" || session.role === "SUPER_ADMIN";
-
-    const userWhere: any = {};
-    if (!isSuper) {
-      userWhere.OR = [
+    const userWhere: any = {
+      customId: { not: "SUPERROOT" },
+      NOT: { role: "SUPER_ROOT_ADMIN" },
+      OR: [
         { adminId: session.userId },
-        { adminId: null },
-      ];
-    }
-    // Exclude SUPERROOT from the tree view as it is purely an internal system operator
-    userWhere.customId = { not: "SUPERROOT" };
+        { id: session.userId },
+      ],
+    };
 
     // Fetch all users, rank exits, and waiting queues with retry
     const [allUsers, rankExits, waitingQueuesCount] = await withDbRetry(async () => {
@@ -101,7 +98,7 @@ export async function GET(req: Request) {
         db.queueEntry.count({
           where: {
             status: "WAITING",
-            ...(isSuper ? {} : { OR: [{ adminId: session.userId }, { adminId: null }] }),
+            adminId: session.userId,
           },
         }),
       ]);

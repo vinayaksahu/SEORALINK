@@ -100,22 +100,22 @@ export async function POST(req: Request) {
 
     // Execution / Restoration Phase
     if (action === "restore") {
-      // 1. If Clean mode, wipe target tables in reverse dependency order
+      // 1. If Clean mode, wipe target tables for this admin's branch in reverse dependency order
       if (mode === "clean") {
-        await db.supportTicket.deleteMany();
-        await db.withdrawalRequest.deleteMany();
-        await db.depositRequest.deleteMany();
-        await db.ledgerEntry.deleteMany();
-        await db.queueEntry.deleteMany();
-        // Disconnect self-referential sponsorId first to avoid FK constraint on user deletion (preserve Super Root Admin)
+        await db.supportTicket.deleteMany({ where: { user: { adminId: session.userId } } });
+        await db.withdrawalRequest.deleteMany({ where: { user: { adminId: session.userId } } });
+        await db.depositRequest.deleteMany({ where: { user: { adminId: session.userId } } });
+        await db.ledgerEntry.deleteMany({ where: { user: { adminId: session.userId } } });
+        await db.queueEntry.deleteMany({ where: { adminId: session.userId } });
+        // Disconnect self-referential sponsorId first to avoid FK constraint on user deletion
         await db.user.updateMany({
-          where: { NOT: [{ role: "SUPER_ROOT_ADMIN" }, { customId: "SUPERROOT" }] },
+          where: { adminId: session.userId },
           data: { sponsorId: null },
         });
         await db.user.deleteMany({
-          where: { NOT: [{ role: "SUPER_ROOT_ADMIN" }, { customId: "SUPERROOT" }] },
+          where: { adminId: session.userId },
         });
-        await db.systemConfig.deleteMany();
+        // Note: systemConfig is global / admin configuration, not wiped by sub-admin
       }
 
       // 2. Restore SystemConfig
@@ -136,11 +136,13 @@ export async function POST(req: Request) {
         });
       }
 
-      // 3. Restore Users - Pass 1: Insert all users without sponsorId to avoid FK errors (skip SUPER_ROOT_ADMIN)
+      // 3. Restore Users - Pass 1: Insert branch users without sponsorId to avoid FK errors (skip SUPER_ROOT_ADMIN)
       for (const u of data.users) {
         if (!u.id || !u.email) continue;
         if (u.role === "SUPER_ROOT_ADMIN" || u.customId === "SUPERROOT") continue;
-        const validRole = ["SUPER_ADMIN", "ADMIN", "USER"].includes(u.role) ? u.role : "USER";
+        const isSelf = u.id === session.userId;
+        const validRole = isSelf ? session.role : "USER";
+        const validAdminId = isSelf ? null : session.userId;
         const validStatus = ["INACTIVE", "ACTIVE", "SUSPENDED", "BLOCKED"].includes(u.status)
           ? u.status
           : "INACTIVE";
@@ -157,6 +159,7 @@ export async function POST(req: Request) {
             role: validRole,
             status: validStatus,
             referralCode: String(u.referralCode || u.customId),
+            adminId: validAdminId,
             usdtAddress: u.usdtAddress ? String(u.usdtAddress) : null,
             usdtNetwork: u.usdtNetwork ? String(u.usdtNetwork) : "USDT_BEP20",
             currentTier: Number(u.currentTier || 0),
@@ -179,6 +182,7 @@ export async function POST(req: Request) {
             role: validRole,
             status: validStatus,
             referralCode: String(u.referralCode || u.customId),
+            adminId: validAdminId,
             sponsorId: null, // Linked in pass 2
             usdtAddress: u.usdtAddress ? String(u.usdtAddress) : null,
             usdtNetwork: u.usdtNetwork ? String(u.usdtNetwork) : "USDT_BEP20",
@@ -217,6 +221,7 @@ export async function POST(req: Request) {
           where: { id: String(q.id) },
           update: {
             userId: String(q.userId),
+            adminId: session.userId,
             tier: Number(q.tier || 0),
             queueIndex: Number(q.queueIndex || 0),
             childrenPlaced: Number(q.childrenPlaced || 0),
@@ -227,6 +232,7 @@ export async function POST(req: Request) {
           create: {
             id: String(q.id),
             userId: String(q.userId),
+            adminId: session.userId,
             tier: Number(q.tier || 0),
             queueIndex: Number(q.queueIndex || 0),
             childrenPlaced: Number(q.childrenPlaced || 0),

@@ -13,14 +13,18 @@ export async function GET(req: Request) {
     const { searchParams } = new URL(req.url);
     const format = (searchParams.get("format") || "json").toLowerCase();
 
-    const notSuperRoot = {
+    const branchUserFilter = {
       NOT: [
         { role: "SUPER_ROOT_ADMIN" as const },
         { customId: "SUPERROOT" },
       ],
+      OR: [
+        { adminId: session.userId },
+        { id: session.userId },
+      ],
     };
 
-    // Fetch all database records across models (strictly excluding Super Root Admin)
+    // Fetch all database records strictly isolated to this admin's branch
     const [
       systemConfigs,
       users,
@@ -32,27 +36,32 @@ export async function GET(req: Request) {
     ] = await Promise.all([
       db.systemConfig.findMany({ orderBy: { key: "asc" } }),
       db.user.findMany({
-        where: notSuperRoot,
+        where: branchUserFilter,
         orderBy: { createdAt: "asc" },
       }),
       db.queueEntry.findMany({
-        where: { user: notSuperRoot },
+        where: {
+          OR: [
+            { adminId: session.userId },
+            { user: branchUserFilter },
+          ],
+        },
         orderBy: [{ tier: "asc" }, { queueIndex: "asc" }],
       }),
       db.ledgerEntry.findMany({
-        where: { user: notSuperRoot },
+        where: { user: branchUserFilter },
         orderBy: { createdAt: "asc" },
       }),
       db.depositRequest.findMany({
-        where: { user: notSuperRoot },
+        where: { user: branchUserFilter },
         orderBy: { createdAt: "asc" },
       }),
       db.withdrawalRequest.findMany({
-        where: { user: notSuperRoot },
+        where: { user: branchUserFilter },
         orderBy: { createdAt: "asc" },
       }),
       db.supportTicket.findMany({
-        where: { user: notSuperRoot },
+        where: { user: branchUserFilter },
         orderBy: { createdAt: "asc" },
       }),
     ]);
