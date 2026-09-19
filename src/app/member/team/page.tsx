@@ -3,11 +3,14 @@ import { getSession } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { redirect } from "next/navigation";
 import { TIER_NAMES } from "@/lib/constants";
-import { Users, UserCheck, ArrowUpRight } from "lucide-react";
+import { Users, UserCheck, ArrowUpRight, ShieldAlert } from "lucide-react";
+import { isUserSystemExited } from "@/lib/userStatus";
 
 export default async function MemberTeamPage() {
   const session = await getSession();
   if (!session) redirect("/login");
+
+  const isSystemExited = await isUserSystemExited(session.userId);
 
   const user = await db.user.findUnique({
     where: { id: session.userId },
@@ -42,6 +45,21 @@ export default async function MemberTeamPage() {
           Monitor your personally sponsored direct mentees and your 5% upline override revenue stream.
         </p>
       </div>
+
+      {/* System Exited Sponsoring Disabled Banner */}
+      {isSystemExited && (
+        <div className="p-4 rounded-xl border-2 border-purple-500/50 bg-purple-500/10 flex items-center gap-3 shadow-md">
+          <ShieldAlert size={28} className="text-purple-400 shrink-0" />
+          <div>
+            <div className="text-xs font-bold text-purple-300 uppercase tracking-wider">
+              Sponsoring Disabled &bull; Single-Exit Protocol Finalized
+            </div>
+            <div className="text-[11px] text-[#cbd5e1] mt-0.5 leading-relaxed">
+              This account has concluded its Single-Exit settlement. Under protocol rules, new direct mentee registrations and downline sponsoring are permanently disabled.
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Network Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">

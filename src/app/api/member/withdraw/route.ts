@@ -54,18 +54,17 @@ export async function POST(req: Request) {
         })
       );
 
-      if (user.status === "BLOCKED" || user.status === "SUSPENDED") {
-        if (!hasRankExit) {
-          throw new Error("This account has been blocked by administration and cannot initiate withdrawals.");
-        }
-
-        // Single-Exit accounts can only withdraw remaining balance from Commission Wallet
-        if (withdrawalCategory !== "COMMISSION") {
-          throw new Error("You have already executed your one-time lifetime Rank Pool Wallet cashout.");
-        }
+      if (hasRankExit) {
+        throw new Error(
+          "This account has permanently exited the network under the Single-Exit protocol and is prohibited from initiating withdrawals."
+        );
       }
 
-      if (user.status !== "ACTIVE" && !hasRankExit) {
+      if (user.status === "BLOCKED" || user.status === "SUSPENDED") {
+        throw new Error("This account has been blocked or suspended by administration and cannot initiate withdrawals.");
+      }
+
+      if (user.status !== "ACTIVE") {
         throw new Error("Account activation ($10 USDT) is required before initiating withdrawals. Please activate your account first.");
       }
 
@@ -74,13 +73,13 @@ export async function POST(req: Request) {
       // ==========================================
       if (withdrawalCategory === "COMMISSION") {
         const numAmount = parseFloat(amount);
-        const minAmount = hasRankExit ? 1 : 10;
+        const minAmount = 10;
 
         if (!amount || isNaN(numAmount) || numAmount < minAmount) {
           throw new Error(`Minimum commission withdrawal amount is $${minAmount.toFixed(2)} USDT`);
         }
 
-        if (!hasRankExit && numAmount % 5 !== 0) {
+        if (numAmount % 5 !== 0) {
           throw new Error("Withdrawal amount must be in multiples of $5 USDT (e.g. $10, $15, $20, $25, $30...)");
         }
 

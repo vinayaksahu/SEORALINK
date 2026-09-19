@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { isUserSystemExited } from "@/lib/userStatus";
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
@@ -23,6 +24,18 @@ export async function GET(req: Request) {
       fullName: true,
     },
   });
+
+  if (!sponsor) {
+    return NextResponse.json({ sponsor: null });
+  }
+
+  const isExited = await isUserSystemExited(sponsor.id);
+  if (isExited) {
+    return NextResponse.json({
+      sponsor: null,
+      error: "This sponsor account has permanently exited the network under the Single-Exit protocol and can no longer sponsor new members.",
+    });
+  }
 
   return NextResponse.json({ sponsor });
 }

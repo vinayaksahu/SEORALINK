@@ -20,6 +20,7 @@ import {
   ShieldCheck,
   PlusCircle,
   LifeBuoy,
+  User,
 } from "lucide-react";
 
 interface MemberMobileNavProps {
@@ -66,6 +67,7 @@ export function MemberMobileNav({ user, isImpersonating }: MemberMobileNavProps)
 
   const navLinks = [
     { href: "/member/dashboard", label: "Dashboard", icon: LayoutDashboard },
+    { href: "/member/profile", label: "My Profile", icon: User },
     { href: "/member/queue", label: "Tripod Queue", icon: GitCommit },
     { href: "/member/activate", label: "Activate $10", icon: Zap },
     { href: "/member/deposit", label: "Deposit USDT", icon: Wallet },
@@ -133,9 +135,19 @@ export function MemberMobileNav({ user, isImpersonating }: MemberMobileNavProps)
         {/* 2. SCROLLABLE MIDDLE (flex-1 min-h-0 overflow-y-auto overscroll-contain) */}
         <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain">
           {/* User ID / Status Info Box */}
-          <div className="px-4 py-3 border-b border-[#1e293b]/60 bg-[#0b1120]">
-            <div className="text-[10px] uppercase font-bold text-[#94a3b8] tracking-wider">
-              Connected Member
+          <Link
+            href="/member/profile"
+            onClick={() => setIsOpen(false)}
+            className="px-4 py-3 border-b border-[#1e293b]/60 bg-[#0b1120] hover:bg-[#0f172a] transition-colors block group"
+            title="Manage Profile & USDT Address"
+          >
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] uppercase font-bold text-[#94a3b8] tracking-wider group-hover:text-[#d4af37] transition-colors">
+                Connected Member
+              </span>
+              <span className="text-[10px] text-[#38bdf8] font-bold group-hover:underline">
+                Edit Profile &rarr;
+              </span>
             </div>
             <div className="flex items-center justify-between mt-1">
               <span className="font-mono-num font-bold text-[#d4af37] text-sm">
@@ -154,7 +166,7 @@ export function MemberMobileNav({ user, isImpersonating }: MemberMobileNavProps)
             <div className="text-xs text-[#cbd5e1] font-semibold mt-1 truncate">
               {user.fullName}
             </div>
-          </div>
+          </Link>
 
           {/* Quick Balances Compact Box */}
           <div className="p-3 border-b border-[#1e293b]/60 bg-[#070a14]">

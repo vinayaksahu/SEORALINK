@@ -3,11 +3,14 @@ import { getSession } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { redirect } from "next/navigation";
 import DepositFormClient from "./DepositFormClient";
-import { Wallet, Clock, CheckCircle2, XCircle } from "lucide-react";
+import { Wallet, Clock, CheckCircle2, XCircle, ShieldAlert } from "lucide-react";
+import { isUserSystemExited } from "@/lib/userStatus";
 
 export default async function MemberDepositPage() {
   const session = await getSession();
   if (!session) redirect("/login");
+
+  const isSystemExited = await isUserSystemExited(session.userId);
 
   // Fetch user deposits
   const deposits = await db.depositRequest.findMany({
@@ -93,12 +96,31 @@ export default async function MemberDepositPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
-        {/* Deposit Submission Form Component */}
-        <DepositFormClient
-          depositAddress={selectedAddress}
-          initialNetwork={selectedNetwork}
-          walletLabel={selectedLabel}
-        />
+        {/* Deposit Submission Form Component or System Exit Notice */}
+        {isSystemExited ? (
+          <div className="card-seoralink p-6 border-2 border-purple-500/50 bg-purple-500/10 space-y-4">
+            <div className="flex items-center gap-3">
+              <ShieldAlert size={28} className="text-purple-400 shrink-0" />
+              <div>
+                <h3 className="text-base font-bold text-purple-300">
+                  Deposits Disabled &bull; System Exited
+                </h3>
+                <span className="text-[10px] font-bold text-purple-400/80 uppercase tracking-wider">
+                  Single-Exit Protocol Settlement
+                </span>
+              </div>
+            </div>
+            <p className="text-xs text-[#cbd5e1] leading-relaxed">
+              This member account has executed the single-exit rank cashout protocol and has officially concluded its participation in the SEORALINK network. Under system exit rules, fund deposits are permanently disabled for retired IDs.
+            </p>
+          </div>
+        ) : (
+          <DepositFormClient
+            depositAddress={selectedAddress}
+            initialNetwork={selectedNetwork}
+            walletLabel={selectedLabel}
+          />
+        )}
 
         {/* Deposit History Table */}
         <div className="card-seoralink p-6 space-y-4">

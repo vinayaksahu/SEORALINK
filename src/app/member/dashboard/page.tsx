@@ -68,24 +68,19 @@ export default async function MemberDashboardPage() {
     <div className="space-y-8">
       {/* Single-Exit Settlement Notice */}
       {hasWithdrawnRankPool && (
-        <div className="p-5 rounded-xl border border-purple-500/50 bg-purple-500/10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="p-5 rounded-xl border-2 border-purple-500/60 bg-purple-500/10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-lg">
           <div className="flex items-start sm:items-center gap-3">
             <CheckCircle2 size={30} className="text-purple-400 flex-shrink-0" />
             <div>
-              <div className="text-sm font-bold text-purple-300">System Exited &bull; Single-Exit Settlement Concluded</div>
+              <div className="text-sm font-bold text-purple-300">System Exited &bull; Single-Exit Protocol Finalized</div>
               <div className="text-xs text-[#cbd5e1] mt-0.5 leading-relaxed">
-                Your one-time Rank Pool cashout has concluded under the protocol Single-Exit rules. Your rank queue progression has ended. You can still access your portal and withdraw any remaining Commission Wallet balance.
+                Your account has concluded its Single-Exit settlement. Under protocol rules, this ID is permanently retired: <strong>deposits</strong>, <strong>withdrawals</strong>, and <strong>referring new downline members</strong> are disabled.
               </div>
             </div>
           </div>
-          {commissionBal > 0 && (
-            <Link
-              href="/member/withdraw"
-              className="px-4 py-2 rounded-lg bg-[#10b981] text-black font-extrabold text-xs whitespace-nowrap hover:bg-[#10b981]/90 transition-all flex items-center gap-1.5 shadow"
-            >
-              Withdraw Comm (${commissionBal.toFixed(2)}) &rarr;
-            </Link>
-          )}
+          <span className="px-3 py-1.5 rounded-lg bg-purple-500/20 text-purple-300 border border-purple-500/40 text-[11px] font-bold uppercase tracking-wider whitespace-nowrap">
+            ID Retired (Single-Exit)
+          </span>
         </div>
       )}
 
@@ -150,6 +145,27 @@ export default async function MemberDashboardPage() {
             className="btn-primary px-5 py-2 text-xs font-extrabold whitespace-nowrap flex items-center gap-1.5"
           >
             Activate Now ($10) <ChevronRight size={14} />
+          </Link>
+        </div>
+      )}
+
+      {/* USDT Address Missing Setup Notice */}
+      {!user.usdtAddress && (
+        <div className="p-4 rounded-xl border border-[#38bdf8]/40 bg-[#38bdf8]/10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-md">
+          <div className="flex items-center gap-3">
+            <Wallet size={22} className="text-[#38bdf8] flex-shrink-0" />
+            <div>
+              <div className="text-xs font-bold text-white">Setup Your USDT Withdrawal Wallet</div>
+              <div className="text-[11px] text-[#cbd5e1] mt-0.5">
+                Add your USDT BEP-20 or TRC-20 payout address in your profile to enable fast Commission Wallet &amp; Rank Pool payouts.
+              </div>
+            </div>
+          </div>
+          <Link
+            href="/member/profile"
+            className="px-4 py-1.5 rounded-lg bg-[#38bdf8] text-black font-extrabold text-xs whitespace-nowrap hover:bg-[#38bdf8]/90 transition-all flex items-center gap-1 shrink-0 cursor-pointer"
+          >
+            Setup Wallet &rarr;
           </Link>
         </div>
       )}
@@ -226,12 +242,14 @@ export default async function MemberDashboardPage() {
         </div>
       </div>
 
-      {/* Referral Link Quick Share Card (Disabled if Banned) */}
-      {!isBanned ? (
+      {/* Referral Link Quick Share Card (Disabled if Banned or System Exited) */}
+      {!isBanned && !hasWithdrawnRankPool ? (
         <ReferralShareCard referralLink={referralLink} />
       ) : (
-        <div className="card-seoralink p-4 border border-red-500/30 bg-red-500/5 text-center text-xs text-[#94a3b8]">
-          Referral link disabled for deactivated accounts.
+        <div className="card-seoralink p-4 border border-purple-500/40 bg-purple-500/5 text-center text-xs text-[#cbd5e1]">
+          {hasWithdrawnRankPool
+            ? "Referral program permanently disabled: This account has exited the network under the Single-Exit protocol."
+            : "Referral link disabled for deactivated accounts."}
         </div>
       )}
 

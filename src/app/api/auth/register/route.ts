@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import { hashPassword, createSessionToken } from "@/lib/auth";
 import { generateCustomId } from "@/lib/utils";
 import { cookies } from "next/headers";
+import { isUserSystemExited } from "@/lib/userStatus";
 
 export async function POST(req: Request) {
   try {
@@ -48,6 +49,15 @@ export async function POST(req: Request) {
       });
 
       if (sponsor) {
+        // Check if sponsor has exited system under Single-Exit protocol
+        const isSponsorExited = await isUserSystemExited(sponsor.id);
+        if (isSponsorExited) {
+          return NextResponse.json(
+            { error: "This sponsor account has permanently exited the network under the Single-Exit protocol and can no longer sponsor or refer new members." },
+            { status: 400 }
+          );
+        }
+
         sponsorId = sponsor.id;
       } else {
         return NextResponse.json(

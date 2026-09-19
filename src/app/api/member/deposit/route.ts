@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { isUserSystemExited } from "@/lib/userStatus";
 import Decimal from "decimal.js";
 
 export async function POST(req: Request) {
@@ -8,6 +9,14 @@ export async function POST(req: Request) {
     const session = await getSession();
     if (!session) {
       return NextResponse.json({ error: "Unauthorized access" }, { status: 401 });
+    }
+
+    const isExited = await isUserSystemExited(session.userId);
+    if (isExited) {
+      return NextResponse.json(
+        { error: "This account has permanently exited the network under the Single-Exit protocol and is prohibited from making deposits." },
+        { status: 403 }
+      );
     }
 
     const { amount, txHash, network, depositAddress } = await req.json();

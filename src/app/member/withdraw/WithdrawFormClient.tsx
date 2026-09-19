@@ -56,6 +56,11 @@ export default function WithdrawFormClient({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+    if (hasWithdrawnRankPool) {
+      setError("This account has exited the system under the Single-Exit protocol and cannot initiate withdrawals.");
+      return;
+    }
+
     if (isInactive) {
       setError("Account activation ($10 USDT) is required before requesting withdrawals. Please activate your account first.");
       return;
@@ -63,12 +68,12 @@ export default function WithdrawFormClient({
 
     if (activeTab === "COMMISSION") {
       const num = parseFloat(amount);
-      const minAmount = hasWithdrawnRankPool ? 1 : 10;
+      const minAmount = 10;
       if (isNaN(num) || num < minAmount) {
         setError(`Minimum withdrawal amount is $${minAmount.toFixed(2)} USDT.`);
         return;
       }
-      if (!hasWithdrawnRankPool && num % 5 !== 0) {
+      if (num % 5 !== 0) {
         setError("Withdrawal amount must be in multiples of $5 USDT (e.g. $10, $15, $20, $25, $30, etc.).");
         return;
       }
@@ -119,7 +124,24 @@ export default function WithdrawFormClient({
     }
   };
 
-  if (isBanned && !hasWithdrawnRankPool) {
+  if (hasWithdrawnRankPool) {
+    return (
+      <div className="card-seoralink p-6 border-2 border-purple-500/50 bg-purple-500/10 space-y-4 text-center">
+        <ShieldAlert size={36} className="text-purple-400 mx-auto" />
+        <div>
+          <h3 className="text-base font-bold text-purple-300">Withdrawals Disabled &bull; System Exited</h3>
+          <span className="text-[10px] font-bold text-purple-400/80 uppercase tracking-wider">
+            Single-Exit Protocol Settlement
+          </span>
+        </div>
+        <p className="text-xs text-[#cbd5e1] leading-relaxed max-w-md mx-auto">
+          This account has concluded its participation in the SEORALINK network under the Single-Exit protocol. Both Commission Wallet and Rank Pool withdrawals are permanently disabled for retired IDs.
+        </p>
+      </div>
+    );
+  }
+
+  if (isBanned) {
     return (
       <div className="card-seoralink p-6 border border-red-500/50 bg-red-500/10 space-y-3 text-center">
         <ShieldAlert size={36} className="text-red-400 mx-auto" />

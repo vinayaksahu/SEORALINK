@@ -40,8 +40,12 @@ function RegisterForm() {
       const data = await res.json();
       if (res.ok && data.sponsor) {
         setSponsorName(data.sponsor.fullName);
+        setError("");
       } else {
         setSponsorName("");
+        if (data.error) {
+          setError(data.error);
+        }
       }
     } catch {
       setSponsorName("");

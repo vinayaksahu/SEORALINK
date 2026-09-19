@@ -19,6 +19,7 @@ import {
   LifeBuoy,
   ShieldAlert,
   ArrowLeft,
+  User,
 } from "lucide-react";
 import { MemberMobileNav } from "@/components/MemberMobileNav";
 import { LanguageSelector } from "@/components/LanguageSelector";
@@ -75,6 +76,7 @@ export default async function MemberLayout({
 
   const navLinks = [
     { href: "/member/dashboard", label: "Dashboard", icon: LayoutDashboard },
+    { href: "/member/profile", label: "My Profile", icon: User },
     { href: "/member/queue", label: "Tripod Queue", icon: GitCommit },
     { href: "/member/activate", label: "Activate $10", icon: Zap },
     { href: "/member/deposit", label: "Deposit USDT", icon: Wallet },
@@ -138,9 +140,18 @@ export default async function MemberLayout({
             </Link>
           </div>
 
-          <div className="text-xs text-slate-600 dark:text-[#94a3b8] hidden lg:block truncate max-w-[220px]">
-            Welcome back, <strong className="text-slate-900 dark:text-white">{user.fullName}</strong>
-          </div>
+          <Link
+            href="/member/profile"
+            className="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-[#1e293b] hover:border-[#d4af37]/50 bg-white/50 dark:bg-[#0b101b]/50 transition-all text-xs text-slate-600 dark:text-[#94a3b8] group"
+            title="Manage Profile & USDT Address"
+          >
+            <div className="w-5 h-5 rounded-full bg-[#d4af37]/20 text-[#d4af37] flex items-center justify-center font-bold text-[10px] group-hover:scale-110 transition-transform">
+              {user.fullName ? user.fullName.charAt(0).toUpperCase() : "U"}
+            </div>
+            <span>
+              Welcome, <strong className="text-slate-900 dark:text-white group-hover:text-[#d4af37] transition-colors">{user.fullName}</strong>
+            </span>
+          </Link>
 
           {/* Live Dual Wallet Counters, Language & Theme Switcher */}
           <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">

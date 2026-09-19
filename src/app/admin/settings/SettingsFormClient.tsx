@@ -14,7 +14,8 @@ import {
   Users,
   Shuffle,
   ShieldCheck,
-  Wallet
+  Wallet,
+  Pencil,
 } from "lucide-react";
 
 export interface DepositAddressItem {
@@ -66,10 +67,65 @@ export default function SettingsFormClient({
   const [newLabel, setNewLabel] = useState("");
   const [newNetwork, setNewNetwork] = useState("USDT_BEP20");
 
+  // Edit Address state
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editAddress, setEditAddress] = useState("");
+  const [editLabel, setEditLabel] = useState("");
+  const [editNetwork, setEditNetwork] = useState("USDT_BEP20");
+
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState("");
   const [error, setError] = useState("");
+
+  const handleStartEdit = (item: DepositAddressItem) => {
+    setError("");
+    setEditingId(item.id);
+    setEditAddress(item.address);
+    setEditLabel(item.label || "");
+    setEditNetwork(item.network || "USDT_BEP20");
+  };
+
+  const handleCancelEdit = () => {
+    setEditingId(null);
+    setEditAddress("");
+    setEditLabel("");
+  };
+
+  const handleSaveEdit = () => {
+    setError("");
+    const trimmed = editAddress.trim();
+    if (!trimmed) {
+      setError("Wallet address cannot be empty.");
+      return;
+    }
+
+    if (!trimmed.startsWith("0x") || trimmed.length !== 42) {
+      setError("Please enter a valid BNB Smart Chain (BEP-20) address starting with 0x (42 characters).");
+      return;
+    }
+
+    if (addresses.some((a) => a.id !== editingId && a.address.toLowerCase() === trimmed.toLowerCase())) {
+      setError("This wallet address is already used by another entry in the pool.");
+      return;
+    }
+
+    setAddresses((prev) =>
+      prev.map((item) =>
+        item.id === editingId
+          ? {
+              ...item,
+              address: trimmed,
+              label: editLabel.trim() || item.label || "Wallet",
+              network: editNetwork,
+            }
+          : item
+      )
+    );
+    setEditingId(null);
+    setSuccess("Address details updated in pool. Click 'Save System Configuration' below to save changes permanently.");
+    setTimeout(() => setSuccess(""), 4000);
+  };
 
   const handleCopy = (id: string, text: string) => {
     navigator.clipboard.writeText(text);
@@ -369,6 +425,76 @@ export default function SettingsFormClient({
         <div className="space-y-2.5">
           {addresses.map((item, index) => {
             const isCopied = copiedId === item.id;
+            const isEditing = editingId === item.id;
+
+            if (isEditing) {
+              return (
+                <div
+                  key={item.id}
+                  className="p-4 rounded-xl border border-[#38bdf8] bg-[#070a14] space-y-3 shadow-lg shadow-[#38bdf8]/5 ring-1 ring-[#38bdf8]/30"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="text-xs font-bold text-white flex items-center gap-2">
+                      <Pencil size={13} className="text-[#38bdf8]" />
+                      Edit Address #{index + 1} ({item.label || `Wallet ${index + 1}`})
+                    </div>
+                    <span className="text-[10px] text-[#94a3b8] font-mono">
+                      {item.isPrimary ? "Primary Wallet" : "Pool Wallet"}
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <label className="text-[10px] text-[#94a3b8] uppercase font-bold">Label / Name</label>
+                      <input
+                        type="text"
+                        value={editLabel}
+                        onChange={(e) => setEditLabel(e.target.value)}
+                        placeholder="e.g. Master Hot Wallet 1"
+                        className="w-full bg-[#0b1120] border border-[#1e293b] text-white rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-[#38bdf8]"
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="text-[10px] text-[#94a3b8] uppercase font-bold">Network</label>
+                      <div className="w-full bg-[#0b1120] border border-[#1e293b] text-[#38bdf8] rounded-lg px-3 py-2 text-xs font-mono font-bold flex items-center justify-between">
+                        <span>USDT &bull; BEP-20</span>
+                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-[#38bdf8]/15 border border-[#38bdf8]/30">BSC</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-[10px] text-[#94a3b8] uppercase font-bold">USDT Wallet Address (0x...) *</label>
+                    <input
+                      type="text"
+                      value={editAddress}
+                      onChange={(e) => setEditAddress(e.target.value)}
+                      placeholder="0x... (42 characters BEP-20 address)"
+                      className="w-full bg-[#0b1120] border border-[#1e293b] text-white rounded-lg px-3 py-2 text-xs font-mono-num focus:outline-none focus:border-[#38bdf8]"
+                    />
+                  </div>
+
+                  <div className="flex justify-end gap-2 pt-1">
+                    <button
+                      type="button"
+                      onClick={handleCancelEdit}
+                      className="px-3 py-1.5 rounded-lg text-xs text-[#94a3b8] hover:text-white border border-[#1e293b] hover:bg-white/5 transition-colors"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleSaveEdit}
+                      className="px-4 py-1.5 text-xs font-bold rounded-lg bg-[#38bdf8] hover:bg-[#0284c7] text-[#0b1120] flex items-center gap-1.5 transition-colors"
+                    >
+                      <Check size={13} /> Update Address
+                    </button>
+                  </div>
+                </div>
+              );
+            }
+
             return (
               <div
                 key={item.id}
@@ -403,6 +529,15 @@ export default function SettingsFormClient({
 
                   {/* Actions */}
                   <div className="flex items-center gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => handleStartEdit(item)}
+                      className="text-[10px] text-[#38bdf8] hover:text-white px-2 py-1 rounded bg-[#070a14] border border-[#1e293b] hover:border-[#38bdf8]/50 flex items-center gap-1 transition-colors"
+                      title="Edit address details"
+                    >
+                      <Pencil size={11} /> Edit
+                    </button>
+
                     {!item.isPrimary && (
                       <button
                         type="button"
@@ -447,6 +582,15 @@ export default function SettingsFormClient({
                     value={item.address}
                     className="w-full bg-[#070a14] border border-[#1e293b] text-white font-mono-num text-[11px] px-3 py-1.5 rounded-lg focus:outline-none select-all"
                   />
+                  <button
+                    type="button"
+                    onClick={() => handleStartEdit(item)}
+                    className="px-2.5 py-1.5 rounded-lg bg-[#070a14] border border-[#1e293b] text-[#38bdf8] hover:text-white text-xs flex items-center gap-1 flex-shrink-0 transition-colors"
+                    title="Edit address"
+                  >
+                    <Pencil size={12} />
+                    <span className="text-[10px]">Edit</span>
+                  </button>
                   <button
                     type="button"
                     onClick={() => handleCopy(item.id, item.address)}
