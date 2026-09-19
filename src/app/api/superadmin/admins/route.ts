@@ -266,6 +266,98 @@ export async function PATCH(req: NextRequest) {
       });
     }
 
+    if (action === "UPDATE_PROFILE") {
+      const { fullName, email, phone, customId, password } = await req.json();
+      const updateData: any = {};
+
+      if (fullName && fullName.trim()) {
+        updateData.fullName = fullName.trim();
+      }
+
+      if (phone !== undefined) {
+        updateData.phone = phone ? phone.trim() : null;
+      }
+
+      if (email && email.trim()) {
+        const cleanEmail = email.trim().toLowerCase();
+        if (cleanEmail !== targetAdmin.email.toLowerCase()) {
+          const emailConflict = await db.user.findFirst({
+            where: {
+              email: cleanEmail,
+              NOT: { id: adminId },
+            },
+          });
+          if (emailConflict) {
+            return NextResponse.json(
+              { error: `Email "${cleanEmail}" is already registered by another user.` },
+              { status: 400 }
+            );
+          }
+          updateData.email = cleanEmail;
+        }
+      }
+
+      if (customId && customId.trim()) {
+        const cleanCustomId = customId.trim().toUpperCase();
+        if (cleanCustomId !== targetAdmin.customId.toUpperCase()) {
+          const idConflict = await db.user.findFirst({
+            where: {
+              OR: [
+                { customId: cleanCustomId },
+                { referralCode: cleanCustomId },
+              ],
+              NOT: { id: adminId },
+            },
+          });
+          if (idConflict) {
+            return NextResponse.json(
+              { error: `Admin ID "${cleanCustomId}" is already taken.` },
+              { status: 400 }
+            );
+          }
+          updateData.customId = cleanCustomId;
+          updateData.referralCode = cleanCustomId;
+        }
+      }
+
+      if (password && password.trim()) {
+        if (password.trim().length < 6) {
+          return NextResponse.json(
+            { error: "Password must be at least 6 characters." },
+            { status: 400 }
+          );
+        }
+        updateData.passwordHash = await hashPassword(password.trim());
+      }
+
+      if (Object.keys(updateData).length === 0) {
+        return NextResponse.json(
+          { error: "No changes detected to update." },
+          { status: 400 }
+        );
+      }
+
+      const updated = await db.user.update({
+        where: { id: adminId },
+        data: updateData,
+        select: {
+          id: true,
+          customId: true,
+          fullName: true,
+          email: true,
+          phone: true,
+          role: true,
+          status: true,
+        },
+      });
+
+      return NextResponse.json({
+        success: true,
+        message: `Admin ${updated.customId} profile updated successfully!`,
+        admin: updated,
+      });
+    }
+
     return NextResponse.json({ error: "Invalid action" }, { status: 400 });
   } catch (error: any) {
     console.error("[SuperAdmin Admins PATCH Error]:", error);

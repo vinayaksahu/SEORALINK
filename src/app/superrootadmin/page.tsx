@@ -32,6 +32,8 @@ import {
   Globe,
   Sliders,
   Check,
+  Edit3,
+  UserCog,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 
@@ -141,6 +143,18 @@ export default function SuperRootAdminPage() {
   const [newPassword, setNewPassword] = useState("");
   const [passwordLoading, setPasswordLoading] = useState(false);
   const [passwordMsg, setPasswordMsg] = useState("");
+
+  // Edit Admin Profile Modal
+  const [editModalAdmin, setEditModalAdmin] = useState<AdminItem | null>(null);
+  const [editForm, setEditForm] = useState({
+    fullName: "",
+    customId: "",
+    email: "",
+    phone: "",
+    newPassword: "",
+  });
+  const [editLoading, setEditLoading] = useState(false);
+  const [editError, setEditError] = useState("");
 
   const loadAllData = async () => {
     try {
@@ -340,6 +354,56 @@ export default function SuperRootAdminPage() {
       setPasswordMsg(err.message);
     } finally {
       setPasswordLoading(false);
+    }
+  };
+
+  const handleOpenEditModal = (admin: AdminItem) => {
+    setEditModalAdmin(admin);
+    setEditForm({
+      fullName: admin.fullName || "",
+      customId: admin.customId || "",
+      email: admin.email || "",
+      phone: admin.phone || "",
+      newPassword: "",
+    });
+    setEditError("");
+  };
+
+  const handleUpdateAdminProfile = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editModalAdmin) return;
+    setEditLoading(true);
+    setEditError("");
+
+    try {
+      const res = await fetch("/api/superadmin/admins", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          adminId: editModalAdmin.id,
+          action: "UPDATE_PROFILE",
+          fullName: editForm.fullName,
+          customId: editForm.customId,
+          email: editForm.email,
+          phone: editForm.phone,
+          password: editForm.newPassword || undefined,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to update admin profile");
+
+      setEditModalAdmin(null);
+      loadAllData();
+      setActionMsg({
+        type: "success",
+        text: data.message || `Admin ${editForm.customId} profile updated successfully!`,
+      });
+      setTimeout(() => setActionMsg(null), 3500);
+    } catch (err: any) {
+      setEditError(err.message);
+    } finally {
+      setEditLoading(false);
     }
   };
 
@@ -695,20 +759,48 @@ export default function SuperRootAdminPage() {
                       filteredAdmins.map((adm) => (
                         <tr key={adm.id} className="hover:bg-slate-800/30 transition-colors">
                           <td className="py-3.5 px-4">
-                            <div className="flex items-center gap-2.5">
-                              <div className="w-8 h-8 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center font-bold text-amber-400 font-mono text-xs">
+                            <button
+                              type="button"
+                              onClick={() => handleOpenEditModal(adm)}
+                              className="group flex items-center gap-2.5 text-left p-1.5 -m-1.5 rounded-xl hover:bg-slate-800/80 transition border border-transparent hover:border-rose-500/30 cursor-pointer"
+                              title="Click to edit Admin Name, ID, Email, Phone or Password"
+                            >
+                              <div className="w-8 h-8 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center font-bold text-amber-400 font-mono text-xs group-hover:border-rose-500 group-hover:text-rose-400 transition shrink-0 shadow-sm">
                                 {adm.customId.slice(-2)}
                               </div>
                               <div>
-                                <p className="font-bold text-white text-sm">{adm.fullName}</p>
-                                <p className="text-slate-400 font-mono text-[11px]">{adm.customId}</p>
+                                <div className="flex items-center gap-1.5">
+                                  <p className="font-bold text-white text-sm group-hover:text-rose-400 transition flex items-center gap-1.5">
+                                    {adm.fullName}
+                                    <span className="opacity-0 group-hover:opacity-100 transition-opacity p-0.5 rounded bg-rose-500/20 text-rose-300">
+                                      <Edit3 className="w-3 h-3" />
+                                    </span>
+                                  </p>
+                                </div>
+                                <div className="flex items-center gap-2 mt-0.5">
+                                  <span className="text-slate-400 font-mono text-[11px] group-hover:text-slate-300">{adm.customId}</span>
+                                  <span className="text-[10px] font-mono text-rose-400/90 group-hover:text-rose-300 underline underline-offset-2">
+                                    Edit Profile ✎
+                                  </span>
+                                </div>
                               </div>
-                            </div>
+                            </button>
                           </td>
 
                           <td className="py-3.5 px-4">
-                            <p className="text-slate-300">{adm.email}</p>
-                            <p className="text-slate-500 font-mono text-[11px]">{adm.phone || "No phone"}</p>
+                            <button
+                              type="button"
+                              onClick={() => handleOpenEditModal(adm)}
+                              className="text-left group/contact hover:opacity-90 cursor-pointer"
+                              title="Click to edit Contact Info"
+                            >
+                              <p className="text-slate-300 group-hover/contact:text-rose-300 transition flex items-center gap-1">
+                                {adm.email}
+                              </p>
+                              <p className="text-slate-500 font-mono text-[11px] group-hover/contact:text-rose-400/80 transition">
+                                {adm.phone || "No phone"}
+                              </p>
+                            </button>
                           </td>
 
                           <td className="py-3.5 px-4 font-mono">
@@ -755,6 +847,16 @@ export default function SuperRootAdminPage() {
                               >
                                 <Eye className="w-3.5 h-3.5" />
                                 Inspect
+                              </button>
+
+                              {/* Edit Profile Button */}
+                              <button
+                                onClick={() => handleOpenEditModal(adm)}
+                                className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-rose-500/15 hover:bg-rose-500/25 text-rose-300 font-bold text-xs transition border border-rose-500/30 cursor-pointer shadow-sm"
+                                title="Edit Admin Profile (Name, ID, Email, Phone, Password)"
+                              >
+                                <UserCog className="w-3.5 h-3.5" />
+                                Edit
                               </button>
 
                               {/* Reset Password */}
@@ -1794,6 +1896,128 @@ export default function SuperRootAdminPage() {
                   className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold transition disabled:opacity-50 cursor-pointer"
                 >
                   {passwordLoading ? "Updating..." : "Update Password"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* EDIT ADMIN PROFILE MODAL */}
+      {editModalAdmin && (
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="w-full max-w-lg bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-4 shadow-2xl relative">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+              <div>
+                <h3 className="text-sm font-black text-white flex items-center gap-2">
+                  <UserCog className="w-4 h-4 text-rose-500" />
+                  Edit Admin Profile: <span className="text-amber-400 font-mono">{editModalAdmin.customId}</span>
+                </h3>
+                <p className="text-[11px] text-slate-400 mt-0.5">
+                  Super Root Master Control: Update admin name, custom ID, email, phone, and password
+                </p>
+              </div>
+              <button
+                onClick={() => setEditModalAdmin(null)}
+                className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 transition cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {editError && (
+              <div className="p-3 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-300 text-xs font-semibold flex items-center gap-2">
+                <AlertTriangle className="w-4 h-4 shrink-0" />
+                <span>{editError}</span>
+              </div>
+            )}
+
+            <form onSubmit={handleUpdateAdminProfile} className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-[11px] font-mono font-bold text-slate-300 uppercase tracking-wider mb-1">
+                    Admin Name <span className="text-rose-400">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={editForm.fullName}
+                    onChange={(e) => setEditForm({ ...editForm, fullName: e.target.value })}
+                    placeholder="Full Name"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-xs text-white outline-none focus:border-rose-500 transition"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-mono font-bold text-slate-300 uppercase tracking-wider mb-1">
+                    Admin ID (Custom ID) <span className="text-rose-400">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={editForm.customId}
+                    onChange={(e) => setEditForm({ ...editForm, customId: e.target.value })}
+                    placeholder="e.g. SL000001"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-xs text-white font-mono uppercase outline-none focus:border-rose-500 transition"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-mono font-bold text-slate-300 uppercase tracking-wider mb-1">
+                  Email Address <span className="text-rose-400">*</span>
+                </label>
+                <input
+                  type="email"
+                  required
+                  value={editForm.email}
+                  onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
+                  placeholder="admin@seoralink.com"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-xs text-white font-mono outline-none focus:border-rose-500 transition"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-mono font-bold text-slate-300 uppercase tracking-wider mb-1">
+                  Phone Number
+                </label>
+                <input
+                  type="text"
+                  value={editForm.phone}
+                  onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })}
+                  placeholder="e.g. 9876543210 or +91..."
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-xs text-white outline-none focus:border-rose-500 transition font-mono"
+                />
+              </div>
+
+              <div className="p-3.5 rounded-2xl bg-slate-950/60 border border-slate-800 space-y-1.5">
+                <label className="block text-[11px] font-mono font-bold text-slate-300 uppercase tracking-wider mb-1">
+                  Set New Password (Optional)
+                </label>
+                <input
+                  type="password"
+                  value={editForm.newPassword}
+                  onChange={(e) => setEditForm({ ...editForm, newPassword: e.target.value })}
+                  placeholder="Leave blank to keep existing password"
+                  className="w-full px-3.5 py-2 rounded-xl bg-slate-900 border border-slate-700 text-xs text-white outline-none focus:border-rose-500 font-mono"
+                />
+                <p className="text-[10px] text-slate-500">Only enter if you wish to overwrite this admin's login password (minimum 6 characters).</p>
+              </div>
+
+              <div className="flex items-center justify-end gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setEditModalAdmin(null)}
+                  className="px-4 py-2.5 rounded-xl border border-slate-700 text-slate-300 text-xs font-bold hover:bg-slate-800 transition cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={editLoading}
+                  className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-rose-600 to-rose-700 hover:from-rose-500 text-white text-xs font-bold transition shadow-lg shadow-rose-600/20 disabled:opacity-50 cursor-pointer flex items-center gap-2"
+                >
+                  {editLoading ? "Saving Changes..." : "Save Profile Changes"}
                 </button>
               </div>
             </form>
