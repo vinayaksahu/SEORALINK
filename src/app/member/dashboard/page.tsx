@@ -157,7 +157,7 @@ export default async function MemberDashboardPage() {
             <div>
               <div className="text-xs font-bold text-white">Setup Your USDT Withdrawal Wallet</div>
               <div className="text-[11px] text-[#cbd5e1] mt-0.5">
-                Add your USDT BEP-20 or TRC-20 payout address in your profile to enable fast Commission Wallet &amp; Rank Pool payouts.
+                Add your USDT BEP-20 payout address in your profile to enable fast Commission Wallet &amp; Rank Pool payouts.
               </div>
             </div>
           </div>

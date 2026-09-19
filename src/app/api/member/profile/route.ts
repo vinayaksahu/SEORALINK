@@ -109,17 +109,14 @@ export async function PATCH(req: Request) {
     // 3. Process Phone Number
     const cleanPhone = phone && typeof phone === "string" ? phone.trim() : null;
 
-    // 4. Validate and Process USDT Address
+    // 4. Validate and Process USDT Address (BEP-20 only)
     const cleanAddress = usdtAddress && typeof usdtAddress === "string" ? usdtAddress.trim() : null;
-    const cleanNetwork =
-      usdtNetwork && typeof usdtNetwork === "string" && usdtNetwork.trim()
-        ? usdtNetwork.trim()
-        : "USDT_BEP20";
+    const cleanNetwork = "USDT_BEP20";
 
     if (cleanAddress) {
-      if (cleanAddress.length < 10 || cleanAddress.length > 100) {
+      if (!cleanAddress.startsWith("0x") || cleanAddress.length !== 42) {
         return NextResponse.json(
-          { error: "Please provide a valid USDT wallet address." },
+          { error: "Please provide a valid BNB Smart Chain (BEP-20) address starting with 0x (42 characters)." },
           { status: 400 }
         );
       }

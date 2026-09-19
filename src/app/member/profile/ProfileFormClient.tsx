@@ -100,9 +100,12 @@ export default function ProfileFormClient({ user: initialUser }: ProfileFormClie
       return;
     }
 
-    if (usdtAddress.trim() && usdtAddress.trim().length < 10) {
-      setError("Please provide a valid USDT wallet address (min 10 characters).");
-      return;
+    if (usdtAddress.trim()) {
+      const trimmed = usdtAddress.trim();
+      if (!trimmed.startsWith("0x") || trimmed.length !== 42) {
+        setError("Please enter a valid BNB Smart Chain (BEP-20) address starting with 0x (42 characters).");
+        return;
+      }
     }
 
     setLoading(true);
@@ -331,51 +334,26 @@ export default function ProfileFormClient({ user: initialUser }: ProfileFormClie
               </div>
 
               <div className="space-y-4">
-                {/* Network Selection Chips */}
+                {/* Network Standard - Only BEP-20 */}
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-[#cbd5e1] uppercase tracking-wider">
-                    USDT Network Standard *
-                  </label>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                    <button
-                      type="button"
-                      onClick={() => setUsdtNetwork("USDT_BEP20")}
-                      className={`p-3 rounded-xl border text-left transition-all cursor-pointer ${
-                        usdtNetwork === "USDT_BEP20"
-                          ? "bg-[#38bdf8]/15 border-[#38bdf8] text-white shadow-lg shadow-[#38bdf8]/10"
-                          : "bg-[#070a14] border-[#1e293b] text-[#94a3b8] hover:border-slate-700"
-                      }`}
-                    >
-                      <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-bold text-[#cbd5e1] uppercase tracking-wider">
+                      USDT Network Standard
+                    </label>
+                    <span className="text-[10px] text-[#38bdf8] font-mono font-bold">BEP-20 Only</span>
+                  </div>
+                  <div className="p-3.5 rounded-xl border border-[#38bdf8]/40 bg-[#0b1120] flex items-center justify-between shadow-sm">
+                    <div className="space-y-0.5">
+                      <div className="flex items-center gap-2">
                         <span className="font-bold text-xs text-white">USDT (BEP-20)</span>
-                        <span className="text-[9px] bg-[#38bdf8]/20 text-[#38bdf8] px-1.5 py-0.5 rounded font-bold">
-                          Recommended
+                        <span className="text-[9px] bg-[#38bdf8]/20 text-[#38bdf8] px-2 py-0.5 rounded-full font-bold border border-[#38bdf8]/30">
+                          BNB Smart Chain (BSC)
                         </span>
                       </div>
-                      <p className="text-[10px] text-[#94a3b8] mt-1">
-                        BNB Smart Chain (Lowest gas fee &amp; instant confirmations)
+                      <p className="text-[10px] text-[#94a3b8]">
+                        Official network for all deposits and withdrawals (Lowest gas fees &amp; instant confirmations).
                       </p>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => setUsdtNetwork("USDT_TRC20")}
-                      className={`p-3 rounded-xl border text-left transition-all cursor-pointer ${
-                        usdtNetwork === "USDT_TRC20"
-                          ? "bg-emerald-500/15 border-emerald-500 text-white shadow-lg shadow-emerald-500/10"
-                          : "bg-[#070a14] border-[#1e293b] text-[#94a3b8] hover:border-slate-700"
-                      }`}
-                    >
-                      <div className="flex items-center justify-between">
-                        <span className="font-bold text-xs text-white">USDT (TRC-20)</span>
-                        <span className="text-[9px] bg-emerald-500/20 text-emerald-400 px-1.5 py-0.5 rounded font-bold">
-                          Tron
-                        </span>
-                      </div>
-                      <p className="text-[10px] text-[#94a3b8] mt-1">
-                        Tron TRC-20 high-speed transfer network
-                      </p>
-                    </button>
+                    </div>
                   </div>
                 </div>
 
@@ -384,7 +362,7 @@ export default function ProfileFormClient({ user: initialUser }: ProfileFormClie
                   <div className="flex items-center justify-between">
                     <label className="text-xs font-bold text-[#cbd5e1] uppercase tracking-wider flex items-center gap-1.5">
                       <Wallet size={13} className="text-emerald-400" />
-                      <span>Your USDT Wallet Address</span>
+                      <span>Your USDT Wallet Address (0x...)</span>
                     </label>
                     <button
                       type="button"
@@ -399,12 +377,8 @@ export default function ProfileFormClient({ user: initialUser }: ProfileFormClie
                       type="text"
                       value={usdtAddress}
                       onChange={(e) => setUsdtAddress(e.target.value)}
-                      placeholder={
-                        usdtNetwork === "USDT_BEP20"
-                          ? "0x... (BEP-20 / EVM address)"
-                          : "T... (Tron TRC-20 address)"
-                      }
-                      className="w-full bg-[#070a14] border border-[#1e293b] text-white rounded-lg pl-3.5 pr-20 py-2.5 text-xs font-mono focus:outline-none focus:border-emerald-500 transition-all"
+                      placeholder="0x... (BNB Smart Chain BEP-20 address)"
+                      className="w-full bg-[#070a14] border border-[#1e293b] text-white rounded-lg pl-3.5 pr-20 py-2.5 text-xs font-mono focus:outline-none focus:border-[#38bdf8] transition-all"
                     />
                     {usdtAddress && (
                       <button
@@ -423,7 +397,7 @@ export default function ProfileFormClient({ user: initialUser }: ProfileFormClie
                     )}
                   </div>
                   <p className="text-[10px] text-[#94a3b8] leading-relaxed">
-                    Please ensure this address supports <strong>{usdtNetwork}</strong>. Withdrawals from Commission Wallet and Rank Pool payouts will be dispatched here.
+                    Please ensure this address is on <strong>BNB Smart Chain (BEP-20)</strong>. Withdrawals from Commission Wallet and Rank Pool payouts will be dispatched here.
                   </p>
                 </div>
               </div>

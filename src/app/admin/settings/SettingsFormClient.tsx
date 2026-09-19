@@ -513,7 +513,7 @@ export default function SettingsFormClient({
                       {item.label || `Wallet ${index + 1}`}
                     </span>
                     <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[#38bdf8]/10 text-[#38bdf8] border border-[#38bdf8]/30">
-                      {item.network === "USDT_TRC20" ? "TRC-20" : "BEP-20"}
+                      BEP-20
                     </span>
                     {item.isPrimary && (
                       <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-[#d4af37]/15 text-[#d4af37] border border-[#d4af37]/40 flex items-center gap-1">
