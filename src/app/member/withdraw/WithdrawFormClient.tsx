@@ -174,8 +174,9 @@ export default function WithdrawFormClient({
       // Check if WITHDRAWAL OTP is enabled in system settings
       const statusRes = await fetch("/api/auth/otp/status?purpose=WITHDRAWAL");
       const statusData = await statusRes.json();
+      const isOtpRequired = statusData.enabled !== false && statusData.settings?.WITHDRAWAL !== false;
 
-      if (statusData.enabled) {
+      if (isOtpRequired) {
         setPendingPayload(payload);
         setShowOtpModal(true);
         setOtpCode("");

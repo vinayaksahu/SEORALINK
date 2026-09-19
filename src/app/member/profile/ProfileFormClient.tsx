@@ -224,8 +224,9 @@ export default function ProfileFormClient({ user: initialUser }: ProfileFormClie
         // Check if PROFILE_UPDATE OTP is enabled in system settings
         const statusRes = await fetch("/api/auth/otp/status?purpose=PROFILE_UPDATE");
         const statusData = await statusRes.json();
+        const isOtpRequired = statusData.enabled !== false && statusData.settings?.PROFILE_UPDATE !== false;
 
-        if (statusData.enabled) {
+        if (isOtpRequired) {
           setPendingProfilePayload(payload);
           setShowOtpModal(true);
           setOtpCode("");

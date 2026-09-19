@@ -1,13 +1,23 @@
 import { NextResponse } from "next/server";
-import { getAllOtpSettings } from "@/lib/otp";
+import { getAllOtpSettings, OtpPurpose } from "@/lib/otp";
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
+    const { searchParams } = new URL(req.url);
+    const purpose = searchParams.get("purpose") as OtpPurpose | null;
+
     const settings = await getAllOtpSettings();
-    return NextResponse.json({ success: true, settings });
+
+    let enabled = true;
+    if (purpose && purpose in settings) {
+      enabled = settings[purpose];
+    }
+
+    return NextResponse.json({ success: true, enabled, settings });
   } catch (error: any) {
     return NextResponse.json({
       success: true,
+      enabled: true,
       settings: {
         REGISTRATION: true,
         FORGOT_PASSWORD: true,
