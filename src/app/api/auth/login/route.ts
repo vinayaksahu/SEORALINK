@@ -127,17 +127,11 @@ export async function POST(req: Request) {
         );
       }
     } else {
-      // Default member portal
-      if (isSuperRoot) {
+      // Default member portal - do not reveal administrator status for security
+      if (isSuperRoot || isAdmin) {
         return NextResponse.json(
           { error: "Invalid Member ID or password" },
           { status: 401 }
-        );
-      }
-      if (isAdmin) {
-        return NextResponse.json(
-          { error: "Access Denied. Administrator accounts cannot log in through the Member Portal. Please use the official Admin Portal at /adminlogin." },
-          { status: 403 }
         );
       }
     }
