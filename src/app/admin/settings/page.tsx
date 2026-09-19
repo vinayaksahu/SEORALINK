@@ -5,6 +5,7 @@ import { db } from "@/lib/db";
 import { redirect } from "next/navigation";
 import SettingsFormClient from "./SettingsFormClient";
 import { Settings, Database, ArrowRight } from "lucide-react";
+import { getAllOtpSettings } from "@/lib/otp";
 
 export default async function AdminSettingsPage() {
   const session = await getSession();
@@ -51,6 +52,8 @@ export default async function AdminSettingsPage() {
     ];
   }
 
+  const otpSettings = await getAllOtpSettings();
+
   return (
     <div className="space-y-8">
       <div>
@@ -93,6 +96,7 @@ export default async function AdminSettingsPage() {
         initialAddresses={initialAddresses}
         initialDistributionMode={distributionMode}
         initialNetwork={network}
+        initialOtpSettings={otpSettings}
       />
     </div>
   );

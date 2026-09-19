@@ -4,10 +4,11 @@ import { hashPassword, createSessionToken } from "@/lib/auth";
 import { generateCustomId } from "@/lib/utils";
 import { cookies } from "next/headers";
 import { isUserSystemExited } from "@/lib/userStatus";
+import { validateAndConsumeOtp } from "@/lib/otp";
 
 export async function POST(req: Request) {
   try {
-    const { fullName, email, phone, password, sponsorCode } = await req.json();
+    const { fullName, email, phone, password, sponsorCode, otpCode } = await req.json();
 
     if (!fullName || !email || !password) {
       return NextResponse.json(
@@ -30,6 +31,20 @@ export async function POST(req: Request) {
     if (existing) {
       return NextResponse.json(
         { error: "Email address is already registered" },
+        { status: 400 }
+      );
+    }
+
+    // Verify OTP code if Registration OTP is enabled
+    const otpValidation = await validateAndConsumeOtp({
+      email: email.toLowerCase().trim(),
+      code: otpCode,
+      purpose: "REGISTRATION",
+    });
+
+    if (!otpValidation.success) {
+      return NextResponse.json(
+        { error: otpValidation.error || "Email verification OTP code is invalid or expired." },
         { status: 400 }
       );
     }

@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { RATES, TIER_NAMES, TIER_VALUES, NET_CASHOUT_VALUES } from "@/lib/constants";
 import { executeLedgerTransaction } from "@/lib/ledger";
 import Decimal from "decimal.js";
+import { validateAndConsumeOtp } from "@/lib/otp";
 
 export async function POST(req: Request) {
   try {
@@ -12,12 +13,35 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Unauthorized access" }, { status: 401 });
     }
 
-    const { category, amount, toAddress } = await req.json();
+    const { category, amount, toAddress, otpCode } = await req.json();
 
     const cleanAddress = toAddress ? toAddress.trim() : "";
     if (!cleanAddress || !cleanAddress.startsWith("0x") || cleanAddress.length !== 42) {
       return NextResponse.json(
         { error: "A valid Binance Smart Chain (BEP-20) destination address starting with 0x (42 characters) is required" },
+        { status: 400 }
+      );
+    }
+
+    // Verify OTP code if withdrawal OTP is enabled
+    const userForOtp = await db.user.findUnique({
+      where: { id: session.userId },
+      select: { email: true },
+    });
+
+    if (!userForOtp?.email) {
+      return NextResponse.json({ error: "User account email not found" }, { status: 400 });
+    }
+
+    const otpValidation = await validateAndConsumeOtp({
+      email: userForOtp.email,
+      code: otpCode,
+      purpose: "WITHDRAWAL",
+    });
+
+    if (!otpValidation.success) {
+      return NextResponse.json(
+        { error: otpValidation.error || "Withdrawal authorization OTP code is invalid or expired." },
         { status: 400 }
       );
     }

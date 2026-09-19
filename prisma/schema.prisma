@@ -183,3 +183,17 @@ model SupportTicket {
 
   @@index([userId])
 }
+
+model EmailOtp {
+  id        String   @id @default(cuid())
+  email     String
+  code      String
+  purpose   String   // "REGISTRATION", "FORGOT_PASSWORD", "WITHDRAWAL", "PROFILE_UPDATE"
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([email, purpose])
+  @@index([createdAt])
+}
+

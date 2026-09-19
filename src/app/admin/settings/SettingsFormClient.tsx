@@ -16,6 +16,10 @@ import {
   ShieldCheck,
   Wallet,
   Pencil,
+  Mail,
+  KeyRound,
+  UserCheck,
+  Shield,
 } from "lucide-react";
 
 export interface DepositAddressItem {
@@ -32,13 +36,29 @@ export default function SettingsFormClient({
   initialAddresses,
   initialDistributionMode,
   initialNetwork,
+  initialOtpSettings,
 }: {
   initialAddress: string;
   initialAddresses?: DepositAddressItem[];
   initialDistributionMode?: string;
   initialNetwork: string;
+  initialOtpSettings?: Record<string, boolean>;
 }) {
   const router = useRouter();
+
+  const [otpSettings, setOtpSettings] = useState<Record<string, boolean>>(() => ({
+    REGISTRATION: initialOtpSettings?.REGISTRATION ?? true,
+    FORGOT_PASSWORD: initialOtpSettings?.FORGOT_PASSWORD ?? true,
+    WITHDRAWAL: initialOtpSettings?.WITHDRAWAL ?? true,
+    PROFILE_UPDATE: initialOtpSettings?.PROFILE_UPDATE ?? true,
+  }));
+
+  const handleToggleOtp = (key: string) => {
+    setOtpSettings((prev) => ({
+      ...prev,
+      [key]: !prev[key],
+    }));
+  };
 
   const [addresses, setAddresses] = useState<DepositAddressItem[]>(() => {
     if (initialAddresses && initialAddresses.length > 0) {
@@ -231,6 +251,7 @@ export default function SettingsFormClient({
           depositAddresses: addresses,
           distributionMode,
           network,
+          otpSettings,
         }),
       });
 
@@ -604,6 +625,130 @@ export default function SettingsFormClient({
               </div>
             );
           })}
+        </div>
+      </div>
+
+      {/* Email OTP Security Multi-Factor Governance */}
+      <div className="space-y-4 pt-4 border-t border-[#1e293b]">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div>
+            <label className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
+              <ShieldCheck size={16} className="text-[#10b981]" />
+              Email OTP Multi-Factor Security Governance
+            </label>
+            <p className="text-[11px] text-[#94a3b8] mt-0.5">
+              Control when members &amp; administrators are required to verify actions via 6-digit email OTP.
+            </p>
+          </div>
+          <span className="text-[10px] font-mono px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-bold self-start sm:self-auto flex items-center gap-1.5">
+            <Mail size={11} /> Namecheap Private Email Active
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {/* 1. Registration OTP */}
+          <div className="p-3.5 rounded-xl border border-[#1e293b] bg-[#070a14] flex items-start justify-between gap-3 hover:border-slate-700 transition-colors">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <UserCheck size={14} className="text-[#38bdf8]" />
+                <span className="text-xs font-bold text-white">Registration OTP</span>
+              </div>
+              <p className="text-[10px] text-[#94a3b8] leading-relaxed">
+                Require 6-digit email verification before new account is created. Prevents fake emails &amp; bot signups.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => handleToggleOtp("REGISTRATION")}
+              className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                otpSettings.REGISTRATION ? "bg-emerald-500" : "bg-slate-700"
+              }`}
+            >
+              <span
+                className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                  otpSettings.REGISTRATION ? "translate-x-4" : "translate-x-0"
+                }`}
+              />
+            </button>
+          </div>
+
+          {/* 2. Forgot Password OTP */}
+          <div className="p-3.5 rounded-xl border border-[#1e293b] bg-[#070a14] flex items-start justify-between gap-3 hover:border-slate-700 transition-colors">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <KeyRound size={14} className="text-[#d4af37]" />
+                <span className="text-xs font-bold text-white">Forgot Password OTP</span>
+              </div>
+              <p className="text-[10px] text-[#94a3b8] leading-relaxed">
+                Authorize password recovery via email verification code before updating password.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => handleToggleOtp("FORGOT_PASSWORD")}
+              className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                otpSettings.FORGOT_PASSWORD ? "bg-emerald-500" : "bg-slate-700"
+              }`}
+            >
+              <span
+                className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                  otpSettings.FORGOT_PASSWORD ? "translate-x-4" : "translate-x-0"
+                }`}
+              />
+            </button>
+          </div>
+
+          {/* 3. Withdrawal Request OTP */}
+          <div className="p-3.5 rounded-xl border border-[#1e293b] bg-[#070a14] flex items-start justify-between gap-3 hover:border-slate-700 transition-colors">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <Shield size={14} className="text-emerald-400" />
+                <span className="text-xs font-bold text-white">Withdrawal Authorization OTP</span>
+              </div>
+              <p className="text-[10px] text-[#94a3b8] leading-relaxed">
+                Require email OTP before submitting Commission or Rank Pool cashout requests. Protects member funds.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => handleToggleOtp("WITHDRAWAL")}
+              className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                otpSettings.WITHDRAWAL ? "bg-emerald-500" : "bg-slate-700"
+              }`}
+            >
+              <span
+                className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                  otpSettings.WITHDRAWAL ? "translate-x-4" : "translate-x-0"
+                }`}
+              />
+            </button>
+          </div>
+
+          {/* 4. Profile & Wallet Update OTP */}
+          <div className="p-3.5 rounded-xl border border-[#1e293b] bg-[#070a14] flex items-start justify-between gap-3 hover:border-slate-700 transition-colors">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <Wallet size={14} className="text-purple-400" />
+                <span className="text-xs font-bold text-white">Profile &amp; Wallet Edit OTP</span>
+              </div>
+              <p className="text-[10px] text-[#94a3b8] leading-relaxed">
+                Require OTP confirmation when user or admin updates USDT payout address, Full Name, Email, or Phone.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => handleToggleOtp("PROFILE_UPDATE")}
+              className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                otpSettings.PROFILE_UPDATE ? "bg-emerald-500" : "bg-slate-700"
+              }`}
+            >
+              <span
+                className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                  otpSettings.PROFILE_UPDATE ? "translate-x-4" : "translate-x-0"
+                }`}
+              />
+            </button>
+          </div>
         </div>
       </div>
 

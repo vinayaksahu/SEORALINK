@@ -9,7 +9,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Unauthorized administrative access" }, { status: 403 });
     }
 
-    const { usdtAddress, network, depositAddresses, distributionMode } = await req.json();
+    const { usdtAddress, network, depositAddresses, distributionMode, otpSettings } = await req.json();
 
     let primaryAddress = usdtAddress ? usdtAddress.trim() : "";
 
@@ -79,6 +79,29 @@ export async function POST(req: Request) {
           description: "Default deposit blockchain network",
         },
       });
+    }
+
+    if (otpSettings && typeof otpSettings === "object") {
+      const keys = [
+        { key: "OTP_ENABLED_REGISTRATION", val: otpSettings.REGISTRATION },
+        { key: "OTP_ENABLED_FORGOT_PASSWORD", val: otpSettings.FORGOT_PASSWORD },
+        { key: "OTP_ENABLED_WITHDRAWAL", val: otpSettings.WITHDRAWAL },
+        { key: "OTP_ENABLED_PROFILE_UPDATE", val: otpSettings.PROFILE_UPDATE },
+      ];
+
+      for (const item of keys) {
+        if (typeof item.val === "boolean") {
+          await db.systemConfig.upsert({
+            where: { key: item.key },
+            update: { value: item.val ? "true" : "false" },
+            create: {
+              key: item.key,
+              value: item.val ? "true" : "false",
+              description: `Email OTP security toggle for ${item.key}`,
+            },
+          });
+        }
+      }
     }
 
     return NextResponse.json({

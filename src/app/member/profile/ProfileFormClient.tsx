@@ -360,9 +360,6 @@ export default function ProfileFormClient({ user: initialUser }: ProfileFormClie
                       <span>Phone Number</span>
                       <span className="text-[10px] text-[#64748b] font-normal lowercase">(optional)</span>
                     </span>
-                    <span className="text-[10px] text-[#94a3b8] font-normal">
-                      Enter 10-digit number
-                    </span>
                   </label>
                   <div className="relative flex items-center">
                     {/* Auto-selected country dial code badge */}
@@ -373,27 +370,18 @@ export default function ProfileFormClient({ user: initialUser }: ProfileFormClie
                     <input
                       type="tel"
                       value={phoneDigits}
-                      maxLength={15}
+                      maxLength={18}
                       onChange={(e) => {
                         const cleaned = e.target.value.replace(/[^0-9\s-]/g, "");
                         setPhoneDigits(cleaned);
                       }}
-                      placeholder="10-1234-5678"
+                      placeholder="e.g. 10-1234-5678"
                       style={{ paddingLeft: `${selectedCountry.dialCode.length > 3 ? "94px" : "86px"}` }}
                       className="w-full bg-[#070a14] border border-[#1e293b] text-white rounded-lg pr-4 py-2.5 text-xs focus:outline-none focus:border-[#d4af37] transition-all font-mono"
                     />
                   </div>
-                  <div className="flex items-center justify-between text-[10px] text-[#64748b] pt-0.5">
-                    <span>
-                      Country code <strong className="text-[#d4af37]">{selectedCountry.dialCode}</strong> is auto-applied.
-                    </span>
-                    {phoneDigits.replace(/\D/g, "").length > 0 && (
-                      <span className={`font-mono font-bold ${
-                        phoneDigits.replace(/\D/g, "").length === 10 ? "text-emerald-400" : "text-amber-400"
-                      }`}>
-                        {phoneDigits.replace(/\D/g, "").length}/10 digits
-                      </span>
-                    )}
+                  <div className="text-[10px] text-[#64748b] pt-0.5">
+                    Country code <strong className="text-[#d4af37]">{selectedCountry.dialCode}</strong> is auto-applied.
                   </div>
                 </div>
               </div>

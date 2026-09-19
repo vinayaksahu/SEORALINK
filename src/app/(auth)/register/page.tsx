@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Logo } from "@/components/Logo";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { Lock, Mail, User as UserIcon, Phone, Users, ArrowRight, AlertCircle, CheckCircle, Globe, ChevronDown } from "lucide-react";
+import { Lock, Mail, User as UserIcon, Phone, Users, ArrowRight, AlertCircle, CheckCircle, Globe, ChevronDown, ShieldCheck } from "lucide-react";
 import { COUNTRIES, DEFAULT_COUNTRY, type Country } from "@/lib/countries";
 
 function RegisterForm() {
@@ -22,6 +22,63 @@ function RegisterForm() {
   const [checkingSponsor, setCheckingSponsor] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  // OTP Verification States
+  const [otpCode, setOtpCode] = useState("");
+  const [otpSent, setOtpSent] = useState(false);
+  const [sendingOtp, setSendingOtp] = useState(false);
+  const [otpCooldown, setOtpCooldown] = useState(0);
+  const [otpEnabled, setOtpEnabled] = useState(true);
+  const [otpSuccessMsg, setOtpSuccessMsg] = useState("");
+
+  useEffect(() => {
+    fetch("/api/auth/otp/status")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data?.settings?.REGISTRATION !== undefined) {
+          setOtpEnabled(data.settings.REGISTRATION);
+        }
+      })
+      .catch(() => setOtpEnabled(true));
+  }, []);
+
+  useEffect(() => {
+    if (otpCooldown > 0) {
+      const timer = setTimeout(() => setOtpCooldown((prev) => prev - 1), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [otpCooldown]);
+
+  const handleSendOtp = async () => {
+    if (!email || !email.includes("@")) {
+      setError("Please enter a valid email address first.");
+      return;
+    }
+    setError("");
+    setOtpSuccessMsg("");
+    setSendingOtp(true);
+    try {
+      const res = await fetch("/api/auth/otp/send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          purpose: "REGISTRATION",
+          email: email.trim(),
+          fullName: fullName.trim() || undefined,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to send verification code");
+      setOtpSent(true);
+      setOtpCooldown(45);
+      setOtpSuccessMsg(data.message || "Verification code sent to your email!");
+      setTimeout(() => setOtpSuccessMsg(""), 5000);
+    } catch (err: any) {
+      setError(err.message || "Failed to dispatch verification code");
+    } finally {
+      setSendingOtp(false);
+    }
+  };
 
   useEffect(() => {
     const ref = searchParams.get("ref");
@@ -59,6 +116,12 @@ function RegisterForm() {
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+
+    if (otpEnabled && (!otpCode || otpCode.trim().length !== 6)) {
+      setError("Please enter the 6-digit verification code sent to your email.");
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -75,6 +138,7 @@ function RegisterForm() {
           phone: fullPhone,
           password,
           sponsorCode: sponsorCode.trim(),
+          otpCode: otpEnabled ? otpCode.trim() : undefined,
         }),
       });
 
@@ -183,6 +247,46 @@ function RegisterForm() {
               </div>
             </div>
 
+            {/* Email Verification OTP (when enabled by Admin) */}
+            {otpEnabled && (
+              <div className="space-y-2 p-3.5 rounded-xl border border-[#38bdf8]/40 bg-[#071124]">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-bold text-[#38bdf8] uppercase tracking-wider flex items-center gap-1.5">
+                    <ShieldCheck size={14} className="text-[#38bdf8]" />
+                    <span>Email Verification Code *</span>
+                  </label>
+                  <button
+                    type="button"
+                    disabled={sendingOtp || otpCooldown > 0 || !email || !email.includes("@")}
+                    onClick={handleSendOtp}
+                    className="text-[11px] font-bold text-[#38bdf8] hover:underline disabled:opacity-50 cursor-pointer"
+                  >
+                    {sendingOtp
+                      ? "Sending..."
+                      : otpCooldown > 0
+                      ? `Resend in ${otpCooldown}s`
+                      : otpSent
+                      ? "Resend Code"
+                      : "Send OTP Code"}
+                  </button>
+                </div>
+                <input
+                  type="text"
+                  maxLength={6}
+                  value={otpCode}
+                  onChange={(e) => setOtpCode(e.target.value.replace(/[^0-9]/g, ""))}
+                  placeholder="Enter 6-digit code"
+                  className="w-full bg-[#0b1120] border border-[#38bdf8]/40 text-white rounded-lg px-3.5 py-2.5 text-xs font-mono font-bold tracking-widest focus:outline-none focus:border-[#38bdf8]"
+                />
+                {otpSuccessMsg && (
+                  <p className="text-[11px] text-emerald-400 font-semibold">{otpSuccessMsg}</p>
+                )}
+                <p className="text-[10px] text-[#94a3b8]">
+                  Click &apos;Send OTP Code&apos; to receive your verification code via Namecheap Private Email.
+                </p>
+              </div>
+            )}
+
             {/* Country Selection */}
             <div className="space-y-1.5">
               <label className="text-xs font-bold text-[#cbd5e1] uppercase tracking-wider flex items-center justify-between">
@@ -214,11 +318,8 @@ function RegisterForm() {
 
             {/* Phone Number (Optional) with Auto-Selected Country Code */}
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-[#cbd5e1] uppercase tracking-wider flex items-center justify-between">
-                <span>Phone Number (Optional)</span>
-                <span className="text-[10px] text-[#94a3b8] font-normal">
-                  Enter 10-digit number
-                </span>
+              <label className="text-xs font-bold text-[#cbd5e1] uppercase tracking-wider block">
+                Phone Number (Optional)
               </label>
               <div className="relative flex items-center">
                 {/* Auto-selected Country Dial Code Badge */}
@@ -229,28 +330,19 @@ function RegisterForm() {
                 <input
                   type="tel"
                   value={phoneDigits}
-                  maxLength={15}
+                  maxLength={18}
                   onChange={(e) => {
                     // Allow only digits, space, and hyphen
                     const cleaned = e.target.value.replace(/[^0-9\s-]/g, "");
                     setPhoneDigits(cleaned);
                   }}
-                  placeholder="10-1234-5678"
+                  placeholder="e.g. 10-1234-5678"
                   style={{ paddingLeft: `${selectedCountry.dialCode.length > 3 ? "94px" : "86px"}` }}
                   className="w-full bg-[#0b1120] border border-[#d4af37]/30 text-white rounded-lg pr-4 py-2.5 text-xs font-medium focus:outline-none focus:border-[#d4af37]"
                 />
               </div>
-              <div className="flex items-center justify-between text-[10.5px] text-[#94a3b8] pt-0.5">
-                <span>
-                  Code <strong className="text-[#d4af37]">{selectedCountry.dialCode}</strong> is auto-applied
-                </span>
-                {phoneDigits.replace(/\D/g, "").length > 0 && (
-                  <span className={`font-mono font-bold ${
-                    phoneDigits.replace(/\D/g, "").length === 10 ? "text-emerald-400" : "text-amber-400"
-                  }`}>
-                    {phoneDigits.replace(/\D/g, "").length}/10 digits
-                  </span>
-                )}
+              <div className="text-[10.5px] text-[#94a3b8] pt-0.5">
+                Code <strong className="text-[#d4af37]">{selectedCountry.dialCode}</strong> is auto-applied
               </div>
             </div>
 
