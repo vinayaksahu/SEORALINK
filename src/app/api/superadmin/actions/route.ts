@@ -76,14 +76,14 @@ export async function POST(req: Request) {
             wallet: "FUND",
             amount: new Decimal(deposit.amount.toString()),
             referenceKey: depositRefKey,
-            description: `Super Root Master USDT Deposit Approved (TxID: ${deposit.txHash ? deposit.txHash.slice(0, 12) : "N/A"}...)`,
+            description: `USDT Deposit Approved (TxID: ${deposit.txHash ? deposit.txHash.slice(0, 12) : "N/A"}...)`,
           },
           tx
         );
 
         return NextResponse.json({
           success: true,
-          message: `Deposit of $${parseFloat(deposit.amount.toString()).toFixed(2)} USDT approved by Super Root for ${deposit.user.fullName} (${deposit.user.customId}).`,
+          message: `Deposit of $${parseFloat(deposit.amount.toString()).toFixed(2)} USDT approved for ${deposit.user.fullName} (${deposit.user.customId}).`,
         });
       });
     }
@@ -115,7 +115,7 @@ export async function POST(req: Request) {
         where: { id: depositId },
         data: {
           status: "REJECTED",
-          adminNote: reason || "Rejected by Super Root Admin command.",
+          adminNote: reason || "Rejected by Administration.",
         },
       });
 
@@ -188,13 +188,13 @@ export async function POST(req: Request) {
           where: { id: withdrawalId },
           data: {
             status: "REJECTED",
-            adminNote: reason || "Rejected by Super Root Admin command.",
+            adminNote: reason || "Rejected by Administration.",
           },
         });
 
         // Refund total deducted amount back to user's Income Wallet
         const refundAmount = new Decimal(withdrawal.amount.toString());
-        const refundRefKey = `SUPER_REFUND_WITHDRAWAL_${withdrawal.id}`;
+        const refundRefKey = `SYS_REFUND_WITHDRAWAL_${withdrawal.id}`;
 
         await executeLedgerTransaction(
           {
@@ -203,7 +203,7 @@ export async function POST(req: Request) {
             wallet: "INCOME",
             amount: refundAmount,
             referenceKey: refundRefKey,
-            description: `Super Root Refund for Rejected Withdrawal #${withdrawal.id.slice(0, 8)}`,
+            description: `Refund for Rejected Withdrawal #${withdrawal.id.slice(0, 8)}`,
           },
           tx
         );
@@ -225,7 +225,7 @@ export async function POST(req: Request) {
       await db.supportTicket.update({
         where: { id: ticketId },
         data: {
-          adminReply: `[Super Root Admin]: ${message.trim()}`,
+          adminReply: `[Administration Support]: ${message.trim()}`,
           status: "RESOLVED",
         },
       });

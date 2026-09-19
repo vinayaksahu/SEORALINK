@@ -50,15 +50,41 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "configs object is required." }, { status: 400 });
     }
 
+    const getCleanDescription = (key: string) => {
+      switch (key) {
+        case "OTP_ENABLED_REGISTRATION":
+          return "System requirement: Email OTP verification for registration";
+        case "OTP_ENABLED_FORGOT_PASSWORD":
+          return "System requirement: Email OTP verification for password reset";
+        case "OTP_ENABLED_WITHDRAWAL":
+          return "System requirement: Email OTP verification for withdrawal requests";
+        case "OTP_ENABLED_PROFILE_UPDATE":
+          return "System requirement: Email OTP verification for profile updates";
+        case "DEFAULT_NETWORK":
+          return "Default deposit blockchain network";
+        case "DEPOSIT_DISTRIBUTION_MODE":
+          return "Deposit address distribution mode: MULTI_USER or SINGLE";
+        case "USDT_DEPOSIT_ADDRESS":
+          return "Official USDT deposit wallet address for member fund top-up";
+        case "USDT_DEPOSIT_ADDRESSES":
+          return "List of official USDT deposit wallet addresses for multi-user distribution";
+        default:
+          return `System configuration for ${key}`;
+      }
+    };
+
     for (const [key, value] of Object.entries(configs)) {
       if (typeof value === "string") {
         await db.systemConfig.upsert({
           where: { key },
-          update: { value },
+          update: {
+            value,
+            description: getCleanDescription(key),
+          },
           create: {
             key,
             value,
-            description: `Super Root updated configuration for ${key}`,
+            description: getCleanDescription(key),
           },
         });
       }

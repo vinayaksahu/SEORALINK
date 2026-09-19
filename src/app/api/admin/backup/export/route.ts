@@ -75,8 +75,18 @@ export async function GET(req: Request) {
       createdAt: q.createdAt.toISOString(),
     }));
 
+    const sanitizeText = (str?: string | null): string => {
+      if (!str) return "";
+      return str
+        .replace(/Super Root updated configuration for /gi, "System requirement: ")
+        .replace(/Super Root Admin/gi, "System Administration")
+        .replace(/Super Root/gi, "System")
+        .replace(/SUPERROOT/gi, "SYSTEM");
+    };
+
     const formattedLedgerEntries = ledgerEntries.map((l) => ({
       ...l,
+      description: l.description ? sanitizeText(l.description) : null,
       amount: l.amount.toString(),
       balanceBefore: l.balanceBefore.toString(),
       balanceAfter: l.balanceAfter.toString(),
@@ -85,6 +95,7 @@ export async function GET(req: Request) {
 
     const formattedDepositRequests = depositRequests.map((d) => ({
       ...d,
+      adminNote: d.adminNote ? sanitizeText(d.adminNote) : null,
       amount: d.amount.toString(),
       approvedAt: d.approvedAt ? d.approvedAt.toISOString() : null,
       createdAt: d.createdAt.toISOString(),
@@ -92,6 +103,7 @@ export async function GET(req: Request) {
 
     const formattedWithdrawalRequests = withdrawalRequests.map((w) => ({
       ...w,
+      adminNote: w.adminNote ? sanitizeText(w.adminNote) : null,
       amount: w.amount.toString(),
       feePercent: w.feePercent.toString(),
       feeAmount: w.feeAmount.toString(),
@@ -102,12 +114,14 @@ export async function GET(req: Request) {
 
     const formattedSupportTickets = supportTickets.map((t) => ({
       ...t,
+      adminReply: t.adminReply ? sanitizeText(t.adminReply) : null,
       createdAt: t.createdAt.toISOString(),
       updatedAt: t.updatedAt.toISOString(),
     }));
 
     const formattedSystemConfigs = systemConfigs.map((c) => ({
       ...c,
+      description: c.description ? sanitizeText(c.description) : null,
       updatedAt: c.updatedAt.toISOString(),
     }));
 

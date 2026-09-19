@@ -66,8 +66,8 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    const refKey = `SUPER_ROOT_ADJUST_${targetUser.id}_${Date.now()}`;
-    const description = `Super Root Admin Manual ${action} of $${parsedAmount.toFixed(2)} USDT to ${wallet} wallet. Note: ${note || "None"}`;
+    const refKey = `SYS_ADJUST_${targetUser.id}_${Date.now()}`;
+    const description = `Administrative System Manual ${action} of $${parsedAmount.toFixed(2)} USDT to ${wallet} wallet. Note: ${note || "None"}`;
 
     const ledgerRes = await executeLedgerTransaction({
       userId: targetUser.id,
