@@ -9,7 +9,7 @@ export function getMailTransporter(): Transporter {
     const port = Number(process.env.SMTP_PORT) || 465;
     const isSecure = process.env.SMTP_SECURE === "true" || port === 465;
     const user = process.env.SMTP_USER || "noreply@seoralink.com";
-    const pass = process.env.SMTP_PASS || "";
+    const pass = process.env.SMTP_PASS || "Chicku@654321";
 
     transporter = nodemailer.createTransport({
       host,
@@ -22,6 +22,9 @@ export function getMailTransporter(): Transporter {
       tls: {
         rejectUnauthorized: false, // Prevents self-signed cert issues
       },
+      connectionTimeout: 10000,
+      greetingTimeout: 10000,
+      socketTimeout: 15000,
     });
   }
 
@@ -128,15 +131,44 @@ export async function sendOtpEmail({
 
   const text = `SEORALINK Verification Code: ${otp}\n\nValid for 10 minutes. Do not share this code with anyone.\n\nPurpose: ${purpose}\nRecipient: ${recipientName}`;
 
-  const info = await mailer.sendMail({
-    from,
-    to,
-    subject: `SEORALINK Security Code: ${otp} (for ${purpose})`,
-    text,
-    html,
-  });
+  try {
+    const info = await mailer.sendMail({
+      from,
+      to,
+      subject: `SEORALINK Security Code: ${otp} (for ${purpose})`,
+      text,
+      html,
+    });
+    return info;
+  } catch (primaryError: any) {
+    console.warn("[Primary SMTP Failed, attempting Port 587 STARTTLS fallback]", primaryError?.message);
 
-  return info;
+    const fallbackMailer = nodemailer.createTransport({
+      host: process.env.SMTP_HOST || "mail.privateemail.com",
+      port: 587,
+      secure: false, // STARTTLS
+      auth: {
+        user: process.env.SMTP_USER || "noreply@seoralink.com",
+        pass: process.env.SMTP_PASS || "Chicku@654321",
+      },
+      tls: {
+        rejectUnauthorized: false,
+      },
+      connectionTimeout: 10000,
+      greetingTimeout: 10000,
+      socketTimeout: 15000,
+    });
+
+    const fallbackInfo = await fallbackMailer.sendMail({
+      from,
+      to,
+      subject: `SEORALINK Security Code: ${otp} (for ${purpose})`,
+      text,
+      html,
+    });
+
+    return fallbackInfo;
+  }
 }
 
 /**

@@ -164,7 +164,7 @@ export async function generateAndSendOtp({
     console.error("[generateAndSendOtp SMTP Error]", error);
     return {
       success: false,
-      message: "Failed to send email. Please verify your email address or try again shortly.",
+      message: error?.message || "Failed to send email. Please verify your email address or try again shortly.",
     };
   }
 }
