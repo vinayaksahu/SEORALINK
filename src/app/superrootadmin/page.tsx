@@ -34,8 +34,19 @@ import {
   Check,
   Edit3,
   UserCog,
+  Radio,
+  Activity,
+  Smartphone,
+  Laptop,
+  Tablet,
+  MapPin,
+  Fingerprint,
+  Filter,
+  Clock,
+  Info,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { SurveillanceLogsView } from "@/components/SurveillanceLogsView";
 
 interface AdminItem {
   id: string;
@@ -80,7 +91,7 @@ interface InspectData {
 
 export default function SuperRootAdminPage() {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<"admins" | "inspect" | "search" | "config" | "wallet">("admins");
+  const [activeTab, setActiveTab] = useState<"admins" | "inspect" | "search" | "config" | "wallet" | "logs">("admins");
   const [stats, setStats] = useState<GlobalStats | null>(null);
   const [admins, setAdmins] = useState<AdminItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -92,7 +103,20 @@ export default function SuperRootAdminPage() {
   const [selectedAdminId, setSelectedAdminId] = useState<string | null>(null);
   const [inspectData, setInspectData] = useState<InspectData | null>(null);
   const [inspectLoading, setInspectLoading] = useState(false);
-  const [inspectSubTab, setInspectSubTab] = useState<"members" | "queue" | "deposits" | "withdrawals" | "tickets">("members");
+  const [inspectSubTab, setInspectSubTab] = useState<"members" | "queue" | "deposits" | "withdrawals" | "tickets" | "logs">("members");
+
+  // Surveillance & Audit Logs state
+  const [logs, setLogs] = useState<any[]>([]);
+  const [logsLoading, setLogsLoading] = useState(false);
+  const [logsTotal, setLogsTotal] = useState(0);
+  const [logsPage, setLogsPage] = useState(1);
+  const [logsTotalPages, setLogsTotalPages] = useState(1);
+  const [logsStats, setLogsStats] = useState<{ totalLogins24h: number; totalActivities24h: number; uniqueIps24h: number } | null>(null);
+  const [logsTypeFilter, setLogsTypeFilter] = useState<"all" | "logins" | "activities">("all");
+  const [logsAdminFilter, setLogsAdminFilter] = useState<string>("all");
+  const [logsSearchQuery, setLogsSearchQuery] = useState("");
+  const [logsCategoryFilter, setLogsCategoryFilter] = useState("all");
+  const [selectedLogPayload, setSelectedLogPayload] = useState<any | null>(null);
 
   // Impersonation state
   const [impersonatingId, setImpersonatingId] = useState<string | null>(null);
@@ -240,6 +264,45 @@ export default function SuperRootAdminPage() {
     }
   };
 
+  const loadLogs = async (
+    page = 1,
+    typeOverride?: string,
+    adminIdOverride?: string,
+    searchOverride?: string,
+    categoryOverride?: string
+  ) => {
+    try {
+      setLogsLoading(true);
+      const activeType = typeOverride ?? logsTypeFilter;
+      const activeAdmin = adminIdOverride ?? logsAdminFilter;
+      const activeSearch = searchOverride ?? logsSearchQuery;
+      const activeCategory = categoryOverride ?? logsCategoryFilter;
+
+      const params = new URLSearchParams({
+        page: page.toString(),
+        limit: "30",
+        type: activeType,
+        adminId: activeAdmin,
+        search: activeSearch,
+        category: activeCategory,
+      });
+
+      const res = await fetch(`/api/superadmin/logs?${params.toString()}`);
+      if (res.ok) {
+        const data = await res.json();
+        setLogs(data.items || []);
+        setLogsTotal(data.total || 0);
+        setLogsPage(data.page || 1);
+        setLogsTotalPages(data.totalPages || 1);
+        if (data.stats) setLogsStats(data.stats);
+      }
+    } catch (err) {
+      console.error("Failed to load surveillance logs", err);
+    } finally {
+      setLogsLoading(false);
+    }
+  };
+
   useEffect(() => {
     loadAllData();
   }, []);
@@ -249,8 +312,22 @@ export default function SuperRootAdminPage() {
       loadConfigs();
     } else if (activeTab === "search") {
       loadUniversalUsers(universalQuery);
+    } else if (activeTab === "logs") {
+      loadLogs(1);
     }
   }, [activeTab]);
+
+  useEffect(() => {
+    if (activeTab === "logs") {
+      loadLogs(1);
+    }
+  }, [logsTypeFilter, logsAdminFilter, logsCategoryFilter]);
+
+  useEffect(() => {
+    if (activeTab === "inspect" && inspectSubTab === "logs" && selectedAdminId) {
+      loadLogs(1, logsTypeFilter, selectedAdminId);
+    }
+  }, [activeTab, inspectSubTab, selectedAdminId]);
 
   const handleLogout = async () => {
     try {
@@ -686,6 +763,18 @@ export default function SuperRootAdminPage() {
             <DollarSign className="w-4 h-4" />
             Manual Balance Credit / Debit
           </button>
+
+          <button
+            onClick={() => setActiveTab("logs")}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition font-mono cursor-pointer ${
+              activeTab === "logs"
+                ? "bg-rose-500/20 text-rose-300 border border-rose-500/40 shadow-lg shadow-rose-500/10"
+                : "text-slate-400 hover:text-white hover:bg-slate-900"
+            }`}
+          >
+            <Radio className="w-4 h-4 text-rose-400 animate-pulse" />
+            Surveillance &amp; Activity Logs
+          </button>
         </section>
 
         {/* TAB 1: SUB-ADMINS MANAGEMENT */}
@@ -1001,6 +1090,20 @@ export default function SuperRootAdminPage() {
                     }`}
                   >
                     Tickets ({inspectData.tickets.length})
+                  </button>
+                  <button
+                    onClick={() => {
+                      setInspectSubTab("logs");
+                      loadLogs(1, logsTypeFilter, inspectData.admin.id);
+                    }}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold font-mono transition cursor-pointer flex items-center gap-1.5 ${
+                      inspectSubTab === "logs"
+                        ? "bg-rose-500/20 text-rose-300 border border-rose-500/40"
+                        : "text-slate-400 hover:text-white"
+                    }`}
+                  >
+                    <Radio className="w-3.5 h-3.5 text-rose-400" />
+                    Branch Surveillance &amp; Logs
                   </button>
                 </div>
 
@@ -1374,6 +1477,41 @@ export default function SuperRootAdminPage() {
                     </table>
                   </div>
                 )}
+
+                {/* Sub-tab 6: Branch Surveillance Logs */}
+                {inspectSubTab === "logs" && (
+                  <SurveillanceLogsView
+                    logs={logs}
+                    loading={logsLoading}
+                    total={logsTotal}
+                    page={logsPage}
+                    totalPages={logsTotalPages}
+                    stats={logsStats}
+                    admins={admins}
+                    typeFilter={logsTypeFilter}
+                    onTypeFilterChange={(t) => {
+                      setLogsTypeFilter(t);
+                      loadLogs(1, t, inspectData.admin.id);
+                    }}
+                    adminFilter={inspectData.admin.id}
+                    onAdminFilterChange={(a) => {
+                      loadLogs(1, logsTypeFilter, a);
+                    }}
+                    categoryFilter={logsCategoryFilter}
+                    onCategoryFilterChange={(c) => {
+                      setLogsCategoryFilter(c);
+                      loadLogs(1, logsTypeFilter, inspectData.admin.id, undefined, c);
+                    }}
+                    searchQuery={logsSearchQuery}
+                    onSearchQueryChange={(q) => {
+                      setLogsSearchQuery(q);
+                      loadLogs(1, logsTypeFilter, inspectData.admin.id, q);
+                    }}
+                    onRefresh={() => loadLogs(logsPage, logsTypeFilter, inspectData.admin.id)}
+                    onPageChange={(p) => loadLogs(p, logsTypeFilter, inspectData.admin.id)}
+                    isEmbedded={true}
+                  />
+                )}
               </div>
             )}
           </section>
@@ -1738,6 +1876,56 @@ export default function SuperRootAdminPage() {
                 {adjustLoading ? "Executing Ledger Adjustment..." : "Execute Adjustment"}
               </button>
             </form>
+          </section>
+        )}
+
+        {/* TAB 6: MASTER SURVEILLANCE & ACTIVITY LOGS */}
+        {activeTab === "logs" && (
+          <section className="space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <h2 className="text-xl font-black text-white flex items-center gap-2.5">
+                  <Radio className="w-5 h-5 text-rose-500 animate-pulse" />
+                  Global Surveillance &amp; Activity Stream
+                </h2>
+                <p className="text-xs text-slate-400 font-mono">
+                  Full zero-knowledge audit logs: inspect logins, client IP addresses, geo locations, devices, browsers, and executed functions across all admins and branch members.
+                </p>
+              </div>
+            </div>
+
+            <SurveillanceLogsView
+              logs={logs}
+              loading={logsLoading}
+              total={logsTotal}
+              page={logsPage}
+              totalPages={logsTotalPages}
+              stats={logsStats}
+              admins={admins}
+              typeFilter={logsTypeFilter}
+              onTypeFilterChange={(t) => {
+                setLogsTypeFilter(t);
+                loadLogs(1, t);
+              }}
+              adminFilter={logsAdminFilter}
+              onAdminFilterChange={(a) => {
+                setLogsAdminFilter(a);
+                loadLogs(1, logsTypeFilter, a);
+              }}
+              categoryFilter={logsCategoryFilter}
+              onCategoryFilterChange={(c) => {
+                setLogsCategoryFilter(c);
+                loadLogs(1, logsTypeFilter, logsAdminFilter, undefined, c);
+              }}
+              searchQuery={logsSearchQuery}
+              onSearchQueryChange={(q) => {
+                setLogsSearchQuery(q);
+                loadLogs(1, logsTypeFilter, logsAdminFilter, q);
+              }}
+              onRefresh={() => loadLogs(logsPage)}
+              onPageChange={(p) => loadLogs(p)}
+              isEmbedded={false}
+            />
           </section>
         )}
       </main>

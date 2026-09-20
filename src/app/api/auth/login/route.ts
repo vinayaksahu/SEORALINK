@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import { comparePassword, createSessionToken } from "@/lib/auth";
 import { cookies } from "next/headers";
 import { getClientIp, checkRateLimitAsync, rateLimitResponse } from "@/lib/rateLimit";
+import { recordLoginSession, recordActivity } from "@/lib/auditLogger";
 
 export async function POST(req: Request) {
   try {
@@ -163,6 +164,18 @@ export async function POST(req: Request) {
 
     const passwordMatch = await comparePassword(password, user.passwordHash);
     if (!passwordMatch) {
+      await recordLoginSession({
+        req,
+        userId: user.id,
+        customId: user.customId,
+        fullName: user.fullName,
+        role: user.role,
+        adminId: user.adminId,
+        status: "FAILED",
+        failureReason: "Invalid password",
+        portal: portal || (isSuperRoot ? "super_root" : isAdmin ? "admin" : "member"),
+      });
+
       return NextResponse.json(
         {
           error:
@@ -175,6 +188,33 @@ export async function POST(req: Request) {
         { status: 401 }
       );
     }
+
+    // Record successful login session & activity
+    await recordLoginSession({
+      req,
+      userId: user.id,
+      customId: user.customId,
+      fullName: user.fullName,
+      role: user.role,
+      adminId: user.adminId,
+      status: "SUCCESS",
+      portal: portal || (isSuperRoot ? "super_root" : isAdmin ? "admin" : "member"),
+    });
+
+    await recordActivity({
+      req,
+      userId: user.id,
+      customId: user.customId,
+      fullName: user.fullName,
+      role: user.role,
+      adminId: user.adminId,
+      action: "LOGIN",
+      category: "AUTH",
+      details: {
+        portal: portal || (isSuperRoot ? "super_root" : isAdmin ? "admin" : "member"),
+        role: user.role,
+      },
+    });
 
     // Determine redirect
     let redirectTo = "/member/dashboard";

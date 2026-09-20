@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { recordActivity } from "@/lib/auditLogger";
 
 export async function POST(
   req: Request,
@@ -49,6 +50,27 @@ export async function POST(
         adminNote: finalNote,
         processedAt: new Date(),
         processedById: session.userId,
+      },
+    });
+
+    await recordActivity({
+      req,
+      userId: session.userId,
+      customId: session.customId,
+      fullName: session.fullName,
+      role: session.role,
+      adminId: session.userId,
+      action: "WITHDRAWAL_PROCESSED",
+      category: "FINANCE",
+      targetUserId: withdrawal.userId,
+      targetCustomId: withdrawal.user.customId,
+      details: {
+        withdrawalId: withdrawal.id,
+        netAmount: withdrawal.netAmount.toString(),
+        toAddress: withdrawal.toAddress,
+        network: withdrawal.network,
+        txHash,
+        member: `${withdrawal.user.fullName} (${withdrawal.user.customId})`,
       },
     });
 

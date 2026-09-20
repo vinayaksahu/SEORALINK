@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getSession, hashPassword } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { validateAndConsumeOtp } from "@/lib/otp";
+import { recordActivity } from "@/lib/auditLogger";
 
 export async function GET() {
   try {
@@ -185,6 +186,24 @@ export async function PATCH(req: Request) {
         currentTier: true,
         fundBalance: true,
         incomeBalance: true,
+      },
+    });
+
+    await recordActivity({
+      req,
+      userId: updated.id,
+      customId: updated.customId,
+      fullName: updated.fullName,
+      role: session.role,
+      adminId: session.adminId,
+      action: "MEMBER_PROFILE_UPDATE",
+      category: "SECURITY",
+      details: {
+        addressChanged: isAddressChanged ? { from: existingUser.usdtAddress, to: cleanAddress } : false,
+        emailChanged: isEmailChanged ? { from: existingUser.email, to: trimmedEmail } : false,
+        nameChanged: isNameChanged,
+        phoneChanged: isPhoneChanged,
+        passwordChanged: isPasswordChanged,
       },
     });
 

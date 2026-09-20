@@ -3,6 +3,7 @@ import { getSession } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { executeLedgerTransaction } from "@/lib/ledger";
 import Decimal from "decimal.js";
+import { recordActivity } from "@/lib/auditLogger";
 
 export async function POST(
   req: Request,
@@ -53,6 +54,26 @@ export async function POST(
         },
         tx
       );
+
+      await recordActivity({
+        req,
+        userId: session.userId,
+        customId: session.customId,
+        fullName: session.fullName,
+        role: session.role,
+        adminId: session.userId,
+        action: "DEPOSIT_APPROVED",
+        category: "FINANCE",
+        targetUserId: deposit.userId,
+        targetCustomId: deposit.user.customId,
+        details: {
+          depositId: deposit.id,
+          amount: deposit.amount.toString(),
+          network: deposit.network,
+          txHash: deposit.txHash,
+          member: `${deposit.user.fullName} (${deposit.user.customId})`,
+        },
+      });
 
       return NextResponse.json({
         success: true,

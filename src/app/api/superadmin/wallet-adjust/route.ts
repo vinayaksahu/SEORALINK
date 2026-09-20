@@ -3,6 +3,7 @@ import { getSession } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { executeLedgerTransaction, WalletType } from "@/lib/ledger";
 import Decimal from "decimal.js";
+import { recordActivity } from "@/lib/auditLogger";
 
 export async function POST(req: NextRequest) {
   try {
@@ -76,6 +77,25 @@ export async function POST(req: NextRequest) {
       amount: deltaAmount,
       referenceKey: refKey,
       description,
+    });
+
+    await recordActivity({
+      req,
+      userId: session.userId,
+      customId: session.customId,
+      fullName: session.fullName,
+      role: session.role,
+      action: "WALLET_ADJUSTMENT",
+      category: "FINANCE",
+      targetUserId: targetUser.id,
+      targetCustomId: targetUser.customId,
+      details: {
+        action,
+        wallet,
+        amount: parsedAmount.toFixed(2),
+        note: note || "None",
+        member: `${targetUser.fullName} (${targetUser.customId})`,
+      },
     });
 
     return NextResponse.json({

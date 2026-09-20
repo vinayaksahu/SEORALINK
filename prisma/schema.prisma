@@ -62,6 +62,8 @@ model User {
   adminId            String?             // Root branch admin ID this user belongs to
   assignedAdmin      User?               @relation("AdminTeamMembers", fields: [adminId], references: [id])
   teamMembers        User[]              @relation("AdminTeamMembers")
+  teamPrefix         String?             // Branch code or team prefix
+
 
   usdtAddress        String?
   usdtNetwork        String?             @default("USDT_BEP20")
@@ -205,4 +207,60 @@ model EmailOtp {
   @@index([email, purpose])
   @@index([createdAt])
 }
+
+model UserSessionLog {
+  id            String   @id @default(cuid())
+  userId        String?
+  customId      String
+  fullName      String?
+  role          String   // USER, ADMIN, SUPER_ADMIN, SUPER_ROOT_ADMIN
+  adminId       String?  // Associated branch admin ID
+  ipAddress     String
+  country       String?
+  city          String?
+  userAgent     String?
+  deviceType    String?  // MOBILE, DESKTOP, TABLET, UNKNOWN
+  browser       String?
+  os            String?
+  status        String   // SUCCESS, FAILED
+  failureReason String?
+  portal        String?  // member, admin, super_root
+  createdAt     DateTime @default(now())
+
+  @@index([userId, createdAt])
+  @@index([adminId, createdAt])
+  @@index([customId])
+  @@index([ipAddress])
+  @@index([createdAt])
+}
+
+model ActivityLog {
+  id             String   @id @default(cuid())
+  userId         String?
+  customId       String
+  fullName       String?
+  role           String
+  adminId        String?  // Associated branch admin ID
+  action         String   // e.g. DEPOSIT_APPROVED, WITHDRAWAL_REQUEST, PROFILE_UPDATE, SIMULATOR_RUN
+  category       String   // AUTH, FINANCE, SECURITY, SYSTEM, MEMBER
+  details        String?  @db.Text
+  targetUserId   String?
+  targetCustomId String?
+  ipAddress      String
+  country        String?
+  city           String?
+  userAgent      String?
+  deviceType     String?
+  browser        String?
+  os             String?
+  createdAt      DateTime @default(now())
+
+  @@index([userId, createdAt])
+  @@index([adminId, createdAt])
+  @@index([category])
+  @@index([action])
+  @@index([targetCustomId])
+  @@index([createdAt])
+}
+
 

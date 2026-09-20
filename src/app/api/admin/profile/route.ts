@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getSession, isAdmin, hashPassword } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { validateAndConsumeOtp, isOtpFeatureEnabled } from "@/lib/otp";
+import { recordActivity } from "@/lib/auditLogger";
 
 export async function GET() {
   try {
@@ -175,6 +176,23 @@ export async function PATCH(req: Request) {
         phone: true,
         role: true,
         status: true,
+      },
+    });
+
+    await recordActivity({
+      req,
+      userId: updatedAdmin.id,
+      customId: updatedAdmin.customId,
+      fullName: updatedAdmin.fullName,
+      role: updatedAdmin.role,
+      adminId: session.adminId || updatedAdmin.id,
+      action: "ADMIN_PROFILE_UPDATE",
+      category: "SECURITY",
+      details: {
+        emailChanged: isEmailChanged ? { from: existingAdmin.email, to: trimmedEmail } : false,
+        nameChanged: isNameChanged,
+        phoneChanged: isPhoneChanged,
+        passwordChanged: isPasswordChanged,
       },
     });
 
