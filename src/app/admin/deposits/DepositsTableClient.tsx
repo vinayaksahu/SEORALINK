@@ -138,22 +138,40 @@ export default function DepositsTableClient({ initialDeposits }: { initialDeposi
                   <td className="py-3 px-4 font-bold text-[#10b981] text-sm">
                     ${parseFloat(d.amount).toFixed(2)}
                   </td>
-                  <td className="py-3 px-4 max-w-xs">
-                    <div className="truncate text-[#38bdf8] flex items-center gap-1">
-                      {d.txHash}
+                  <td className="py-3 px-4 max-w-sm">
+                    <div className="flex items-center gap-2 mb-1 flex-wrap">
                       <a
-                        href={`https://bscscan.com/tx/${d.txHash}`}
+                        href={
+                          d.txHash.trim().startsWith("http")
+                            ? d.txHash.trim()
+                            : `https://bscscan.com/tx/${d.txHash.trim()}`
+                        }
                         target="_blank"
-                        rel="noreferrer"
-                        className="text-[#94a3b8] hover:text-white"
+                        rel="noopener noreferrer"
+                        className="group inline-flex items-center gap-1.5 font-mono text-xs font-semibold text-[#38bdf8] hover:text-sky-300 hover:underline transition-colors max-w-[210px]"
+                        title={`Click to verify ${d.txHash} on BscScan`}
                       >
-                        <ExternalLink size={12} />
+                        <span className="truncate">{d.txHash}</span>
+                        <ExternalLink size={12} className="shrink-0 text-sky-400 group-hover:translate-x-0.5 transition-transform" />
+                      </a>
+                      <a
+                        href={
+                          d.txHash.trim().startsWith("http")
+                            ? d.txHash.trim()
+                            : `https://bscscan.com/tx/${d.txHash.trim()}`
+                        }
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-sky-500/10 hover:bg-sky-500/20 border border-sky-500/30 hover:border-sky-400 text-sky-400 hover:text-sky-300 text-[10px] font-bold font-sans transition-all"
+                        title="Open directly in BscScan blockchain explorer"
+                      >
+                        BscScan ↗
                       </a>
                     </div>
-                    <div className="text-[10px] text-[#64748b] flex items-center gap-2">
-                      <span>{d.network}</span>
+                    <div className="text-[10px] text-[#64748b] flex items-center gap-2 flex-wrap">
+                      <span className="font-mono text-slate-400 font-semibold">{d.network}</span>
                       {d.adminNote && (
-                        <span className="text-[#d4af37] truncate max-w-[140px]" title={d.adminNote}>
+                        <span className="text-[#d4af37] truncate max-w-[180px]" title={d.adminNote}>
                           &bull; {d.adminNote}
                         </span>
                       )}

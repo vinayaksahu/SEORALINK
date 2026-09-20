@@ -1164,7 +1164,22 @@ export default function SuperRootAdminPage() {
                                 {d.user?.customId} ({d.user?.fullName})
                               </td>
                               <td className="py-3 px-4 text-emerald-400 font-bold">${Number(d.amount).toFixed(2)} USDT</td>
-                              <td className="py-3 px-4 text-slate-400 text-[11px] truncate max-w-xs">{d.txHash}</td>
+                              <td className="py-3 px-4 text-[11px] max-w-xs">
+                                {d.txHash ? (
+                                  <a
+                                    href={d.txHash.trim().startsWith("http") ? d.txHash.trim() : `https://bscscan.com/tx/${d.txHash.trim()}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-sky-400 hover:text-sky-300 hover:underline font-mono truncate flex items-center gap-1"
+                                    title="Verify on BscScan"
+                                  >
+                                    <span className="truncate">{d.txHash}</span>
+                                    <ExternalLink size={11} className="shrink-0" />
+                                  </a>
+                                ) : (
+                                  <span className="text-slate-500">N/A</span>
+                                )}
+                              </td>
                               <td className="py-3 px-4">
                                 <span
                                   className={`px-2 py-0.5 rounded text-[10px] font-bold ${

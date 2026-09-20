@@ -4,7 +4,7 @@ import { getSession } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { redirect } from "next/navigation";
 import DepositFormClient from "./DepositFormClient";
-import { Wallet, Clock, CheckCircle2, XCircle, ShieldAlert, Zap } from "lucide-react";
+import { Wallet, Clock, CheckCircle2, XCircle, ShieldAlert, Zap, ExternalLink } from "lucide-react";
 import { isUserSystemExited } from "@/lib/userStatus";
 
 export default async function MemberDepositPage() {
@@ -217,8 +217,21 @@ export default async function MemberDepositPage() {
                       <td className="py-2.5 px-3 font-bold text-white">
                         ${parseFloat(d.amount.toString()).toFixed(2)}
                       </td>
-                      <td className="py-2.5 px-3 text-[#38bdf8] truncate max-w-[120px]">
-                        {d.txHash}
+                      <td className="py-2.5 px-3 max-w-[150px]">
+                        <a
+                          href={
+                            d.txHash.trim().startsWith("http")
+                              ? d.txHash.trim()
+                              : `https://bscscan.com/tx/${d.txHash.trim()}`
+                          }
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-[#38bdf8] hover:text-sky-300 hover:underline text-xs font-mono truncate flex items-center gap-1"
+                          title="View on BscScan"
+                        >
+                          <span className="truncate">{d.txHash}</span>
+                          <ExternalLink size={11} className="shrink-0" />
+                        </a>
                       </td>
                       <td className="py-2.5 px-3">
                         {d.status === "APPROVED" && (
