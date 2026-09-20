@@ -77,8 +77,11 @@ export async function sendOtpEmail({
             <table border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 520px; background-color: #0b1325; border: 1px solid #1e3a5f; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);">
               <!-- Header -->
               <tr>
-                <td style="padding: 30px 30px 20px; text-align: center; border-bottom: 1px solid #1e293b; background: linear-gradient(180deg, #0d1a36 0%, #0b1325 100%);">
-                  <div style="display: inline-block; padding: 6px 16px; border-radius: 20px; background-color: rgba(212, 175, 55, 0.15); border: 1px solid rgba(212, 175, 55, 0.4); margin-bottom: 12px;">
+                <td style="padding: 28px 30px 20px; text-align: center; border-bottom: 1px solid #1e293b; background: linear-gradient(180deg, #0d1a36 0%, #0b1325 100%);">
+                  <div style="margin-bottom: 14px;">
+                    <img src="https://seoralink.com/logo-icon.png" alt="SEORALINK" width="56" height="56" style="display: inline-block; width: 56px; height: 56px; border-radius: 50%; box-shadow: 0 4px 16px rgba(212, 175, 55, 0.35); vertical-align: middle;" />
+                  </div>
+                  <div style="display: inline-block; padding: 5px 16px; border-radius: 20px; background-color: rgba(212, 175, 55, 0.15); border: 1px solid rgba(212, 175, 55, 0.4); margin-bottom: 10px;">
                     <span style="color: #d4af37; font-size: 11px; font-weight: bold; letter-spacing: 1.5px; text-transform: uppercase;">SEORALINK NETWORK</span>
                   </div>
                   <h1 style="margin: 0; color: #ffffff; font-size: 20px; font-weight: 800; letter-spacing: -0.5px;">Security Verification Code</h1>
@@ -206,6 +209,9 @@ export async function sendNotificationEmail({
             <table border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 520px; background-color: #0b1325; border: 1px solid #1e3a5f; border-radius: 16px; overflow: hidden;">
               <tr>
                 <td style="padding: 24px; text-align: center; border-bottom: 1px solid #1e293b; background: #0d1a36;">
+                  <div style="margin-bottom: 12px;">
+                    <img src="https://seoralink.com/logo-icon.png" alt="SEORALINK" width="48" height="48" style="display: inline-block; width: 48px; height: 48px; border-radius: 50%; box-shadow: 0 4px 14px rgba(212, 175, 55, 0.35); vertical-align: middle;" />
+                  </div>
                   <span style="color: #d4af37; font-size: 11px; font-weight: bold; letter-spacing: 1.5px; text-transform: uppercase;">SEORALINK NETWORK</span>
                   <h2 style="margin: 8px 0 0; color: #fff; font-size: 18px;">${title}</h2>
                 </td>
