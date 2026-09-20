@@ -2,9 +2,24 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { hashPassword } from "@/lib/auth";
 import { validateAndConsumeOtp } from "@/lib/otp";
+import { getClientIp, checkRateLimitAsync, rateLimitResponse } from "@/lib/rateLimit";
 
 export async function POST(req: Request) {
   try {
+    const clientIp = getClientIp(req);
+
+    // IP rate limit: max 5 reset attempts per 5 minutes
+    const ipLimit = await checkRateLimitAsync(`forgot:ip:${clientIp}`, {
+      maxRequests: 5,
+      windowSeconds: 300,
+    });
+    if (!ipLimit.success) {
+      return rateLimitResponse(
+        ipLimit.resetInSeconds,
+        `Too many password reset requests from this network. Please wait ${Math.ceil(ipLimit.resetInSeconds / 60)} minutes.`
+      );
+    }
+
     const { email, otpCode, newPassword } = await req.json();
 
     const cleanEmail = email ? email.toLowerCase().trim() : "";
@@ -12,6 +27,18 @@ export async function POST(req: Request) {
       return NextResponse.json(
         { error: "A valid email address is required" },
         { status: 400 }
+      );
+    }
+
+    // Email rate limit: max 3 reset attempts per 5 minutes
+    const emailLimit = await checkRateLimitAsync(`forgot:email:${cleanEmail}`, {
+      maxRequests: 3,
+      windowSeconds: 300,
+    });
+    if (!emailLimit.success) {
+      return rateLimitResponse(
+        emailLimit.resetInSeconds,
+        `Too many password reset requests for this email. Please wait ${Math.ceil(emailLimit.resetInSeconds / 60)} minutes.`
       );
     }
 

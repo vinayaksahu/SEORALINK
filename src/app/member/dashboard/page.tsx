@@ -61,7 +61,8 @@ export default async function MemberDashboardPage() {
   const isBanned = user.status === "BLOCKED" && !hasWithdrawnRankPool;
   const rankPoolBalance = (user.status === "ACTIVE" && !hasWithdrawnRankPool && currentTier > 0) ? rankValuation : 0;
 
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://seoralink.com";
+  const rawAppUrl = process.env.NEXT_PUBLIC_APP_URL || "https://seoralink.com";
+  const appUrl = (rawAppUrl.includes("vercel.app") || !rawAppUrl) ? "https://seoralink.com" : rawAppUrl.replace(/\/$/, "");
   const referralLink = `${appUrl}/register?ref=${user.customId}`;
 
   return (

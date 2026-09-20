@@ -111,7 +111,9 @@ export default function ProfileFormClient({ user: initialUser }: ProfileFormClie
     }
   }, [otpCooldown]);
 
-  const appUrl = typeof window !== "undefined" ? window.location.origin : "https://seoralink.com";
+  const appUrl = typeof window !== "undefined"
+    ? (window.location.origin.includes("vercel.app") ? "https://seoralink.com" : window.location.origin)
+    : (process.env.NEXT_PUBLIC_APP_URL?.includes("vercel.app") ? "https://seoralink.com" : (process.env.NEXT_PUBLIC_APP_URL || "https://seoralink.com"));
   const referralLink = `${appUrl}/register?ref=${user.customId}`;
 
   const handleCopyLink = async () => {

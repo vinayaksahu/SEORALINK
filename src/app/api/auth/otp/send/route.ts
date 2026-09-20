@@ -2,9 +2,24 @@ import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { generateAndSendOtp, OtpPurpose, isOtpFeatureEnabled } from "@/lib/otp";
+import { getClientIp, checkRateLimitAsync, rateLimitResponse } from "@/lib/rateLimit";
 
 export async function POST(req: Request) {
   try {
+    const clientIp = getClientIp(req);
+
+    // IP Rate Limit: max 6 OTP dispatches per 2 minutes (120s)
+    const ipLimit = await checkRateLimitAsync(`otp:ip:${clientIp}`, {
+      maxRequests: 6,
+      windowSeconds: 120,
+    });
+    if (!ipLimit.success) {
+      return rateLimitResponse(
+        ipLimit.resetInSeconds,
+        `Too many verification codes requested from this network. Please wait ${ipLimit.resetInSeconds} seconds.`
+      );
+    }
+
     const body = await req.json();
     const { purpose, email } = body as { purpose: OtpPurpose; email?: string };
 
@@ -96,6 +111,18 @@ export async function POST(req: Request) {
       if (body.fullName) {
         recipientName = body.fullName;
       }
+    }
+
+    // Email rate limit: max 3 OTP requests per 2 minutes
+    const emailLimit = await checkRateLimitAsync(`otp:email:${targetEmail}`, {
+      maxRequests: 3,
+      windowSeconds: 120,
+    });
+    if (!emailLimit.success) {
+      return rateLimitResponse(
+        emailLimit.resetInSeconds,
+        `Too many verification codes requested for this email. Please wait ${emailLimit.resetInSeconds} seconds before requesting a new code.`
+      );
     }
 
     const result = await generateAndSendOtp({

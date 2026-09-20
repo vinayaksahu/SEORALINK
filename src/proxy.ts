@@ -1,7 +1,9 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { jwtVerify } from "jose";
 
-const secretKey = process.env.JWT_SECRET || "seoralink-default-jwt-secret-key-2026-auth";
+const DEFAULT_FALLBACK_SECRET = "seoralink-default-jwt-secret-key-2026-auth";
+const rawSecret = process.env.JWT_SECRET;
+const secretKey = rawSecret || DEFAULT_FALLBACK_SECRET;
 const encodedKey = new TextEncoder().encode(secretKey);
 
 export async function proxy(request: NextRequest) {

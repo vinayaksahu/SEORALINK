@@ -2,7 +2,16 @@ import { SignJWT, jwtVerify } from "jose";
 import bcrypt from "bcryptjs";
 import { cookies } from "next/headers";
 
-const secretKey = process.env.JWT_SECRET || "seoralink-default-jwt-secret-key-2026-auth";
+const DEFAULT_FALLBACK_SECRET = "seoralink-default-jwt-secret-key-2026-auth";
+const rawSecret = process.env.JWT_SECRET;
+
+if (process.env.NODE_ENV === "production" && (!rawSecret || rawSecret === DEFAULT_FALLBACK_SECRET)) {
+  console.error(
+    "⚠️ [CRITICAL SECURITY WARNING] JWT_SECRET is not configured or is using default insecure fallback in production environment! Set a strong random JWT_SECRET in your environment variables immediately."
+  );
+}
+
+const secretKey = rawSecret || DEFAULT_FALLBACK_SECRET;
 const encodedKey = new TextEncoder().encode(secretKey);
 
 export interface SessionPayload {

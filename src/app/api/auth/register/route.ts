@@ -5,9 +5,24 @@ import { generateCustomId } from "@/lib/utils";
 import { cookies } from "next/headers";
 import { isUserSystemExited } from "@/lib/userStatus";
 import { validateAndConsumeOtp } from "@/lib/otp";
+import { getClientIp, checkRateLimitAsync, rateLimitResponse } from "@/lib/rateLimit";
 
 export async function POST(req: Request) {
   try {
+    const clientIp = getClientIp(req);
+
+    // Rate limit: max 5 registrations per 10 minutes per IP
+    const registerLimit = await checkRateLimitAsync(`register:ip:${clientIp}`, {
+      maxRequests: 5,
+      windowSeconds: 600,
+    });
+    if (!registerLimit.success) {
+      return rateLimitResponse(
+        registerLimit.resetInSeconds,
+        `Too many registration requests from this network. Please try again in ${Math.ceil(registerLimit.resetInSeconds / 60)} minutes.`
+      );
+    }
+
     const { fullName, email, phone, password, sponsorCode, otpCode } = await req.json();
 
     if (!fullName || !email || !password) {

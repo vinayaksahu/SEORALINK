@@ -2,9 +2,24 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { comparePassword, createSessionToken } from "@/lib/auth";
 import { cookies } from "next/headers";
+import { getClientIp, checkRateLimitAsync, rateLimitResponse } from "@/lib/rateLimit";
 
 export async function POST(req: Request) {
   try {
+    const clientIp = getClientIp(req);
+
+    // Global IP rate limit: max 10 login attempts per 60 seconds
+    const ipLimit = await checkRateLimitAsync(`login:ip:${clientIp}`, {
+      maxRequests: 10,
+      windowSeconds: 60,
+    });
+    if (!ipLimit.success) {
+      return rateLimitResponse(
+        ipLimit.resetInSeconds,
+        `Too many login attempts from this network. Please wait ${ipLimit.resetInSeconds} seconds before trying again.`
+      );
+    }
+
     const { identifier, password, requireAdmin, portal } = await req.json();
 
     if (!identifier || !password) {
@@ -15,6 +30,18 @@ export async function POST(req: Request) {
     }
 
     const trimmed = identifier.trim();
+
+    // Account + IP rate limit: max 5 attempts per 60 seconds
+    const accountLimit = await checkRateLimitAsync(`login:acc:${trimmed.toLowerCase()}:${clientIp}`, {
+      maxRequests: 5,
+      windowSeconds: 60,
+    });
+    if (!accountLimit.success) {
+      return rateLimitResponse(
+        accountLimit.resetInSeconds,
+        `Too many login attempts for this account. Please wait ${accountLimit.resetInSeconds} seconds before trying again.`
+      );
+    }
 
     // Find user by customId or email (with alias support for superrootadmin)
     const orConditions: any[] = [
