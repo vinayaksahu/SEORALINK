@@ -10,25 +10,26 @@ export default async function MemberTeamPage() {
   const session = await getSession();
   if (!session) redirect("/login");
 
-  const isSystemExited = await isUserSystemExited(session.userId);
-
-  const user = await db.user.findUnique({
-    where: { id: session.userId },
-    include: {
-      directs: {
-        orderBy: { createdAt: "desc" },
-        select: {
-          id: true,
-          customId: true,
-          fullName: true,
-          email: true,
-          status: true,
-          currentTier: true,
-          createdAt: true,
+  const [isSystemExited, user] = await Promise.all([
+    isUserSystemExited(session.userId),
+    db.user.findUnique({
+      where: { id: session.userId },
+      include: {
+        directs: {
+          orderBy: { createdAt: "desc" },
+          select: {
+            id: true,
+            customId: true,
+            fullName: true,
+            email: true,
+            status: true,
+            currentTier: true,
+            createdAt: true,
+          },
         },
       },
-    },
-  });
+    }),
+  ]);
 
   if (!user) redirect("/login");
 

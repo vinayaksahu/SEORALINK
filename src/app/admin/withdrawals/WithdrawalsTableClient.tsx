@@ -150,7 +150,6 @@ export default function WithdrawalsTableClient({ initialWithdrawals }: { initial
       );
       setApproveModalItem(null);
       setApproveTxHash("");
-      router.refresh();
     } catch (err: any) {
       alert(err.message);
     } finally {
@@ -198,7 +197,6 @@ export default function WithdrawalsTableClient({ initialWithdrawals }: { initial
       );
       setRejectModalItem(null);
       setRejectRemark("");
-      router.refresh();
     } catch (err: any) {
       alert(err.message);
     } finally {

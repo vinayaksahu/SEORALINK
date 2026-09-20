@@ -52,7 +52,6 @@ export default function DepositsTableClient({ initialDeposits }: { initialDeposi
         prev.map((d) => (d.id === id ? { ...d, status: "APPROVED" } : d))
       );
       alert(data.message);
-      router.refresh();
     } catch (err: any) {
       alert(err.message);
     } finally {
@@ -83,7 +82,6 @@ export default function DepositsTableClient({ initialDeposits }: { initialDeposi
         prev.map((d) => (d.id === id ? { ...d, status: "REJECTED" } : d))
       );
       alert(data.message);
-      router.refresh();
     } catch (err: any) {
       alert(err.message);
     } finally {

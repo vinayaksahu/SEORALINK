@@ -24,21 +24,28 @@ export default async function AdminOverviewPage() {
   const userFilter = { adminId, role: "USER" as const };
   const userRelationFilter = { user: { adminId } };
 
-  // Aggregate stats
-  const totalUsers = await db.user.count({ where: userFilter });
-  const activeUsers = await db.user.count({ where: { ...userFilter, status: "ACTIVE" } });
-  
-  const pendingDeposits = await db.depositRequest.count({ where: { ...userRelationFilter, status: "PENDING" } });
-  const approvedDeposits = await db.depositRequest.aggregate({
-    where: { ...userRelationFilter, status: "APPROVED" },
-    _sum: { amount: true },
-  });
-
-  const pendingWithdrawals = await db.withdrawalRequest.count({ where: { ...userRelationFilter, status: "PENDING" } });
-  const processedWithdrawals = await db.withdrawalRequest.aggregate({
-    where: { ...userRelationFilter, status: "APPROVED" },
-    _sum: { amount: true, feeAmount: true, netAmount: true },
-  });
+  // Aggregate stats in parallel
+  const [
+    totalUsers,
+    activeUsers,
+    pendingDeposits,
+    approvedDeposits,
+    pendingWithdrawals,
+    processedWithdrawals,
+  ] = await Promise.all([
+    db.user.count({ where: userFilter }),
+    db.user.count({ where: { ...userFilter, status: "ACTIVE" } }),
+    db.depositRequest.count({ where: { ...userRelationFilter, status: "PENDING" } }),
+    db.depositRequest.aggregate({
+      where: { ...userRelationFilter, status: "APPROVED" },
+      _sum: { amount: true },
+    }),
+    db.withdrawalRequest.count({ where: { ...userRelationFilter, status: "PENDING" } }),
+    db.withdrawalRequest.aggregate({
+      where: { ...userRelationFilter, status: "APPROVED" },
+      _sum: { amount: true, feeAmount: true, netAmount: true },
+    }),
+  ]);
 
   const totalDepositVolume = parseFloat(approvedDeposits._sum.amount?.toString() || "0");
   const totalWithdrawalVolume = parseFloat(processedWithdrawals._sum.netAmount?.toString() || "0");

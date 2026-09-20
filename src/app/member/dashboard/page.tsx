@@ -24,19 +24,37 @@ export default async function MemberDashboardPage() {
   const session = await getSession();
   if (!session) redirect("/login");
 
-  // Automatically check and promote if directs qualification is satisfied
-  await checkPendingRankPromotions(session.userId);
-
-  const user = await db.user.findUnique({
-    where: { id: session.userId },
-    include: {
-      queueEntries: {
-        orderBy: { tier: "desc" },
+  // Fetch user data and rank withdrawal status concurrently in parallel
+  const [user, existingRankWithdrawal] = await Promise.all([
+    db.user.findUnique({
+      where: { id: session.userId },
+      include: {
+        queueEntries: {
+          orderBy: { tier: "desc" },
+        },
       },
-    },
-  });
+    }),
+    db.withdrawalRequest.findFirst({
+      where: {
+        userId: session.userId,
+        OR: [
+          { feePercent: 20 },
+          { adminNote: { contains: "CASHOUT" } },
+          { adminNote: { contains: "RANK_EXIT" } },
+          { amount: 20480 },
+        ],
+        status: { not: "REJECTED" },
+      },
+      select: { id: true },
+    }),
+  ]);
 
   if (!user) redirect("/login");
+
+  // Non-blocking promotion check: only evaluate if user is active with eligible directs
+  if (user.status === "ACTIVE" && user.directCount >= 2 && !existingRankWithdrawal) {
+    checkPendingRankPromotions(session.userId).catch(() => {});
+  }
 
   const fundBal = parseFloat(user.fundBalance?.toString() || "0");
   const commissionBal = parseFloat(user.incomeBalance?.toString() || "0");
@@ -45,18 +63,6 @@ export default async function MemberDashboardPage() {
   const rankValuation = TIER_VALUES[currentTier];
   const netCashoutVal = NET_CASHOUT_VALUES[currentTier];
 
-  const existingRankWithdrawal = await db.withdrawalRequest.findFirst({
-    where: {
-      userId: session.userId,
-      OR: [
-        { feePercent: 20 },
-        { adminNote: { contains: "CASHOUT" } },
-        { adminNote: { contains: "RANK_EXIT" } },
-        { amount: 20480 },
-      ],
-      status: { not: "REJECTED" },
-    },
-  });
   const hasWithdrawnRankPool = Boolean(existingRankWithdrawal);
   const isBanned = user.status === "BLOCKED" && !hasWithdrawnRankPool;
   const rankPoolBalance = (user.status === "ACTIVE" && !hasWithdrawnRankPool && currentTier > 0) ? rankValuation : 0;

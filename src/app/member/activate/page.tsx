@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Zap, CheckCircle, AlertCircle, ArrowRight, Wallet } from "lucide-react";
+import { Zap, CheckCircle, AlertCircle, ArrowRight, Wallet, RefreshCw } from "lucide-react";
 
 export default function MemberActivatePage() {
   const router = useRouter();
@@ -138,10 +138,19 @@ export default function MemberActivatePage() {
               <button
                 onClick={handleActivate}
                 disabled={loading}
-                className="btn-primary w-full py-3.5 text-xs font-extrabold flex items-center justify-center gap-2 disabled:opacity-50 shadow-lg"
+                className="btn-primary w-full py-3.5 text-xs font-extrabold flex items-center justify-center gap-2 disabled:opacity-60 shadow-lg cursor-pointer disabled:cursor-wait transition-all duration-150 active:scale-[0.98]"
               >
-                {loading ? "Processing Queue Placement..." : "Confirm & Activate ($10 USDT)"}
-                {!loading && <Zap size={15} />}
+                {loading ? (
+                  <>
+                    <RefreshCw size={15} className="animate-spin text-black" />
+                    <span>Processing Queue Placement...</span>
+                  </>
+                ) : (
+                  <>
+                    <span>Confirm & Activate ($10 USDT)</span>
+                    <Zap size={15} />
+                  </>
+                )}
               </button>
             ) : (
               <div className="text-center space-y-3 pt-2">

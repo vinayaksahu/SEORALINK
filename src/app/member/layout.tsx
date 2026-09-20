@@ -24,7 +24,6 @@ import {
 import { MemberMobileNav } from "@/components/MemberMobileNav";
 import { LanguageSelector } from "@/components/LanguageSelector";
 import { TIER_VALUES } from "@/lib/constants";
-import { checkPendingRankPromotions } from "@/lib/queueEngine";
 
 export default async function MemberLayout({
   children,
@@ -36,39 +35,40 @@ export default async function MemberLayout({
     redirect("/login");
   }
 
-  // Ensure rank upgrades are applied
-  await checkPendingRankPromotions(session.userId);
-
-  const user = await db.user.findUnique({
-    where: { id: session.userId },
-    select: {
-      id: true,
-      customId: true,
-      fullName: true,
-      fundBalance: true,
-      incomeBalance: true,
-      currentTier: true,
-      status: true,
-      role: true,
-    },
-  });
+  // Parallel fetch: user data and rank withdrawal status concurrently
+  const [user, existingRankWithdrawal] = await Promise.all([
+    db.user.findUnique({
+      where: { id: session.userId },
+      select: {
+        id: true,
+        customId: true,
+        fullName: true,
+        fundBalance: true,
+        incomeBalance: true,
+        currentTier: true,
+        status: true,
+        role: true,
+      },
+    }),
+    db.withdrawalRequest.findFirst({
+      where: {
+        userId: session.userId,
+        OR: [
+          { feePercent: 20 },
+          { adminNote: { contains: "CASHOUT" } },
+          { adminNote: { contains: "RANK_EXIT" } },
+          { amount: 20480 },
+        ],
+        status: { not: "REJECTED" },
+      },
+      select: { id: true },
+    }),
+  ]);
 
   if (!user) {
     redirect("/login");
   }
 
-  const existingRankWithdrawal = await db.withdrawalRequest.findFirst({
-    where: {
-      userId: user.id,
-      OR: [
-        { feePercent: 20 },
-        { adminNote: { contains: "CASHOUT" } },
-        { adminNote: { contains: "RANK_EXIT" } },
-        { amount: 20480 },
-      ],
-      status: { not: "REJECTED" },
-    },
-  });
   const hasWithdrawnRankPool = Boolean(existingRankWithdrawal);
   const rankPoolBalance = (user.status === "ACTIVE" && !hasWithdrawnRankPool && user.currentTier > 0)
     ? (TIER_VALUES[user.currentTier] || 0)

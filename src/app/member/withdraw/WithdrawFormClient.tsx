@@ -494,35 +494,52 @@ export default function WithdrawFormClient({
               numCommAmount > incomeBalance ||
               (hasWithdrawnRankPool ? numCommAmount < 1 : (numCommAmount < 10 || numCommAmount % 5 !== 0))
             }
-            className="btn-primary w-full py-3 text-xs font-extrabold flex items-center justify-center gap-2 mt-2 disabled:opacity-50"
+            className="btn-primary w-full py-3 text-xs font-extrabold flex items-center justify-center gap-2 mt-2 disabled:opacity-50 cursor-pointer disabled:cursor-wait transition-all duration-150 active:scale-[0.98]"
           >
-            {isInactive
-              ? "Account Activation ($10) Required to Withdraw"
-              : loading
-              ? "Submitting Request..."
-              : "Request Commission Payout (10% Fee)"}
-            {!loading && !isInactive && <ArrowRight size={14} />}
+            {loading ? (
+              <>
+                <span className="w-3.5 h-3.5 border-2 border-black border-t-transparent rounded-full animate-spin" />
+                <span>Submitting Request...</span>
+              </>
+            ) : isInactive ? (
+              "Account Activation ($10) Required to Withdraw"
+            ) : (
+              <>
+                <span>Request Commission Payout (10% Fee)</span>
+                <ArrowRight size={14} />
+              </>
+            )}
           </button>
         ) : (
           <button
             type="submit"
             disabled={loading || isInactive || hasWithdrawnRankPool || currentTier < 1 || (!isUltima && !rankExitConfirmed)}
-            className={`w-full py-3 text-xs font-extrabold rounded-lg flex items-center justify-center gap-2 mt-2 transition-all disabled:opacity-50 ${
+            className={`w-full py-3 text-xs font-extrabold rounded-lg flex items-center justify-center gap-2 mt-2 transition-all duration-150 active:scale-[0.98] cursor-pointer disabled:cursor-wait disabled:opacity-50 ${
               isUltima
                 ? "bg-[#10b981] text-black hover:bg-[#10b981]/90 shadow-lg"
                 : "bg-red-600 text-white hover:bg-red-700 shadow-lg"
             }`}
           >
-            {isInactive
-              ? "Account Activation ($10) Required"
-              : loading
-              ? "Processing Cashout..."
-              : hasWithdrawnRankPool
-              ? "Rank Pool Already Cashed Out"
-              : isUltima
-              ? "Cashout Ultima Rank Pool ($18,432.00 Net)"
-              : `Exit Rank Pool & Ban ID ($${rankNet.toLocaleString()} Net)`}
-            {!loading && !isInactive && !hasWithdrawnRankPool && <ArrowRight size={14} />}
+            {loading ? (
+              <>
+                <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                <span>Processing Cashout...</span>
+              </>
+            ) : isInactive ? (
+              "Account Activation ($10) Required"
+            ) : hasWithdrawnRankPool ? (
+              "Rank Pool Already Cashed Out"
+            ) : isUltima ? (
+              <>
+                <span>Cashout Ultima Rank Pool ($18,432.00 Net)</span>
+                <ArrowRight size={14} />
+              </>
+            ) : (
+              <>
+                <span>Exit Rank Pool & Ban ID (${rankNet.toLocaleString()} Net)</span>
+                <ArrowRight size={14} />
+              </>
+            )}
           </button>
         )}
       </form>

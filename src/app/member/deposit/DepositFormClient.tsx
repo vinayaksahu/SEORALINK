@@ -236,10 +236,19 @@ export default function DepositFormClient({
         <button
           type="submit"
           disabled={loading}
-          className="btn-primary w-full py-3 text-xs font-extrabold flex items-center justify-center gap-2 mt-2 disabled:opacity-50"
+          className="btn-primary w-full py-3 text-xs font-extrabold flex items-center justify-center gap-2 mt-2 disabled:opacity-60 cursor-pointer disabled:cursor-wait transition-all duration-150 active:scale-[0.98]"
         >
-          {loading ? "Submitting Request..." : "Submit Deposit for Verification"}
-          {!loading && <ArrowRight size={14} />}
+          {loading ? (
+            <>
+              <span className="w-3.5 h-3.5 border-2 border-black border-t-transparent rounded-full animate-spin" />
+              <span>Submitting Request...</span>
+            </>
+          ) : (
+            <>
+              <span>Submit Deposit for Verification</span>
+              <ArrowRight size={14} />
+            </>
+          )}
         </button>
       </form>
     </div>

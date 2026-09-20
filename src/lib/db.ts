@@ -26,9 +26,12 @@ function createPrismaClient(): PrismaClient {
 
   const pool = new Pool({
     connectionString,
-    max: isServerless ? 10 : 20,
-    idleTimeoutMillis: 30000,
-    connectionTimeoutMillis: 30000, // 30s to allow Neon cold-start wakeups
+    max: isServerless ? 15 : 25,
+    idleTimeoutMillis: 300000, // Keep connections warm for 5 minutes instead of 30 seconds
+    connectionTimeoutMillis: 15000, // 15s connection acquisition window
+    keepAlive: true,
+    keepAliveInitialDelayMillis: 10000,
+    allowExitOnIdle: false,
     ...(isSSL ? { ssl: { rejectUnauthorized: false } } : {}),
   });
 

@@ -103,7 +103,7 @@ export default function AdminProfileClient({ admin: initialAdmin }: AdminProfile
     }
   };
 
-  const sendProfileOtp = async () => {
+  const sendProfileOtp = async (): Promise<{ success: boolean; bypassed?: boolean }> => {
     setOtpSending(true);
     setOtpError("");
     try {
@@ -116,9 +116,14 @@ export default function AdminProfileClient({ admin: initialAdmin }: AdminProfile
       if (!res.ok) {
         throw new Error(data.error || "Failed to send profile verification code.");
       }
+      if (data.bypassed) {
+        return { success: true, bypassed: true };
+      }
       setOtpCooldown(60);
+      return { success: true, bypassed: false };
     } catch (err: any) {
       setOtpError(err.message || "Failed to dispatch verification OTP.");
+      throw err;
     } finally {
       setOtpSending(false);
     }
@@ -204,16 +209,20 @@ export default function AdminProfileClient({ admin: initialAdmin }: AdminProfile
     setLoading(true);
     try {
       // Check if OTP is enabled for profile updates
-      const otpStatusRes = await fetch("/api/auth/otp/status");
+      const otpStatusRes = await fetch("/api/auth/otp/status?purpose=PROFILE_UPDATE");
       const otpStatus = await otpStatusRes.json();
-      const isOtpRequired = otpStatus?.features?.PROFILE_UPDATE !== false;
+      const isOtpRequired = otpStatus?.enabled !== false && otpStatus?.settings?.PROFILE_UPDATE !== false;
 
       if (isOtpRequired) {
         setPendingPayload(payload);
         setOtpCode("");
         setOtpError("");
+        const otpResult = await sendProfileOtp();
+        if (otpResult?.bypassed) {
+          await executeProfileUpdate(payload);
+          return;
+        }
         setShowOtpModal(true);
-        await sendProfileOtp();
       } else {
         await executeProfileUpdate(payload);
       }

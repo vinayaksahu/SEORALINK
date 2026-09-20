@@ -215,7 +215,7 @@ export default function SuperRootAdminPage() {
           otpRegistration: c.OTP_ENABLED_REGISTRATION !== "false",
           otpForgotPassword: c.OTP_ENABLED_FORGOT_PASSWORD !== "false",
           otpWithdrawal: c.OTP_ENABLED_WITHDRAWAL !== "false",
-          otpProfileUpdate: c.OTP_ENABLED_PROFILE_UPDATE === "true",
+          otpProfileUpdate: c.OTP_ENABLED_PROFILE_UPDATE !== "false",
         });
       }
     } catch (err) {
