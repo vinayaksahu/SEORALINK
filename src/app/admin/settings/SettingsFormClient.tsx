@@ -796,8 +796,8 @@ export default function SettingsFormClient({
             </div>
             <p className="text-[11px] text-[#94a3b8] leading-relaxed">
               {requireActiveSponsor
-                ? "RULE ON: Jab tak kisi member ki ID activate ($10 USDT) nahi hai, tab tak wo kisi ko bhi refer nahi kar sakta. Registration portal par inactive sponsor code reject ho jayega. (Admin & Super Admin accounts are exempt and can always sponsor)."
-                : "RULE OFF: Kisi bhi registered member ki referral link hamesha open rahegi chahe unka account active ho ya inactive."}
+                ? "RULE ON: Members must have an active ($10 USDT) account to refer new users. Registrations attempting to use an inactive sponsor code will be rejected."
+                : "RULE OFF: Any registered member can refer new users regardless of whether their account is active or inactive."}
             </p>
           </div>
           <button

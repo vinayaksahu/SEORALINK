@@ -1781,7 +1781,7 @@ export default function SuperRootAdminPage() {
                   <div className="space-y-1">
                     <p className="text-xs font-bold text-white">Require Account Activation Before Referring</p>
                     <p className="text-[11px] text-slate-400 leading-relaxed">
-                      Jab tak kisi member ka ID activate ($10 USDT) nahi hai tab tak wo kisi ko bhi refer nahi kar sakta. Inactive member ki referral link se registration block rahegi. (Admin &amp; Super Admin hamesha exempt rahenge).
+                      Members must have an active ($10 USDT) account to refer new users. Registrations attempting to use an inactive sponsor code will be rejected.
                     </p>
                   </div>
                   <input
