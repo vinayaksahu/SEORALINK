@@ -33,9 +33,18 @@ export async function POST(req: Request) {
       );
     }
 
-    if (password.length < 6) {
+    if (typeof password !== "string" || password.length < 8) {
       return NextResponse.json(
-        { error: "Password must be at least 6 characters" },
+        { error: "Password must be at least 8 characters long for account security" },
+        { status: 400 }
+      );
+    }
+
+    const hasLetter = /[a-zA-Z]/.test(password);
+    const hasDigit = /[0-9]/.test(password);
+    if (!hasLetter || !hasDigit) {
+      return NextResponse.json(
+        { error: "Password must contain both letters and numbers for account security" },
         { status: 400 }
       );
     }

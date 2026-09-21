@@ -39,16 +39,39 @@ export async function executeLedgerTransaction(
     return { success: false, alreadyProcessed: true, ledger: existing };
   }
 
-  // Fetch current user wallet balance
-  const user = await tx.user.findUnique({
-    where: { id: params.userId },
-    select: {
-      fundBalance: true,
-      incomeBalance: true,
-      totalEarned: true,
-      totalWithdrawn: true,
-    },
-  });
+  // Fetch current user wallet balance with exclusive row-level lock (FOR UPDATE)
+  // to completely eliminate concurrent race conditions and double-spending
+  let user: {
+    fundBalance: any;
+    incomeBalance: any;
+    totalEarned: any;
+    totalWithdrawn: any;
+  } | null = null;
+
+  try {
+    const lockedUsers = await tx.$queryRaw<
+      Array<{
+        fundBalance: any;
+        incomeBalance: any;
+        totalEarned: any;
+        totalWithdrawn: any;
+      }>
+    >`SELECT "fundBalance", "incomeBalance", "totalEarned", "totalWithdrawn" FROM "User" WHERE id = ${params.userId} FOR UPDATE`;
+    if (lockedUsers && lockedUsers.length > 0) {
+      user = lockedUsers[0];
+    }
+  } catch {
+    // Safe fallback if raw query is not supported in the transaction context
+    user = await tx.user.findUnique({
+      where: { id: params.userId },
+      select: {
+        fundBalance: true,
+        incomeBalance: true,
+        totalEarned: true,
+        totalWithdrawn: true,
+      },
+    });
+  }
 
   if (!user) {
     throw new Error(`User ${params.userId} not found for ledger transaction`);

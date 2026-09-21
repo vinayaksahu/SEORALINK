@@ -92,6 +92,20 @@ export async function POST(req: Request) {
         throw new Error("Account activation ($10 USDT) is required before initiating withdrawals. Please activate your account first.");
       }
 
+      // Check if user already has an unapproved withdrawal in queue
+      const existingPending = await tx.withdrawalRequest.findFirst({
+        where: {
+          userId: user.id,
+          status: "PENDING",
+        },
+      });
+
+      if (existingPending) {
+        throw new Error(
+          "You already have a pending withdrawal request currently being processed by administration. Please wait until your previous request is completed before submitting another."
+        );
+      }
+
       // ==========================================
       // CASE 1: COMMISSION WALLET WITHDRAWAL (10% FEE)
       // ==========================================

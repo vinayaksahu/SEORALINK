@@ -6,8 +6,9 @@ const DEFAULT_FALLBACK_SECRET = "seoralink-default-jwt-secret-key-2026-auth";
 const rawSecret = process.env.JWT_SECRET;
 
 if (process.env.NODE_ENV === "production" && (!rawSecret || rawSecret === DEFAULT_FALLBACK_SECRET)) {
-  console.error(
-    "⚠️ [CRITICAL SECURITY WARNING] JWT_SECRET is not configured or is using default insecure fallback in production environment! Set a strong random JWT_SECRET in your environment variables immediately."
+  console.error("CRITICAL: Missing JWT_SECRET in production environment!");
+  throw new Error(
+    "FATAL SECURITY CONFIGURATION: JWT_SECRET must be explicitly configured in production environment variables."
   );
 }
 
@@ -68,6 +69,35 @@ export async function getSession(): Promise<SessionPayload | null> {
     const token = cookieStore.get("sl_session")?.value;
     if (!token) return null;
     return verifySessionToken(token);
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Validates session against database to ensure user exists, has not been
+ * blocked or suspended, and reflects current live role.
+ */
+export async function getValidatedSession(): Promise<(SessionPayload & { status: string }) | null> {
+  const session = await getSession();
+  if (!session) return null;
+
+  try {
+    const { db } = await import("./db");
+    const user = await db.user.findUnique({
+      where: { id: session.userId },
+      select: { status: true, role: true },
+    });
+
+    if (!user || user.status === "BLOCKED" || user.status === "SUSPENDED") {
+      return null;
+    }
+
+    return {
+      ...session,
+      role: user.role,
+      status: user.status,
+    };
   } catch {
     return null;
   }

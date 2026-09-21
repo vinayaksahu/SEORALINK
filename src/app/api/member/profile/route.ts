@@ -127,9 +127,17 @@ export async function PATCH(req: Request) {
     // 5. Validate New Password if provided
     let passwordHashToUpdate: string | undefined = undefined;
     if (newPassword && typeof newPassword === "string" && newPassword.trim().length > 0) {
-      if (newPassword.trim().length < 6) {
+      if (newPassword.trim().length < 8) {
         return NextResponse.json(
-          { error: "New password must be at least 6 characters long." },
+          { error: "New password must be at least 8 characters long for account security." },
+          { status: 400 }
+        );
+      }
+      const hasLetter = /[a-zA-Z]/.test(newPassword);
+      const hasDigit = /[0-9]/.test(newPassword);
+      if (!hasLetter || !hasDigit) {
+        return NextResponse.json(
+          { error: "New password must contain both letters and numbers for account security." },
           { status: 400 }
         );
       }

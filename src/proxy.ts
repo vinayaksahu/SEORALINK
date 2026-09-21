@@ -8,6 +8,43 @@ const encodedKey = new TextEncoder().encode(secretKey);
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
+
+  // -------------------------------------------------------------------------
+  // 0. CSRF & Cross-Origin Mutation Protection for State-Changing API Requests
+  // -------------------------------------------------------------------------
+  if (pathname.startsWith("/api/")) {
+    const method = request.method.toUpperCase();
+    if (["POST", "PUT", "PATCH", "DELETE"].includes(method)) {
+      const origin = request.headers.get("origin");
+      const host = request.headers.get("host");
+
+      if (origin && host) {
+        try {
+          const originHost = new URL(origin).host;
+          const isAllowed =
+            originHost === host ||
+            originHost.endsWith(".seoralink.com") ||
+            originHost.endsWith(".vercel.app") ||
+            originHost.includes("localhost") ||
+            originHost.includes("127.0.0.1");
+
+          if (!isAllowed) {
+            console.warn(`[Security Alert] Blocked cross-origin mutation attempt from: ${origin} targeting: ${host}`);
+            return NextResponse.json(
+              { error: "Forbidden: Cross-origin API request rejected by security policy." },
+              { status: 403 }
+            );
+          }
+        } catch {
+          return NextResponse.json(
+            { error: "Malformed origin header in request." },
+            { status: 400 }
+          );
+        }
+      }
+    }
+  }
+
   const token = request.cookies.get("sl_session")?.value;
 
   let session: any = null;
@@ -110,7 +147,13 @@ export async function proxy(request: NextRequest) {
     }
   }
 
-  return NextResponse.next();
+  const response = NextResponse.next();
+  response.headers.set("X-Frame-Options", "SAMEORIGIN");
+  response.headers.set("X-Content-Type-Options", "nosniff");
+  response.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
+  response.headers.set("X-XSS-Protection", "1; mode=block");
+
+  return response;
 }
 
 export default proxy;
@@ -125,5 +168,6 @@ export const config = {
     "/login",
     "/register",
     "/adminlogin",
+    "/api/:path*",
   ],
 };

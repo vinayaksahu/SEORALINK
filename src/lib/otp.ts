@@ -1,5 +1,7 @@
 import { db } from "./db";
 import { sendOtpEmail } from "./mail";
+import { randomInt } from "node:crypto";
+import { checkRateLimitAsync } from "./rateLimit";
 
 export type OtpPurpose =
   | "REGISTRATION"
@@ -132,8 +134,8 @@ export async function generateAndSendOtp({
     },
   });
 
-  // 4. Generate 6-digit code
-  const code = Math.floor(100000 + Math.random() * 900000).toString();
+  // 4. Generate cryptographically secure 6-digit code
+  const code = randomInt(100000, 1000000).toString();
   const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
 
   // 5. Store new OTP record
@@ -198,7 +200,31 @@ export async function validateAndConsumeOtp({
     };
   }
 
-  // 3. Check matching valid OTP
+  // 3. Brute force defense: Max 5 verification attempts per 10-minute window
+  const attemptLimitKey = `otp:verify:${cleanEmail}:${purpose}`;
+  const attemptCheck = await checkRateLimitAsync(attemptLimitKey, {
+    maxRequests: 5,
+    windowSeconds: 600,
+  });
+
+  if (!attemptCheck.success) {
+    // Invalidate any pending OTP for this purpose due to brute force detection
+    await db.emailOtp.updateMany({
+      where: {
+        email: cleanEmail,
+        purpose,
+        used: false,
+      },
+      data: { used: true },
+    });
+
+    return {
+      success: false,
+      error: "Too many failed attempts. For your security, this verification code has been permanently cancelled. Please request a fresh code.",
+    };
+  }
+
+  // 4. Check matching valid OTP
   const otpRecord = await db.emailOtp.findFirst({
     where: {
       email: cleanEmail,
@@ -211,13 +237,16 @@ export async function validateAndConsumeOtp({
   });
 
   if (!otpRecord) {
+    const remaining = Math.max(0, attemptCheck.remaining);
     return {
       success: false,
-      error: "Invalid or expired verification code. Please request a new code.",
+      error: remaining > 0
+        ? `Invalid verification code. (${remaining} attempt${remaining === 1 ? "" : "s"} remaining before code is locked)`
+        : "Invalid or expired verification code. Please request a new code.",
     };
   }
 
-  // 4. Mark code as used immediately (single-use)
+  // 5. Mark code as used immediately (single-use)
   await db.emailOtp.update({
     where: { id: otpRecord.id },
     data: { used: true },
