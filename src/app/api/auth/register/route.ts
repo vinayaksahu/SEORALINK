@@ -6,6 +6,7 @@ import { cookies } from "next/headers";
 import { isUserSystemExited } from "@/lib/userStatus";
 import { validateAndConsumeOtp } from "@/lib/otp";
 import { getClientIp, checkRateLimitAsync, rateLimitResponse } from "@/lib/rateLimit";
+import { canUserSponsor } from "@/lib/referralPolicy";
 
 export async function POST(req: Request) {
   try {
@@ -98,6 +99,15 @@ export async function POST(req: Request) {
         if (isSponsorExited) {
           return NextResponse.json(
             { error: "This sponsor account has permanently exited the network under the Single-Exit protocol and can no longer sponsor or refer new members." },
+            { status: 400 }
+          );
+        }
+
+        // Check if system policy requires active sponsor to refer
+        const sponsorPolicyCheck = await canUserSponsor(sponsor);
+        if (!sponsorPolicyCheck.allowed) {
+          return NextResponse.json(
+            { error: sponsorPolicyCheck.reason },
             { status: 400 }
           );
         }

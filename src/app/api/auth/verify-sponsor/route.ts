@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { isUserSystemExited } from "@/lib/userStatus";
+import { canUserSponsor } from "@/lib/referralPolicy";
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
@@ -26,6 +27,8 @@ export async function GET(req: Request) {
       id: true,
       customId: true,
       fullName: true,
+      role: true,
+      status: true,
     },
   });
 
@@ -41,5 +44,19 @@ export async function GET(req: Request) {
     });
   }
 
-  return NextResponse.json({ sponsor });
+  const sponsorCheck = await canUserSponsor(sponsor);
+  if (!sponsorCheck.allowed) {
+    return NextResponse.json({
+      sponsor: null,
+      error: sponsorCheck.reason,
+    });
+  }
+
+  return NextResponse.json({
+    sponsor: {
+      id: sponsor.id,
+      customId: sponsor.customId,
+      fullName: sponsor.fullName,
+    },
+  });
 }

@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import SettingsFormClient from "./SettingsFormClient";
 import { Settings, Database, ArrowRight } from "lucide-react";
 import { getAllOtpSettings } from "@/lib/otp";
+import { isRequireActiveSponsorEnabled } from "@/lib/referralPolicy";
 
 export default async function AdminSettingsPage() {
   const session = await getSession();
@@ -53,6 +54,7 @@ export default async function AdminSettingsPage() {
   }
 
   const otpSettings = await getAllOtpSettings();
+  const requireActiveSponsor = await isRequireActiveSponsorEnabled();
 
   return (
     <div className="space-y-8">
@@ -97,6 +99,7 @@ export default async function AdminSettingsPage() {
         initialDistributionMode={distributionMode}
         initialNetwork={network}
         initialOtpSettings={otpSettings}
+        initialRequireActiveSponsor={requireActiveSponsor}
       />
     </div>
   );

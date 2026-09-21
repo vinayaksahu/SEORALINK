@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import ProfileFormClient from "./ProfileFormClient";
 import { UserCheck } from "lucide-react";
 import { isUserSystemExited } from "@/lib/userStatus";
+import { isRequireActiveSponsorEnabled } from "@/lib/referralPolicy";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -33,6 +34,7 @@ export default async function MemberProfilePage() {
   }
 
   const isSystemExited = await isUserSystemExited(user.id);
+  const requireActiveSponsor = await isRequireActiveSponsorEnabled();
 
   const serializedUser = {
     id: user.id,
@@ -44,6 +46,7 @@ export default async function MemberProfilePage() {
     usdtNetwork: user.usdtNetwork || "USDT_BEP20",
     status: user.status,
     isSystemExited,
+    isSponsorLocked: Boolean(requireActiveSponsor && user.status !== "ACTIVE" && session.role === "USER"),
     currentTier: user.currentTier,
     directCount: user.directCount,
     fundBalance: user.fundBalance.toString(),

@@ -136,6 +136,7 @@ export default function SuperRootAdminPage() {
     otpForgotPassword: true,
     otpWithdrawal: true,
     otpProfileUpdate: false,
+    requireActiveSponsor: true,
   });
   const [configLoading, setConfigLoading] = useState(false);
   const [configSaving, setConfigSaving] = useState(false);
@@ -240,6 +241,7 @@ export default function SuperRootAdminPage() {
           otpForgotPassword: c.OTP_ENABLED_FORGOT_PASSWORD !== "false",
           otpWithdrawal: c.OTP_ENABLED_WITHDRAWAL !== "false",
           otpProfileUpdate: c.OTP_ENABLED_PROFILE_UPDATE !== "false",
+          requireActiveSponsor: c.REQUIRE_ACTIVE_SPONSOR !== "false",
         });
       }
     } catch (err) {
@@ -522,6 +524,7 @@ export default function SuperRootAdminPage() {
             OTP_ENABLED_FORGOT_PASSWORD: configForm.otpForgotPassword ? "true" : "false",
             OTP_ENABLED_WITHDRAWAL: configForm.otpWithdrawal ? "true" : "false",
             OTP_ENABLED_PROFILE_UPDATE: configForm.otpProfileUpdate ? "true" : "false",
+            REQUIRE_ACTIVE_SPONSOR: configForm.requireActiveSponsor ? "true" : "false",
           },
         }),
       });
@@ -1756,6 +1759,38 @@ export default function SuperRootAdminPage() {
                     />
                   </label>
                 </div>
+              </div>
+
+              {/* Referral Sponsorship Activation Policy */}
+              <div className="space-y-3 pt-3 border-t border-slate-800">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-xs font-bold text-amber-400 uppercase tracking-wider flex items-center gap-2">
+                    <Users size={14} className="text-amber-400" />
+                    Referral Sponsorship Rule ($10 USDT Activation)
+                  </h3>
+                  <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-full border ${
+                    configForm.requireActiveSponsor
+                      ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/30"
+                      : "bg-amber-500/15 text-amber-400 border-amber-500/30"
+                  }`}>
+                    {configForm.requireActiveSponsor ? "ACTIVE SPONSOR MANDATORY" : "OPEN REFERRALS"}
+                  </span>
+                </div>
+
+                <label className="flex items-start justify-between p-4 rounded-xl bg-slate-950 border border-slate-800 cursor-pointer hover:border-slate-700 transition gap-4">
+                  <div className="space-y-1">
+                    <p className="text-xs font-bold text-white">Require Account Activation Before Referring</p>
+                    <p className="text-[11px] text-slate-400 leading-relaxed">
+                      Jab tak kisi member ka ID activate ($10 USDT) nahi hai tab tak wo kisi ko bhi refer nahi kar sakta. Inactive member ki referral link se registration block rahegi. (Admin &amp; Super Admin hamesha exempt rahenge).
+                    </p>
+                  </div>
+                  <input
+                    type="checkbox"
+                    checked={configForm.requireActiveSponsor}
+                    onChange={(e) => setConfigForm({ ...configForm, requireActiveSponsor: e.target.checked })}
+                    className="w-5 h-5 accent-emerald-500 rounded cursor-pointer shrink-0 mt-1"
+                  />
+                </label>
               </div>
 
               <button

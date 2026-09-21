@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import { TIER_NAMES, TIER_VALUES, REQUIRED_DIRECTS, NET_CASHOUT_VALUES } from "@/lib/constants";
 import { checkPendingRankPromotions } from "@/lib/queueEngine";
 import { ReferralShareCard } from "@/components/ReferralShareCard";
+import { isRequireActiveSponsorEnabled } from "@/lib/referralPolicy";
 import {
   Wallet,
   ArrowUpRight,
@@ -24,8 +25,8 @@ export default async function MemberDashboardPage() {
   const session = await getSession();
   if (!session) redirect("/login");
 
-  // Fetch user data and rank withdrawal status concurrently in parallel
-  const [user, existingRankWithdrawal] = await Promise.all([
+  // Fetch user data, rank withdrawal status, and sponsor policy concurrently in parallel
+  const [user, existingRankWithdrawal, requireActiveSponsor] = await Promise.all([
     db.user.findUnique({
       where: { id: session.userId },
       include: {
@@ -47,6 +48,7 @@ export default async function MemberDashboardPage() {
       },
       select: { id: true },
     }),
+    isRequireActiveSponsorEnabled(),
   ]);
 
   if (!user) redirect("/login");
@@ -257,7 +259,10 @@ export default async function MemberDashboardPage() {
 
       {/* Referral Link Quick Share Card (Disabled if Banned or System Exited) */}
       {!isBanned && !hasWithdrawnRankPool ? (
-        <ReferralShareCard referralLink={referralLink} />
+        <ReferralShareCard
+          referralLink={referralLink}
+          isLocked={Boolean(requireActiveSponsor && user.status !== "ACTIVE" && session.role === "USER")}
+        />
       ) : (
         <div className="card-seoralink p-4 border border-purple-500/40 bg-purple-500/5 text-center text-xs text-[#cbd5e1]">
           {hasWithdrawnRankPool

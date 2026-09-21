@@ -9,7 +9,14 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Unauthorized administrative access" }, { status: 403 });
     }
 
-    const { usdtAddress, network, depositAddresses, distributionMode, otpSettings } = await req.json();
+    const {
+      usdtAddress,
+      network,
+      depositAddresses,
+      distributionMode,
+      otpSettings,
+      requireActiveSponsor,
+    } = await req.json();
 
     let primaryAddress = usdtAddress ? usdtAddress.trim() : "";
 
@@ -102,6 +109,18 @@ export async function POST(req: Request) {
           });
         }
       }
+    }
+
+    if (typeof requireActiveSponsor === "boolean") {
+      await db.systemConfig.upsert({
+        where: { key: "REQUIRE_ACTIVE_SPONSOR" },
+        update: { value: requireActiveSponsor ? "true" : "false" },
+        create: {
+          key: "REQUIRE_ACTIVE_SPONSOR",
+          value: requireActiveSponsor ? "true" : "false",
+          description: "Policy: Require active account ($10 USDT) for referrals and sponsorship",
+        },
+      });
     }
 
     return NextResponse.json({

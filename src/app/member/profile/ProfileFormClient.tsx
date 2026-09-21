@@ -40,6 +40,7 @@ interface ProfileFormClientProps {
     usdtNetwork: string | null;
     status: string;
     isSystemExited?: boolean;
+    isSponsorLocked?: boolean;
     currentTier: number;
     directCount: number;
     fundBalance: string;
@@ -756,6 +757,24 @@ export default function ProfileFormClient({ user: initialUser }: ProfileFormClie
                   <p className="text-[11px] text-[#cbd5e1] leading-relaxed">
                     This account has concluded its Single-Exit protocol settlement and can no longer sponsor or refer new members.
                   </p>
+                </div>
+              ) : user.isSponsorLocked ? (
+                <div className="p-3.5 rounded-xl border border-amber-500/40 bg-amber-500/10 space-y-2">
+                  <div className="flex items-center gap-1.5 text-xs font-bold text-amber-400">
+                    <Lock size={13} className="shrink-0" />
+                    <span>Referrals Inactive — Activation Required</span>
+                  </div>
+                  <p className="text-[11px] text-[#cbd5e1] leading-relaxed">
+                    Aapka account abhi activate nahi hai ($10 USDT). Jab tak ID activate nahi hoti, tab tak naye members aapke referral link se join nahi kar payenge.
+                  </p>
+                  <div className="pt-1">
+                    <a
+                      href="/member/activate"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-black text-xs font-bold transition-all shadow-md shadow-emerald-500/20"
+                    >
+                      Activate Account ($10 USDT) &rarr;
+                    </a>
+                  </div>
                 </div>
               ) : (
                 <>

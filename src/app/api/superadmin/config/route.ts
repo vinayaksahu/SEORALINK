@@ -60,6 +60,8 @@ export async function POST(req: Request) {
           return "System requirement: Email OTP verification for withdrawal requests";
         case "OTP_ENABLED_PROFILE_UPDATE":
           return "System requirement: Email OTP verification for profile updates";
+        case "REQUIRE_ACTIVE_SPONSOR":
+          return "Policy: Require members to have an active ($10 USDT) account before they can sponsor/refer new users";
         case "DEFAULT_NETWORK":
           return "Default deposit blockchain network";
         case "DEPOSIT_DISTRIBUTION_MODE":

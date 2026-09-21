@@ -37,14 +37,20 @@ export default function SettingsFormClient({
   initialDistributionMode,
   initialNetwork,
   initialOtpSettings,
+  initialRequireActiveSponsor,
 }: {
   initialAddress: string;
   initialAddresses?: DepositAddressItem[];
   initialDistributionMode?: string;
   initialNetwork: string;
   initialOtpSettings?: Record<string, boolean>;
+  initialRequireActiveSponsor?: boolean;
 }) {
   const router = useRouter();
+
+  const [requireActiveSponsor, setRequireActiveSponsor] = useState<boolean>(
+    initialRequireActiveSponsor ?? true
+  );
 
   const [otpSettings, setOtpSettings] = useState<Record<string, boolean>>(() => ({
     REGISTRATION: initialOtpSettings?.REGISTRATION ?? true,
@@ -252,6 +258,7 @@ export default function SettingsFormClient({
           distributionMode,
           network,
           otpSettings,
+          requireActiveSponsor,
         }),
       });
 
@@ -749,6 +756,63 @@ export default function SettingsFormClient({
               />
             </button>
           </div>
+        </div>
+      </div>
+
+      {/* Referral & Sponsorship Policy */}
+      <div className="space-y-4 pt-4 border-t border-[#1e293b]">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div>
+            <label className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
+              <Users size={16} className="text-[#d4af37]" />
+              Referral &amp; Sponsorship Activation Policy
+            </label>
+            <p className="text-[11px] text-[#94a3b8] mt-0.5">
+              Control whether members must have an active $10 USDT account before they can sponsor/refer new users.
+            </p>
+          </div>
+          <span className={`text-[10px] font-mono px-2.5 py-1 rounded-full border font-bold self-start sm:self-auto flex items-center gap-1.5 ${
+            requireActiveSponsor
+              ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400"
+              : "bg-amber-500/10 border-amber-500/30 text-amber-400"
+          }`}>
+            <ShieldCheck size={11} /> {requireActiveSponsor ? "Policy: Active Account Required" : "Policy: Open Referrals"}
+          </span>
+        </div>
+
+        <div className="p-4 rounded-xl border border-[#1e293b] bg-[#070a14] flex items-start justify-between gap-4 hover:border-slate-700 transition-colors">
+          <div className="space-y-1.5">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-xs font-bold text-white">
+                Require Active Account ($10 USDT) To Sponsor
+              </span>
+              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
+                requireActiveSponsor 
+                  ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/40" 
+                  : "bg-amber-500/15 text-amber-400 border-amber-500/40"
+              }`}>
+                {requireActiveSponsor ? "ACTIVE (ENABLED)" : "DISABLED"}
+              </span>
+            </div>
+            <p className="text-[11px] text-[#94a3b8] leading-relaxed">
+              {requireActiveSponsor
+                ? "RULE ON: Jab tak kisi member ki ID activate ($10 USDT) nahi hai, tab tak wo kisi ko bhi refer nahi kar sakta. Registration portal par inactive sponsor code reject ho jayega. (Admin & Super Admin accounts are exempt and can always sponsor)."
+                : "RULE OFF: Kisi bhi registered member ki referral link hamesha open rahegi chahe unka account active ho ya inactive."}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setRequireActiveSponsor(!requireActiveSponsor)}
+            className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+              requireActiveSponsor ? "bg-emerald-500" : "bg-slate-700"
+            }`}
+          >
+            <span
+              className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                requireActiveSponsor ? "translate-x-5" : "translate-x-0"
+              }`}
+            />
+          </button>
         </div>
       </div>
 

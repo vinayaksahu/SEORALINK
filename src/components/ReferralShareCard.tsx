@@ -1,13 +1,15 @@
 "use client";
 
 import React, { useState } from "react";
-import { Copy, Check } from "lucide-react";
+import Link from "next/link";
+import { Copy, Check, Lock, ArrowRight } from "lucide-react";
 
 interface ReferralShareCardProps {
   referralLink: string;
+  isLocked?: boolean;
 }
 
-export function ReferralShareCard({ referralLink }: ReferralShareCardProps) {
+export function ReferralShareCard({ referralLink, isLocked = false }: ReferralShareCardProps) {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = async () => {
@@ -21,6 +23,50 @@ export function ReferralShareCard({ referralLink }: ReferralShareCardProps) {
       console.error("Failed to copy link", err);
     }
   };
+
+  if (isLocked) {
+    return (
+      <div className="card-seoralink p-5 bg-[#0d1424] border-amber-500/40 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <div className="space-y-1.5 max-w-xl">
+          <div className="text-xs font-bold text-amber-400 uppercase tracking-wider flex items-center gap-2">
+            <Lock size={14} className="text-amber-400 shrink-0" />
+            <span>Referral Sponsorship Locked — Account Activation Required</span>
+            <span className="text-[10px] bg-amber-500/20 text-amber-300 border border-amber-500/40 px-2 py-0.5 rounded-full font-bold">
+              INACTIVE ID
+            </span>
+          </div>
+          <p className="text-xs text-[#94a3b8] leading-relaxed">
+            Aapki ID abhi activate nahi hai. System policy ke mutabiq, jab tak aapka $10 USDT account activation complete nahi hota, tab tak new members aapke referral link se join nahi kar sakte.
+          </p>
+        </div>
+
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 w-full md:w-auto shrink-0">
+          <Link
+            href="/member/activate"
+            className="px-4 py-2.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-black font-extrabold text-xs flex items-center justify-center gap-1.5 transition-all active:scale-95 shadow-lg shadow-emerald-500/20 whitespace-nowrap"
+          >
+            Activate Account ($10 USDT) <ArrowRight size={14} />
+          </Link>
+          <button
+            type="button"
+            onClick={handleCopy}
+            title="Copy link anyway"
+            className="px-3.5 py-2.5 rounded-lg border border-slate-700 bg-slate-800/80 hover:bg-slate-700 text-slate-300 text-xs font-semibold flex items-center justify-center gap-1.5 whitespace-nowrap transition-colors"
+          >
+            {copied ? (
+              <>
+                <Check size={14} className="text-emerald-400" /> Copied
+              </>
+            ) : (
+              <>
+                <Copy size={14} /> Copy Link
+              </>
+            )}
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="card-seoralink p-5 bg-[#0d1424] border-[#d4af37]/30 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
