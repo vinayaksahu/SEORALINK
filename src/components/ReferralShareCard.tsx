@@ -36,7 +36,7 @@ export function ReferralShareCard({ referralLink, isLocked = false }: ReferralSh
             </span>
           </div>
           <p className="text-xs text-[#94a3b8] leading-relaxed">
-            Aapki ID abhi activate nahi hai. System policy ke mutabiq, jab tak aapka $10 USDT account activation complete nahi hota, tab tak new members aapke referral link se join nahi kar sakte.
+            Your account is currently inactive. In accordance with system policy, account activation ($10 USDT) is required before new members can register using your referral link.
           </p>
         </div>
 

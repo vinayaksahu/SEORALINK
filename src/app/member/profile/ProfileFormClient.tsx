@@ -765,7 +765,7 @@ export default function ProfileFormClient({ user: initialUser }: ProfileFormClie
                     <span>Referrals Inactive — Activation Required</span>
                   </div>
                   <p className="text-[11px] text-[#cbd5e1] leading-relaxed">
-                    Aapka account abhi activate nahi hai ($10 USDT). Jab tak ID activate nahi hoti, tab tak naye members aapke referral link se join nahi kar payenge.
+                    Your account is currently inactive ($10 USDT). In accordance with system policy, account activation is required before new partners can join using your referral code.
                   </p>
                   <div className="pt-1">
                     <a

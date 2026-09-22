@@ -160,7 +160,7 @@ export default async function MemberDepositPage() {
             </div>
 
             <p className="text-xs text-[#cbd5e1] leading-relaxed">
-              Aapka account already successfully activated hai. SEORALINK protocol ke mutabik ek ID ko sirf ek baar <strong>$10 Micro-Entry</strong> fee se activate karna hota hai. Active members ko extra deposits karne ki permission ya zaroorat nahi hoti.
+              Your account is already active. Under the SEORALINK protocol, each account requires only a single <strong>$10 Micro-Entry</strong> activation fee. Active accounts do not require additional deposits.
             </p>
 
             <div className="flex flex-wrap items-center gap-3 pt-1">

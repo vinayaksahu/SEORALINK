@@ -352,7 +352,7 @@ export default function BackupClient({ currentStats, adminEmail }: BackupClientP
               Restore / Populate New Database
             </div>
             <p className="text-xs text-slate-400 leading-relaxed">
-              Jab aap naya database create karein ya purana backup restore karna chahein, toh local <strong>.json</strong> ya <strong>.xlsx</strong> file upload karke execute karein.
+              Upload a previously exported <strong>.json</strong> or <strong>.xlsx</strong> backup file to restore or populate your database.
             </p>
 
             {/* Mode Selector */}
