@@ -40,29 +40,13 @@ export function ReferralShareCard({ referralLink, isLocked = false }: ReferralSh
           </p>
         </div>
 
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 w-full md:w-auto shrink-0">
+        <div className="flex items-center gap-2.5 w-full md:w-auto shrink-0">
           <Link
             href="/member/activate"
-            className="px-4 py-2.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-black font-extrabold text-xs flex items-center justify-center gap-1.5 transition-all active:scale-95 shadow-lg shadow-emerald-500/20 whitespace-nowrap"
+            className="px-5 py-2.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-black font-extrabold text-xs flex items-center justify-center gap-1.5 transition-all active:scale-95 shadow-lg shadow-emerald-500/20 whitespace-nowrap"
           >
             Activate Account ($10 USDT) <ArrowRight size={14} />
           </Link>
-          <button
-            type="button"
-            onClick={handleCopy}
-            title="Copy link anyway"
-            className="px-3.5 py-2.5 rounded-lg border border-slate-700 bg-slate-800/80 hover:bg-slate-700 text-slate-300 text-xs font-semibold flex items-center justify-center gap-1.5 whitespace-nowrap transition-colors"
-          >
-            {copied ? (
-              <>
-                <Check size={14} className="text-emerald-400" /> Copied
-              </>
-            ) : (
-              <>
-                <Copy size={14} /> Copy Link
-              </>
-            )}
-          </button>
         </div>
       </div>
     );

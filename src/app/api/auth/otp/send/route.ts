@@ -3,6 +3,8 @@ import { getSession } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { generateAndSendOtp, OtpPurpose, isOtpFeatureEnabled } from "@/lib/otp";
 import { getClientIp, checkRateLimitAsync, rateLimitResponse } from "@/lib/rateLimit";
+import { isUserSystemExited } from "@/lib/userStatus";
+import { canUserSponsor } from "@/lib/referralPolicy";
 
 export async function POST(req: Request) {
   try {
@@ -21,7 +23,12 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json();
-    const { purpose, email } = body as { purpose: OtpPurpose; email?: string };
+    const { purpose, email, sponsorCode } = body as {
+      purpose: OtpPurpose;
+      email?: string;
+      sponsorCode?: string;
+      fullName?: string;
+    };
 
     if (!purpose) {
       return NextResponse.json({ error: "OTP purpose is required" }, { status: 400 });
@@ -110,6 +117,54 @@ export async function POST(req: Request) {
       }
       if (body.fullName) {
         recipientName = body.fullName;
+      }
+
+      // Strictly validate Sponsor Referral Code if provided
+      const regSponsorCode = typeof sponsorCode === "string" ? sponsorCode.trim() : "";
+      if (regSponsorCode) {
+        const sponsor = await db.user.findFirst({
+          where: {
+            OR: [
+              { customId: { equals: regSponsorCode, mode: "insensitive" } },
+              { referralCode: { equals: regSponsorCode, mode: "insensitive" } },
+              { email: { equals: regSponsorCode.toLowerCase(), mode: "insensitive" } },
+            ],
+            NOT: [
+              { role: "SUPER_ROOT_ADMIN" },
+              { customId: "SUPERROOT" },
+            ],
+          },
+          select: {
+            id: true,
+            customId: true,
+            fullName: true,
+            role: true,
+            status: true,
+          },
+        });
+
+        if (!sponsor) {
+          return NextResponse.json(
+            { error: "Invalid sponsor referral code. Account not found." },
+            { status: 400 }
+          );
+        }
+
+        const isSponsorExited = await isUserSystemExited(sponsor.id);
+        if (isSponsorExited) {
+          return NextResponse.json(
+            { error: "This sponsor account has permanently exited the network under the Single-Exit protocol and cannot sponsor new members." },
+            { status: 400 }
+          );
+        }
+
+        const sponsorPolicyCheck = await canUserSponsor(sponsor);
+        if (!sponsorPolicyCheck.allowed) {
+          return NextResponse.json(
+            { error: sponsorPolicyCheck.reason || "Sponsor account is not activated. Inactive accounts cannot sponsor new members." },
+            { status: 400 }
+          );
+        }
       }
     }
 

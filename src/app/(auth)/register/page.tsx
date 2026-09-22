@@ -20,8 +20,13 @@ function RegisterForm() {
   const [sponsorCode, setSponsorCode] = useState("");
   const [sponsorName, setSponsorName] = useState("");
   const [checkingSponsor, setCheckingSponsor] = useState(false);
+  const [sponsorValid, setSponsorValid] = useState<boolean | null>(null);
+  const [sponsorError, setSponsorError] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  // When sponsor is explicitly invalid/inactive, disable all subsequent form fields
+  const isFormDisabled = sponsorValid === false;
 
   // OTP Verification States
   const [otpCode, setOtpCode] = useState("");
@@ -50,6 +55,10 @@ function RegisterForm() {
   }, [otpCooldown]);
 
   const handleSendOtp = async () => {
+    if (isFormDisabled) {
+      setError("Cannot dispatch verification code with an inactive or invalid sponsor referral code.");
+      return;
+    }
     if (!email || !email.includes("@")) {
       setError("Please enter a valid email address first.");
       return;
@@ -65,6 +74,7 @@ function RegisterForm() {
           purpose: "REGISTRATION",
           email: email.trim(),
           fullName: fullName.trim() || undefined,
+          sponsorCode: sponsorCode.trim(),
         }),
       });
       const data = await res.json();
@@ -84,38 +94,56 @@ function RegisterForm() {
     const ref = searchParams.get("ref");
     if (ref) {
       setSponsorCode(ref);
-      verifySponsor(ref);
     }
   }, [searchParams]);
 
-  const verifySponsor = async (code: string) => {
-    if (!code || code.trim().length < 3) {
+  useEffect(() => {
+    const trimmed = sponsorCode.trim();
+    if (!trimmed || trimmed.length < 3) {
       setSponsorName("");
+      setSponsorError("");
+      setSponsorValid(null);
+      setCheckingSponsor(false);
       return;
     }
+
     setCheckingSponsor(true);
-    try {
-      const res = await fetch(`/api/auth/verify-sponsor?code=${encodeURIComponent(code.trim())}`);
-      const data = await res.json();
-      if (res.ok && data.sponsor) {
-        setSponsorName(data.sponsor.fullName);
-        setError("");
-      } else {
-        setSponsorName("");
-        if (data.error) {
-          setError(data.error);
+    const timer = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/auth/verify-sponsor?code=${encodeURIComponent(trimmed)}`);
+        const data = await res.json();
+        if (res.ok && data.sponsor) {
+          setSponsorName(data.sponsor.fullName);
+          setSponsorValid(true);
+          setSponsorError("");
+          setError((prev) => (prev.toLowerCase().includes("sponsor") ? "" : prev));
+        } else {
+          setSponsorName("");
+          setSponsorValid(false);
+          const errMsg = data.error || "Invalid sponsor referral code. Account not found.";
+          setSponsorError(errMsg);
+          setError(errMsg);
         }
+      } catch {
+        setSponsorName("");
+        setSponsorValid(false);
+        setSponsorError("Failed to verify sponsor referral code. Please check your connection.");
+      } finally {
+        setCheckingSponsor(false);
       }
-    } catch {
-      setSponsorName("");
-    } finally {
-      setCheckingSponsor(false);
-    }
-  };
+    }, 350);
+
+    return () => clearTimeout(timer);
+  }, [sponsorCode]);
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+
+    if (isFormDisabled) {
+      setError("Cannot proceed: The provided sponsor account is inactive or invalid.");
+      return;
+    }
 
     if (otpEnabled && (!otpCode || otpCode.trim().length !== 6)) {
       setError("Please enter the 6-digit verification code sent to your email.");
@@ -177,7 +205,7 @@ function RegisterForm() {
         </div>
 
         <div className="card-seoralink p-8 space-y-6 bg-white dark:bg-[#0d1424]/95 border-slate-200 dark:border-[#d4af37]/35 shadow-2xl">
-          {error && (
+          {error && !sponsorError && (
             <div className="p-3.5 rounded-lg bg-red-500/10 border border-red-500/30 text-red-500 dark:text-red-400 text-xs flex items-center gap-2">
               <AlertCircle size={16} className="flex-shrink-0" />
               <span>{error}</span>
@@ -189,11 +217,15 @@ function RegisterForm() {
             <div className="space-y-1.5">
               <label className="text-xs font-bold text-[#d4af37] uppercase tracking-wider flex items-center justify-between">
                 <span>Sponsor Referral Code</span>
-                {sponsorName && (
+                {checkingSponsor ? (
+                  <span className="text-[#d4af37] font-semibold text-[11px] animate-pulse">
+                    Verifying sponsor...
+                  </span>
+                ) : sponsorName ? (
                   <span className="text-[#10b981] font-bold text-[11px] flex items-center gap-1">
                     <CheckCircle size={12} /> {sponsorName}
                   </span>
-                )}
+                ) : null}
               </label>
               <div className="relative">
                 <Users size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#64748b]" />
@@ -201,14 +233,35 @@ function RegisterForm() {
                   type="text"
                   required
                   value={sponsorCode}
-                  onChange={(e) => {
-                    setSponsorCode(e.target.value);
-                    verifySponsor(e.target.value);
-                  }}
+                  onChange={(e) => setSponsorCode(e.target.value)}
                   placeholder="e.g. SL100000 or sponsor ID"
-                  className="w-full bg-[#0b1120] border border-[#d4af37]/40 text-white rounded-lg pl-10 pr-4 py-2.5 text-xs font-mono font-bold focus:outline-none focus:border-[#d4af37]"
+                  className={`w-full bg-[#0b1120] border text-white rounded-lg pl-10 pr-4 py-2.5 text-xs font-mono font-bold focus:outline-none transition-colors ${
+                    sponsorValid === false
+                      ? "border-red-500/70 focus:border-red-500"
+                      : sponsorValid === true
+                      ? "border-emerald-500/70 focus:border-emerald-500"
+                      : "border-[#d4af37]/40 focus:border-[#d4af37]"
+                  }`}
                 />
               </div>
+
+              {/* Inactive or Invalid Sponsor Warning Banner */}
+              {sponsorValid === false && sponsorError && (
+                <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-xs flex items-start gap-2.5 mt-2 animate-in fade-in duration-200">
+                  <AlertCircle size={16} className="text-red-400 shrink-0 mt-0.5" />
+                  <div className="space-y-1">
+                    <div className="font-bold text-red-400 flex items-center gap-1.5">
+                      <span>Registration Locked</span>
+                    </div>
+                    <p className="text-[11px] text-red-300/90 leading-relaxed">
+                      {sponsorError}
+                    </p>
+                    <p className="text-[10px] text-slate-400 font-medium pt-0.5">
+                      All subsequent registration fields and verification dispatch are disabled until an active sponsor code is provided.
+                    </p>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Full Name */}
@@ -221,10 +274,11 @@ function RegisterForm() {
                 <input
                   type="text"
                   required
+                  disabled={isFormDisabled}
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
                   placeholder="e.g. Alexander Vance"
-                  className="w-full bg-[#0b1120] border border-[#d4af37]/30 text-white rounded-lg pl-10 pr-4 py-2.5 text-xs font-medium focus:outline-none focus:border-[#d4af37]"
+                  className="w-full bg-[#0b1120] border border-[#d4af37]/30 text-white rounded-lg pl-10 pr-4 py-2.5 text-xs font-medium focus:outline-none focus:border-[#d4af37] disabled:opacity-40 disabled:cursor-not-allowed disabled:bg-slate-900/60"
                 />
               </div>
             </div>
@@ -239,17 +293,22 @@ function RegisterForm() {
                 <input
                   type="email"
                   required
+                  disabled={isFormDisabled}
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="name@example.com"
-                  className="w-full bg-[#0b1120] border border-[#d4af37]/30 text-white rounded-lg pl-10 pr-4 py-2.5 text-xs font-medium focus:outline-none focus:border-[#d4af37]"
+                  className="w-full bg-[#0b1120] border border-[#d4af37]/30 text-white rounded-lg pl-10 pr-4 py-2.5 text-xs font-medium focus:outline-none focus:border-[#d4af37] disabled:opacity-40 disabled:cursor-not-allowed disabled:bg-slate-900/60"
                 />
               </div>
             </div>
 
             {/* Email Verification OTP (when enabled by Admin) */}
             {otpEnabled && (
-              <div className="space-y-2 p-3.5 rounded-xl border border-[#38bdf8]/40 bg-[#071124]">
+              <div className={`space-y-2 p-3.5 rounded-xl border transition-opacity ${
+                isFormDisabled
+                  ? "border-slate-800 bg-[#071124]/50 opacity-40 cursor-not-allowed"
+                  : "border-[#38bdf8]/40 bg-[#071124]"
+              }`}>
                 <div className="flex items-center justify-between">
                   <label className="text-xs font-bold text-[#38bdf8] uppercase tracking-wider flex items-center gap-1.5">
                     <ShieldCheck size={14} className="text-[#38bdf8]" />
@@ -257,9 +316,9 @@ function RegisterForm() {
                   </label>
                   <button
                     type="button"
-                    disabled={sendingOtp || otpCooldown > 0 || !email || !email.includes("@")}
+                    disabled={isFormDisabled || sendingOtp || otpCooldown > 0 || !email || !email.includes("@")}
                     onClick={handleSendOtp}
-                    className="text-[11px] font-bold text-[#38bdf8] hover:underline disabled:opacity-50 cursor-pointer"
+                    className="text-[11px] font-bold text-[#38bdf8] hover:underline disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
                   >
                     {sendingOtp
                       ? "Sending..."
@@ -273,10 +332,11 @@ function RegisterForm() {
                 <input
                   type="text"
                   maxLength={6}
+                  disabled={isFormDisabled}
                   value={otpCode}
                   onChange={(e) => setOtpCode(e.target.value.replace(/[^0-9]/g, ""))}
                   placeholder="Enter 6-digit code"
-                  className="w-full bg-[#0b1120] border border-[#38bdf8]/40 text-white rounded-lg px-3.5 py-2.5 text-xs font-mono font-bold tracking-widest focus:outline-none focus:border-[#38bdf8]"
+                  className="w-full bg-[#0b1120] border border-[#38bdf8]/40 text-white rounded-lg px-3.5 py-2.5 text-xs font-mono font-bold tracking-widest focus:outline-none focus:border-[#38bdf8] disabled:opacity-40 disabled:cursor-not-allowed disabled:bg-slate-900/60"
                 />
                 {otpSuccessMsg && (
                   <p className="text-[11px] text-emerald-400 font-semibold">{otpSuccessMsg}</p>
@@ -300,11 +360,12 @@ function RegisterForm() {
                 <Globe size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#64748b] pointer-events-none" />
                 <select
                   value={selectedCountry.code}
+                  disabled={isFormDisabled}
                   onChange={(e) => {
                     const found = COUNTRIES.find((c) => c.code === e.target.value) || DEFAULT_COUNTRY;
                     setSelectedCountry(found);
                   }}
-                  className="w-full bg-[#0b1120] border border-[#d4af37]/30 text-white rounded-lg pl-10 pr-10 py-2.5 text-xs font-medium focus:outline-none focus:border-[#d4af37] cursor-pointer appearance-none transition-colors hover:border-[#d4af37]/60"
+                  className="w-full bg-[#0b1120] border border-[#d4af37]/30 text-white rounded-lg pl-10 pr-10 py-2.5 text-xs font-medium focus:outline-none focus:border-[#d4af37] cursor-pointer appearance-none transition-colors hover:border-[#d4af37]/60 disabled:opacity-40 disabled:cursor-not-allowed disabled:bg-slate-900/60"
                 >
                   {COUNTRIES.map((c) => (
                     <option key={c.code} value={c.code} className="bg-[#0b1120] text-white py-1">
@@ -329,6 +390,7 @@ function RegisterForm() {
                 </div>
                 <input
                   type="tel"
+                  disabled={isFormDisabled}
                   value={phoneDigits}
                   maxLength={18}
                   onChange={(e) => {
@@ -338,7 +400,7 @@ function RegisterForm() {
                   }}
                   placeholder="e.g. 10-1234-5678"
                   style={{ paddingLeft: `${selectedCountry.dialCode.length > 3 ? "94px" : "86px"}` }}
-                  className="w-full bg-[#0b1120] border border-[#d4af37]/30 text-white rounded-lg pr-4 py-2.5 text-xs font-medium focus:outline-none focus:border-[#d4af37]"
+                  className="w-full bg-[#0b1120] border border-[#d4af37]/30 text-white rounded-lg pr-4 py-2.5 text-xs font-medium focus:outline-none focus:border-[#d4af37] disabled:opacity-40 disabled:cursor-not-allowed disabled:bg-slate-900/60"
                 />
               </div>
               <div className="text-[10.5px] text-[#94a3b8] pt-0.5">
@@ -356,18 +418,19 @@ function RegisterForm() {
                 <input
                   type="password"
                   required
+                  disabled={isFormDisabled}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="At least 6 characters"
-                  className="w-full bg-[#0b1120] border border-[#d4af37]/30 text-white rounded-lg pl-10 pr-4 py-2.5 text-xs font-medium focus:outline-none focus:border-[#d4af37]"
+                  className="w-full bg-[#0b1120] border border-[#d4af37]/30 text-white rounded-lg pl-10 pr-4 py-2.5 text-xs font-medium focus:outline-none focus:border-[#d4af37] disabled:opacity-40 disabled:cursor-not-allowed disabled:bg-slate-900/60"
                 />
               </div>
             </div>
 
             <button
               type="submit"
-              disabled={loading}
-              className="btn-primary w-full py-3 text-xs font-bold flex items-center justify-center gap-2 mt-4 disabled:opacity-50"
+              disabled={loading || isFormDisabled || checkingSponsor}
+              className="btn-primary w-full py-3 text-xs font-bold flex items-center justify-center gap-2 mt-4 disabled:opacity-40 disabled:cursor-not-allowed"
             >
               {loading ? "Creating Account..." : "Complete Registration"}
               {!loading && <ArrowRight size={14} />}

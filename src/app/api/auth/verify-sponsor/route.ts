@@ -14,9 +14,9 @@ export async function GET(req: Request) {
   const sponsor = await db.user.findFirst({
     where: {
       OR: [
-        { customId: code },
-        { referralCode: code },
-        { email: code.toLowerCase() },
+        { customId: { equals: code, mode: "insensitive" } },
+        { referralCode: { equals: code, mode: "insensitive" } },
+        { email: { equals: code.toLowerCase(), mode: "insensitive" } },
       ],
       NOT: [
         { role: "SUPER_ROOT_ADMIN" },
@@ -33,7 +33,10 @@ export async function GET(req: Request) {
   });
 
   if (!sponsor) {
-    return NextResponse.json({ sponsor: null });
+    return NextResponse.json({
+      sponsor: null,
+      error: "Invalid sponsor referral code. Account not found.",
+    });
   }
 
   const isExited = await isUserSystemExited(sponsor.id);
