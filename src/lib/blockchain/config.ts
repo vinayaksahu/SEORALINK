@@ -14,10 +14,9 @@ export const DEFAULT_FIXED_DEPOSIT_AMOUNT = "10.00";
 // Public RPC endpoints with fallback (verified active and open)
 export const DEFAULT_BSC_RPCS = [
   "https://bsc.publicnode.com",
-  "https://binance.community-rpc.com",
+  "https://bsc-dataseed.binance.org",
   "https://bsc-dataseed1.defibit.io",
   "https://bsc-dataseed1.ninicoin.io",
-  "https://bsc-rpc.publicnode.com",
   "https://1rpc.io/bnb",
 ];
 

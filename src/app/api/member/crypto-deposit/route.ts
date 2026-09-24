@@ -38,40 +38,16 @@ export async function GET(req: Request) {
     const isPaused = await isDepositCreditingPaused();
     const requiredConfirmations = await getRequiredConfirmations();
 
-    let depositInfo: {
-      mode: "AUTOMATIC" | "MANUAL";
-      address: string;
-      qrCodeUrl: string | null;
-      label: string;
-      network: string;
-      asset: string;
-      source?: string;
-      derivationIndex?: number;
+    const vault = await getEffectiveDepositVault(session.userId);
+    const depositInfo = {
+      mode: "AUTOMATIC" as const,
+      address: vault.address,
+      qrCodeUrl: vault.qrCodeUrl,
+      label: vault.label || "Official Branch Deposit Vault",
+      network: "USDT_BEP20",
+      asset: "USDT",
+      source: vault.source,
     };
-
-    if (mode === "AUTOMATIC") {
-      const personalAddress = await getOrCreateMemberDepositAddress(session.userId);
-      depositInfo = {
-        mode: "AUTOMATIC",
-        address: personalAddress.address,
-        qrCodeUrl: null,
-        label: "Your Dedicated BSC Deposit Address (Auto-Credit)",
-        network: "USDT_BEP20",
-        asset: "USDT",
-        derivationIndex: personalAddress.derivationIndex,
-      };
-    } else {
-      const vault = await getEffectiveDepositVault(session.userId);
-      depositInfo = {
-        mode: "MANUAL",
-        address: vault.address,
-        qrCodeUrl: vault.qrCodeUrl,
-        label: vault.label,
-        network: "USDT_BEP20",
-        asset: "USDT",
-        source: vault.source,
-      };
-    }
 
     // Fetch user recent deposits
     const deposits = await db.depositRequest.findMany({
@@ -127,13 +103,6 @@ export async function POST(req: Request) {
       select: { status: true, customId: true, fullName: true, adminId: true },
     });
 
-    if (currentUser?.status === "ACTIVE") {
-      return NextResponse.json(
-        { error: "Your account is already active. Deposits are disabled for active accounts." },
-        { status: 403 }
-      );
-    }
-
     const body = await req.json().catch(() => ({}));
     const { txHash, declaredAmount } = body;
 
@@ -166,117 +135,53 @@ export async function POST(req: Request) {
     const isPaused = await isDepositCreditingPaused();
 
     // Verify transaction on-chain directly via BSC JSON-RPC
-    let expectedAddress: string | undefined;
-    if (mode === "AUTOMATIC") {
-      const personal = await getOrCreateMemberDepositAddress(session.userId);
-      expectedAddress = personal.address;
-    } else {
-      const vault = await getEffectiveDepositVault(session.userId);
-      expectedAddress = vault.address;
+    const vault = await getEffectiveDepositVault(session.userId);
+    const candidateAddresses = [vault.address.toLowerCase()];
+    const personal = await db.depositAddress.findFirst({
+      where: { userId: session.userId, status: "ACTIVE" },
+      select: { address: true },
+    });
+    if (personal && !candidateAddresses.includes(personal.address.toLowerCase())) {
+      candidateAddresses.push(personal.address.toLowerCase());
     }
 
-    // Allow minimum 1.0 USDT for testing or flexible wallet deposits
-    const minAmount = 1.0;
-    const verification = await verifyOnChainTxHash(cleanHash, expectedAddress, minAmount);
+    // Verify transaction on-chain directly via BSC JSON-RPC
+    // Allows any amount >= 0.01 USDT (0.50, 1.00, 10.00 etc.)
+    const minAmount = 0.01;
+    let verification: any = null;
+    for (const targetAddr of candidateAddresses) {
+      const v = await verifyOnChainTxHash(cleanHash, targetAddr, minAmount);
+      if (v.valid) {
+        verification = v;
+        break;
+      }
+    }
 
-    if (!verification.valid) {
+    if (!verification || !verification.valid) {
       return NextResponse.json(
         {
           error:
-            verification.error ||
-            "On-chain verification failed. Ensure USDT was sent to the designated address and has mined.",
+            verification?.error ||
+            `On-chain verification failed. Ensure USDT was sent to the designated receiving address (${vault.address}) and has mined on BSC.`,
         },
         { status: 400 }
       );
     }
 
-    const amountInUsdt = new Decimal(verification.amountInUsdt || "10.00");
+    const amountInUsdt = new Decimal(verification.amountInUsdt || "1.00");
     const confirmations = verification.confirmations || 0;
     const blockNumber = verification.blockNumber;
 
-    if (mode === "AUTOMATIC") {
-      const shouldCreditImmediately = confirmations >= requiredConfirmations && !isPaused;
-      const initialStatus = shouldCreditImmediately
-        ? "CREDITED"
-        : isPaused
-        ? "CREDIT_PENDING_PAUSED"
-        : confirmations >= requiredConfirmations
-        ? "CONFIRMED"
-        : "CONFIRMING";
+    // IMMEDIATE ON-CHAIN AUTO-CREDIT TO FUND WALLET
+    const shouldCreditImmediately = confirmations >= requiredConfirmations && !isPaused;
+    const initialStatus = shouldCreditImmediately
+      ? "CREDITED"
+      : isPaused
+      ? "CREDIT_PENDING_PAUSED"
+      : "CONFIRMING";
 
-      const created = await db.$transaction(async (tx) => {
-        const deposit = await tx.depositRequest.create({
-          data: {
-            userId: session.userId,
-            amount: amountInUsdt.toFixed(8),
-            amountInUsdt: amountInUsdt.toFixed(8),
-            txHash: cleanHash,
-            network: "USDT_BEP20",
-            tokenContract: DEFAULT_BSC_USDT_CONTRACT,
-            fromAddress: verification.fromAddress,
-            toAddress: verification.toAddress,
-            blockNumber,
-            confirmations,
-            processingMode: "AUTOMATIC",
-            status: initialStatus,
-            detectedAt: new Date(),
-            confirmedAt: confirmations >= requiredConfirmations ? new Date() : null,
-            creditedAt: shouldCreditImmediately ? new Date() : null,
-            adminNote: shouldCreditImmediately
-              ? "Instantly credited via on-chain confirmation"
-              : isPaused
-              ? "Crediting held by SuperRoot kill-switch"
-              : "Awaiting required confirmations",
-          },
-        });
-
-        if (shouldCreditImmediately) {
-          await executeLedgerTransaction(
-            {
-              userId: session.userId,
-              type: "DEPOSIT",
-              wallet: "FUND",
-              amount: amountInUsdt,
-              referenceKey: `CRYPTO_DEPOSIT_${cleanHash}`,
-              description: `USDT BEP-20 Instant Deposit (TxID: ${cleanHash.slice(0, 10)}...)`,
-            },
-            tx
-          );
-        }
-
-        return deposit;
-      });
-
-      await recordActivity({
-        req,
-        userId: session.userId,
-        customId: session.customId,
-        fullName: session.fullName,
-        role: session.role,
-        adminId: currentUser?.adminId,
-        action: shouldCreditImmediately ? "DEPOSIT_AUTO_CREDITED" : "DEPOSIT_DETECTED",
-        category: "FINANCE",
-        details: {
-          txHash: cleanHash,
-          amount: amountInUsdt.toString(),
-          confirmations,
-          status: initialStatus,
-          mode: "AUTOMATIC",
-        },
-      });
-
-      return NextResponse.json(
-        serializeBlockchainData({
-          success: true,
-          message: shouldCreditImmediately
-            ? `Transaction confirmed on BSC! $${amountInUsdt.toFixed(2)} USDT credited to your Fund Wallet.`
-            : `Transaction registered with ${confirmations}/${requiredConfirmations} confirmations. Auto-crediting in progress.`,
-          deposit: created,
-        })
-      );
-    } else {
-      // MANUAL APPROVAL MODE
-      const created = await db.depositRequest.create({
+    const created = await db.$transaction(async (tx) => {
+      const deposit = await tx.depositRequest.create({
         data: {
           userId: session.userId,
           amount: amountInUsdt.toFixed(8),
@@ -288,39 +193,64 @@ export async function POST(req: Request) {
           toAddress: verification.toAddress,
           blockNumber,
           confirmations,
-          processingMode: "MANUAL",
-          status: "PENDING_REVIEW",
+          processingMode: "AUTOMATIC",
+          status: initialStatus,
           detectedAt: new Date(),
-          adminNote: `Manual deposit submitted by member. Verified on-chain to ${verification.toAddress}.`,
+          confirmedAt: confirmations >= requiredConfirmations ? new Date() : null,
+          creditedAt: shouldCreditImmediately ? new Date() : null,
+          adminNote: shouldCreditImmediately
+            ? `Instantly credited on-chain to ${verification.toAddress}`
+            : isPaused
+            ? "Crediting held by SuperRoot kill-switch"
+            : "Awaiting required confirmations",
         },
       });
 
-      await recordActivity({
-        req,
-        userId: session.userId,
-        customId: session.customId,
-        fullName: session.fullName,
-        role: session.role,
-        adminId: currentUser?.adminId,
-        action: "DEPOSIT_PENDING_REVIEW",
-        category: "FINANCE",
-        details: {
-          txHash: cleanHash,
-          amount: amountInUsdt.toString(),
-          vaultAddress: verification.toAddress,
-          mode: "MANUAL",
-        },
-      });
+      if (shouldCreditImmediately) {
+        await executeLedgerTransaction(
+          {
+            userId: session.userId,
+            type: "DEPOSIT",
+            wallet: "FUND",
+            amount: amountInUsdt,
+            referenceKey: `CRYPTO_DEPOSIT_${cleanHash}`,
+            description: `USDT BEP-20 Instant Deposit (TxID: ${cleanHash.slice(0, 10)}...)`,
+          },
+          tx
+        );
+      }
 
-      return NextResponse.json(
-        serializeBlockchainData({
-          success: true,
-          message:
-            "Deposit verified on BSC and queued for your Branch Admin review. Funds will be credited once approved.",
-          deposit: created,
-        })
-      );
-    }
+      return deposit;
+    });
+
+    await recordActivity({
+      req,
+      userId: session.userId,
+      customId: session.customId,
+      fullName: session.fullName,
+      role: session.role,
+      adminId: currentUser?.adminId,
+      action: shouldCreditImmediately ? "DEPOSIT_AUTO_CREDITED" : "DEPOSIT_DETECTED",
+      category: "FINANCE",
+      details: {
+        txHash: cleanHash,
+        amount: amountInUsdt.toString(),
+        confirmations,
+        status: initialStatus,
+        mode: "AUTOMATIC",
+        toAddress: verification.toAddress,
+      },
+    });
+
+    return NextResponse.json(
+      serializeBlockchainData({
+        success: true,
+        message: shouldCreditImmediately
+          ? `Transaction confirmed on BSC! ${amountInUsdt.toString()} USDT credited to your Fund Wallet.`
+          : `Transaction registered with ${confirmations}/${requiredConfirmations} confirmations. Auto-crediting in progress.`,
+        deposit: created,
+      })
+    );
   } catch (error: any) {
     console.error("[Crypto Deposit POST Error]", error);
     return NextResponse.json(

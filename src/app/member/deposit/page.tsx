@@ -46,20 +46,11 @@ export default async function MemberDepositPage() {
   const isPaused = await isDepositCreditingPaused();
   const requiredConfirmations = await getRequiredConfirmations();
 
-  let depositAddress = "";
-  let walletLabel = "";
-  let qrCodeUrl: string | null = null;
-
-  if (mode === "AUTOMATIC") {
-    const personal = await getOrCreateMemberDepositAddress(session.userId);
-    depositAddress = personal.address;
-    walletLabel = "Your Personal Dedicated BSC Address (Auto-Credit)";
-  } else {
-    const vault = await getEffectiveDepositVault(session.userId);
-    depositAddress = vault.address;
-    walletLabel = vault.label;
-    qrCodeUrl = vault.qrCodeUrl;
-  }
+  // Direct all deposits directly to the Admin's Main Vault address
+  const vault = await getEffectiveDepositVault(session.userId);
+  const depositAddress = vault.address;
+  const walletLabel = vault.label;
+  const qrCodeUrl = vault.qrCodeUrl;
 
   // Fetch recent user deposits
   const rawDeposits = await db.depositRequest.findMany({
@@ -101,77 +92,30 @@ export default async function MemberDepositPage() {
               This member account has executed the single-exit rank cashout protocol and has officially concluded its participation in the SEORALINK network. Under system exit rules, fund deposits are permanently disabled for retired IDs.
             </p>
           </div>
-        ) : isActivated ? (
-          <div className="card-seoralink p-6 border-2 border-emerald-500/40 bg-[#070e1b] space-y-5 shadow-xl">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center shrink-0">
-                <CheckCircle2 size={26} className="text-emerald-400" />
-              </div>
-              <div>
-                <h3 className="text-base font-bold text-white flex items-center gap-2">
-                  <span>ID Already Activated</span>
-                  <span className="text-[9px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 px-2 py-0.5 rounded-full font-bold uppercase">
-                    Active ID
-                  </span>
-                </h3>
-                <p className="text-[11px] text-[#94a3b8] mt-0.5">
-                  Deposit option is disabled for active member accounts.
-                </p>
-              </div>
-            </div>
-
-            <div className="p-4 rounded-xl bg-[#0b1325] border border-[#1e293b] space-y-3">
-              <div className="flex items-center justify-between text-xs pb-2 border-b border-[#1e293b]">
-                <span className="text-[#94a3b8]">Member ID:</span>
-                <span className="text-[#d4af37] font-mono font-bold">{currentUser?.customId}</span>
-              </div>
-              <div className="flex items-center justify-between text-xs pb-2 border-b border-[#1e293b]">
-                <span className="text-[#94a3b8]">Account Status:</span>
-                <span className="text-emerald-400 font-bold flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                  ACTIVE
-                </span>
-              </div>
-              <div className="flex items-center justify-between text-xs pb-2 border-b border-[#1e293b]">
-                <span className="text-[#94a3b8]">Fund Wallet:</span>
-                <span className="text-[#38bdf8] font-mono font-bold">
-                  ${parseFloat(currentUser?.fundBalance?.toString() || "0").toFixed(2)} USDT
-                </span>
-              </div>
-              <div className="flex items-center justify-between text-xs">
-                <span className="text-[#94a3b8]">Activation Protocol:</span>
-                <span className="text-white font-mono font-bold">$10.00 USDT Micro-Entry (Completed)</span>
-              </div>
-            </div>
-
-            <p className="text-xs text-[#cbd5e1] leading-relaxed">
-              Your account is already active. Under the SEORALINK protocol, each account requires only a single <strong>$10 Micro-Entry</strong> activation fee. Active accounts do not require additional deposits.
-            </p>
-
-            <div className="flex flex-wrap items-center gap-3 pt-1">
-              <Link
-                href="/member/dashboard"
-                className="btn-primary text-xs font-bold px-4 py-2.5 flex items-center gap-1.5"
-              >
-                Go to Dashboard &rarr;
-              </Link>
-              <Link
-                href="/member/team"
-                className="px-4 py-2.5 text-xs font-bold rounded-lg border border-[#1e293b] hover:border-slate-600 text-[#cbd5e1] hover:text-white transition-colors"
-              >
-                View Downline Team
-              </Link>
-            </div>
-          </div>
         ) : (
-          <DepositFormClient
-            mode={mode}
-            depositAddress={depositAddress}
-            walletLabel={walletLabel}
-            qrCodeUrl={qrCodeUrl}
-            requiredConfirmations={requiredConfirmations}
-            isPaused={isPaused}
-          />
+          <div className="space-y-4">
+            {isActivated && (
+              <div className="p-3.5 rounded-xl border border-emerald-500/40 bg-emerald-500/10 flex items-center justify-between">
+                <div className="flex items-center gap-2.5">
+                  <CheckCircle2 size={18} className="text-emerald-400 shrink-0" />
+                  <div>
+                    <span className="text-xs font-bold text-white block">Account Active &bull; Fund Wallet Top-Up</span>
+                    <span className="text-[11px] text-emerald-200/80">
+                      Balance: ${parseFloat(currentUser?.fundBalance?.toString() || "0").toFixed(2)} USDT. Deposits credit directly to your Fund Wallet.
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
+            <DepositFormClient
+              mode={mode}
+              depositAddress={depositAddress}
+              walletLabel={walletLabel}
+              qrCodeUrl={qrCodeUrl}
+              requiredConfirmations={requiredConfirmations}
+              isPaused={isPaused}
+            />
+          </div>
         )}
 
         {/* Deposit History Table */}
