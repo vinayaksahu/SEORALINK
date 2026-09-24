@@ -175,7 +175,8 @@ export async function POST(req: Request) {
       expectedAddress = vault.address;
     }
 
-    const minAmount = 10.0;
+    // Allow minimum 1.0 USDT for testing or flexible wallet deposits
+    const minAmount = 1.0;
     const verification = await verifyOnChainTxHash(cleanHash, expectedAddress, minAmount);
 
     if (!verification.valid) {
