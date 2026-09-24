@@ -2,32 +2,59 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { QrCode, Copy, Check, ArrowRight, AlertCircle, CheckCircle2, Lock, ShieldCheck } from "lucide-react";
+import {
+  QrCode,
+  Copy,
+  Check,
+  ArrowRight,
+  AlertCircle,
+  CheckCircle2,
+  Lock,
+  ShieldCheck,
+  Zap,
+  ExternalLink,
+  ChevronDown,
+  ChevronUp,
+  Clock,
+  Sparkles,
+  AlertTriangle,
+  Info,
+} from "lucide-react";
 import QRCode from "qrcode";
 
-export default function DepositFormClient({
-  depositAddress,
-  initialNetwork,
-  walletLabel,
-}: {
+interface DepositFormClientProps {
+  mode: "AUTOMATIC" | "MANUAL";
   depositAddress: string;
-  initialNetwork?: string;
   walletLabel?: string;
-}) {
+  qrCodeUrl?: string | null;
+  requiredConfirmations?: number;
+  isPaused?: boolean;
+}
+
+export default function DepositFormClient({
+  mode,
+  depositAddress,
+  walletLabel,
+  qrCodeUrl,
+  requiredConfirmations = 3,
+  isPaused = false,
+}: DepositFormClientProps) {
   const router = useRouter();
   const fixedAmount = "10.00";
   const [txHash, setTxHash] = useState("");
-  const network = "USDT_BEP20"; // Fixed to USDT BEP-20
   const [copied, setCopied] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string>("");
+  const [showOptionalTxInput, setShowOptionalTxInput] = useState(false);
 
   useEffect(() => {
-    if (depositAddress) {
+    if (qrCodeUrl) {
+      setQrCodeDataUrl(qrCodeUrl);
+    } else if (depositAddress) {
       QRCode.toDataURL(depositAddress, {
-        width: 220,
+        width: 240,
         margin: 1.5,
         color: {
           dark: "#0b1120",
@@ -37,10 +64,10 @@ export default function DepositFormClient({
         .then((url) => setQrCodeDataUrl(url))
         .catch((err) => console.error("QR Code generation error:", err));
     }
-  }, [depositAddress]);
+  }, [depositAddress, qrCodeUrl]);
 
-  const handleCopy = () => {
-    navigator.clipboard.writeText(depositAddress);
+  const handleCopy = (text: string) => {
+    navigator.clipboard.writeText(text);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
@@ -50,23 +77,21 @@ export default function DepositFormClient({
     setError("");
     setSuccess("");
 
-    const trimmedHash = txHash.trim();
-    if (!trimmedHash.startsWith("0x") || trimmedHash.length < 20) {
-      setError("Please enter a valid BNB Smart Chain Transaction Hash (TxID) starting with 0x.");
+    const trimmedHash = txHash.trim().toLowerCase();
+    if (!trimmedHash.startsWith("0x") || trimmedHash.length !== 66) {
+      setError("Please enter a valid BNB Smart Chain Transaction Hash (66 characters starting with 0x).");
       return;
     }
 
     setLoading(true);
 
     try {
-      const res = await fetch("/api/member/deposit", {
+      const res = await fetch("/api/member/crypto-deposit", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          amount: fixedAmount,
           txHash: trimmedHash,
-          network,
-          depositAddress,
+          declaredAmount: fixedAmount,
         }),
       });
 
@@ -75,7 +100,7 @@ export default function DepositFormClient({
         throw new Error(data.error || "Deposit submission failed");
       }
 
-      setSuccess("Deposit request submitted successfully! Funds will be credited after admin review.");
+      setSuccess(data.message || "Deposit submitted successfully!");
       setTxHash("");
       router.refresh();
     } catch (err: any) {
@@ -85,172 +110,227 @@ export default function DepositFormClient({
     }
   };
 
-  return (
-    <div className="card-seoralink p-6 space-y-6">
-      <h3 className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
-        <span className="w-2 h-2 rounded-full bg-[#38bdf8]"></span>
-        Deposit Instructions
-      </h3>
+  const isAutomatic = mode === "AUTOMATIC";
 
-      {/* Company Address & Auto-Generated QR Code Box */}
-      <div className="p-4 rounded-xl border border-[#d4af37]/30 bg-[#0b1120] space-y-4">
-        <div className="text-[10px] font-mono-num uppercase text-[#94a3b8] flex justify-between items-center">
-          <span className="font-bold text-white">{walletLabel || "Official Company Deposit Address"}</span>
+  return (
+    <div className="card-seoralink p-6 space-y-6 border border-[#1e293b]">
+      {/* Mode Header Banner */}
+      <div className="flex items-center justify-between flex-wrap gap-2">
+        <h3 className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
+          <span className={`w-2.5 h-2.5 rounded-full ${isAutomatic ? "bg-emerald-400 animate-pulse" : "bg-[#d4af37]"}`}></span>
+          {isAutomatic ? "Automated Instant Deposit" : "Manual Branch Approval Deposit"}
+        </h3>
+        <span
+          className={`text-[10px] font-mono-num font-bold px-2.5 py-1 rounded-full border ${
+            isAutomatic
+              ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30"
+              : "bg-amber-500/10 text-amber-400 border-amber-500/30"
+          }`}
+        >
+          {isAutomatic ? "⚡ AUTO-CREDIT ACTIVE" : "🛡️ ADMIN REVIEW REQUIRED"}
+        </span>
+      </div>
+
+      {/* Emergency Pause Notice if applicable */}
+      {isPaused && (
+        <div className="p-3.5 rounded-xl border border-amber-500/40 bg-amber-500/10 flex items-start gap-3">
+          <AlertTriangle size={18} className="text-amber-400 shrink-0 mt-0.5" />
+          <div className="text-xs text-amber-200">
+            <span className="font-bold">System Notice:</span> Automatic wallet balance crediting is temporarily paused for routine ledger reconciliation. Blockchain scans remain active, and deposits will credit automatically upon resume.
+          </div>
+        </div>
+      )}
+
+      {/* Mode Explanation Notice */}
+      <div className={`p-4 rounded-xl border ${isAutomatic ? "border-emerald-500/30 bg-emerald-950/20" : "border-[#d4af37]/30 bg-[#0b1325]"}`}>
+        <p className="text-xs text-[#cbd5e1] leading-relaxed">
+          {isAutomatic ? (
+            <>
+              Send exactly <strong className="text-emerald-300 font-mono">$10.00 USDT (BEP-20)</strong> to your personal dedicated receiving address below. Our automated blockchain monitor detects incoming transfers instantly on BSC and credits your Fund Wallet within <strong>{requiredConfirmations} block confirmations (~9 seconds)</strong>.
+            </>
+          ) : (
+            <>
+              Send exactly <strong className="text-[#d4af37] font-mono">$10.00 USDT (BEP-20)</strong> to your assigned Branch Admin&apos;s vault below. After sending, enter your on-chain Transaction Hash (TxID) to queue the deposit for review.
+            </>
+          )}
+        </p>
+      </div>
+
+      {/* QR Code and Address Box */}
+      <div className="p-5 rounded-xl border border-[#1e293b] bg-[#070e1b] space-y-4">
+        <div className="text-[11px] font-mono-num uppercase text-[#94a3b8] flex justify-between items-center">
+          <span className="font-bold text-white">{walletLabel || (isAutomatic ? "Your Personal BSC Deposit Address" : "Branch Vault Address")}</span>
           <span className="text-[#38bdf8] font-bold px-2 py-0.5 rounded bg-[#38bdf8]/10 border border-[#38bdf8]/30">
             USDT &bull; BEP-20 (BSC)
           </span>
         </div>
 
         {/* QR Code Display */}
-        <div className="flex flex-col sm:flex-row items-center gap-4 bg-[#070a14] p-3.5 rounded-xl border border-[#1e293b]">
-          <div className="bg-white p-2 rounded-lg shadow-md flex-shrink-0 flex items-center justify-center">
-            {qrCodeDataUrl ? (
-              <img
-                src={qrCodeDataUrl}
-                alt="Deposit Wallet QR Code"
-                className="w-32 h-32 object-contain"
-              />
-            ) : (
-              <div className="w-32 h-32 flex items-center justify-center text-zinc-400 text-[10px]">
-                <QrCode size={28} className="animate-pulse text-[#d4af37]" />
-              </div>
-            )}
-          </div>
-
-          <div className="space-y-2 text-center sm:text-left flex-1">
-            <div className="text-xs font-bold text-[#f1f5f9] flex items-center justify-center sm:justify-start gap-1.5">
-              <QrCode size={14} className="text-[#d4af37]" />
-              Scan QR Code to Pay
+        <div className="flex flex-col items-center justify-center p-3 bg-white rounded-xl max-w-[240px] mx-auto shadow-lg">
+          {qrCodeDataUrl ? (
+            <img src={qrCodeDataUrl} alt="Deposit QR Code" className="w-[210px] h-[210px] object-contain" />
+          ) : (
+            <div className="w-[210px] h-[210px] flex items-center justify-center text-slate-400">
+              <QrCode size={48} className="animate-pulse" />
             </div>
-            <p className="text-[11px] text-[#94a3b8] leading-relaxed">
-              Scan this QR code using <strong>Binance</strong>, <strong>Trust Wallet</strong>, or <strong>MetaMask</strong> to directly transfer exactly <strong>$10.00 USDT</strong> on BNB Smart Chain.
-            </p>
-            <div className="text-[10px] text-emerald-400 font-bold flex items-center justify-center sm:justify-start gap-1">
-              <ShieldCheck size={12} /> Direct Verified BSC Deposit Gateway
-            </div>
-          </div>
+          )}
+          <span className="text-[10px] text-[#0b1120] font-mono font-bold mt-1 text-center tracking-tight">
+            SCAN WITH BINANCE / TRUST WALLET / METAMASK
+          </span>
         </div>
 
-        {/* Address String & Copy Button */}
+        {/* Deposit Address Box with Copy */}
         <div className="space-y-1.5">
-          <label className="text-[10px] text-[#94a3b8] uppercase font-mono tracking-wider">
-            Deposit Wallet Address
-          </label>
-          <div className="flex items-center gap-2">
-            <input
-              type="text"
-              readOnly
-              value={depositAddress}
-              className="w-full bg-[#070a14] border border-[#1e293b] text-white font-mono-num text-xs px-3 py-2.5 rounded-lg focus:outline-none select-all"
-            />
+          <label className="text-[10px] uppercase font-bold text-[#94a3b8]">Deposit Receiving Address</label>
+          <div className="flex items-center gap-2 bg-[#0b1325] border border-[#1e293b] rounded-xl p-2.5">
+            <span className="text-xs font-mono text-[#38bdf8] break-all select-all font-semibold flex-1">
+              {depositAddress}
+            </span>
             <button
               type="button"
-              onClick={handleCopy}
-              className="btn-primary px-3 py-2.5 text-xs font-bold flex items-center gap-1.5 flex-shrink-0"
+              onClick={() => handleCopy(depositAddress)}
+              className="p-2 rounded-lg bg-sky-500/10 hover:bg-sky-500/20 text-[#38bdf8] border border-[#38bdf8]/30 transition-all shrink-0"
+              title="Copy Address"
             >
-              {copied ? <Check size={14} /> : <Copy size={14} />}
-              {copied ? "Copied" : "Copy"}
+              {copied ? <Check size={16} className="text-emerald-400" /> : <Copy size={16} />}
             </button>
           </div>
         </div>
 
-        <p className="text-[10px] text-[#94a3b8]">
-          Send only <strong>USDT via BNB Smart Chain (BEP-20)</strong> to this address. Amount is strictly <strong>$10.00 USDT</strong>.
-        </p>
+        {/* Network & Contract Details */}
+        <div className="grid grid-cols-2 gap-3 pt-2 text-[11px] font-mono-num border-t border-[#1e293b]/70">
+          <div>
+            <span className="text-[#64748b] block text-[9px] uppercase font-bold">Network</span>
+            <span className="text-white font-semibold">BNB Smart Chain (BSC)</span>
+          </div>
+          <div>
+            <span className="text-[#64748b] block text-[9px] uppercase font-bold">Token Standard</span>
+            <span className="text-[#38bdf8] font-semibold">BEP-20 (Chain ID 56)</span>
+          </div>
+          <div>
+            <span className="text-[#64748b] block text-[9px] uppercase font-bold">Required Amount</span>
+            <span className="text-emerald-400 font-bold">$10.00 USDT</span>
+          </div>
+          <div>
+            <span className="text-[#64748b] block text-[9px] uppercase font-bold">Explorer</span>
+            <a
+              href={`https://bscscan.com/address/${depositAddress}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[#38bdf8] hover:underline flex items-center gap-1"
+            >
+              <span>View Address</span>
+              <ExternalLink size={10} />
+            </a>
+          </div>
+        </div>
       </div>
 
-      {/* Submission Form */}
+      {/* Success / Error Alerts */}
       {error && (
-        <div className="p-3.5 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-xs flex items-center gap-2">
-          <AlertCircle size={16} className="flex-shrink-0" />
+        <div className="p-3.5 rounded-xl border border-red-500/40 bg-red-500/10 text-red-300 text-xs flex items-center gap-2">
+          <AlertCircle size={16} className="shrink-0" />
           <span>{error}</span>
         </div>
       )}
 
       {success && (
-        <div className="p-3.5 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs flex items-center gap-2">
-          <CheckCircle2 size={16} className="flex-shrink-0" />
+        <div className="p-3.5 rounded-xl border border-emerald-500/40 bg-emerald-500/10 text-emerald-300 text-xs flex items-center gap-2">
+          <CheckCircle2 size={16} className="shrink-0" />
           <span>{success}</span>
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-4">
-        {/* Fixed Deposit Amount Field - Non editable */}
-        <div className="space-y-1.5">
-          <div className="flex items-center justify-between">
-            <label className="text-xs font-bold text-[#cbd5e1] uppercase tracking-wider">
-              Deposit Amount (USDT)
-            </label>
-            <span className="text-[10px] font-bold text-[#d4af37] flex items-center gap-1 bg-[#d4af37]/10 px-2 py-0.5 rounded border border-[#d4af37]/30">
-              <Lock size={10} /> Fixed Entry Amount
-            </span>
+      {/* AUTOMATIC MODE: Optional instant trigger toggle */}
+      {isAutomatic ? (
+        <div className="space-y-4 pt-2 border-t border-[#1e293b]">
+          <div className="p-4 rounded-xl bg-gradient-to-r from-emerald-950/30 to-[#070e1b] border border-emerald-500/30 flex items-center justify-between">
+            <div className="flex items-center gap-2.5">
+              <Sparkles size={18} className="text-emerald-400 shrink-0" />
+              <div>
+                <p className="text-xs font-bold text-white">No TxID submission required!</p>
+                <p className="text-[11px] text-[#94a3b8]">Your wallet will credit automatically once 3 confirmations occur on BSC.</p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => router.refresh()}
+              className="px-3 py-1.5 text-xs font-bold rounded-lg bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30 transition-colors shrink-0"
+            >
+              Refresh Status
+            </button>
           </div>
-          <div className="relative">
+
+          <div>
+            <button
+              type="button"
+              onClick={() => setShowOptionalTxInput(!showOptionalTxInput)}
+              className="text-xs text-[#94a3b8] hover:text-white flex items-center gap-1.5 transition-colors font-medium"
+            >
+              <span>Want faster verification? Submit TxHash manually (optional)</span>
+              {showOptionalTxInput ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+            </button>
+
+            {showOptionalTxInput && (
+              <form onSubmit={handleSubmit} className="mt-3 space-y-3 p-4 rounded-xl bg-[#0b1325] border border-[#1e293b]">
+                <div className="space-y-1">
+                  <label className="text-[11px] font-bold text-[#cbd5e1]">Transaction Hash (TxID)</label>
+                  <input
+                    type="text"
+                    value={txHash}
+                    onChange={(e) => setTxHash(e.target.value)}
+                    placeholder="0x..."
+                    className="w-full bg-[#070e1b] border border-[#1e293b] rounded-lg px-3 py-2 text-xs font-mono text-white placeholder-slate-500 focus:outline-none focus:border-[#38bdf8]"
+                  />
+                </div>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="btn-primary text-xs font-bold px-4 py-2 flex items-center gap-2"
+                >
+                  {loading ? "Verifying On-Chain..." : "Trigger Instant Verification"}
+                  <ArrowRight size={14} />
+                </button>
+              </form>
+            )}
+          </div>
+        </div>
+      ) : (
+        /* MANUAL MODE: Required TxHash submission form */
+        <form onSubmit={handleSubmit} className="space-y-4 pt-2 border-t border-[#1e293b]">
+          <div className="space-y-1">
+            <label className="text-xs font-bold text-white flex items-center justify-between">
+              <span>Blockchain Transaction Hash (TxID)</span>
+              <span className="text-[10px] text-red-400 font-mono uppercase">* Required for manual mode</span>
+            </label>
             <input
               type="text"
-              readOnly
-              disabled
-              value={`$${fixedAmount} USDT`}
-              className="w-full bg-[#0b1120]/80 border border-[#1e293b] text-white/90 rounded-lg px-4 py-2.5 text-xs font-mono-num font-extrabold cursor-not-allowed select-none"
+              required
+              value={txHash}
+              onChange={(e) => setTxHash(e.target.value)}
+              placeholder="Paste 66-character 0x... hash here"
+              className="w-full bg-[#0b1325] border border-[#1e293b] rounded-xl px-3.5 py-2.5 text-xs font-mono text-white placeholder-slate-500 focus:outline-none focus:border-[#d4af37]"
             />
-            <div className="absolute right-3 top-1/2 -translate-y-1/2 text-[11px] text-[#94a3b8] font-bold">
-              Standard Membership Pack
-            </div>
+            <p className="text-[10px] text-[#94a3b8]">
+              Copy the transaction hash from your wallet (Binance, Trust Wallet, MetaMask) after sending USDT.
+            </p>
           </div>
-          <p className="text-[10px] text-[#94a3b8]">
-            Deposit amount is strictly fixed at $10.00 USDT for universal cycle entry.
-          </p>
-        </div>
 
-        {/* Fixed Network Field - Only BEP-20 */}
-        <div className="space-y-1.5">
-          <label className="text-xs font-bold text-[#cbd5e1] uppercase tracking-wider flex items-center justify-between">
-            <span>Network</span>
-            <span className="text-[10px] text-[#38bdf8] font-mono font-bold">Only BEP-20 Supported</span>
-          </label>
-          <div className="w-full bg-[#0b1120] border border-[#1e293b] text-white rounded-lg px-4 py-2.5 text-xs font-mono-num flex items-center justify-between">
-            <span className="font-bold text-[#38bdf8]">USDT &bull; BNB Smart Chain (BEP-20)</span>
-            <span className="text-[10px] px-2 py-0.5 rounded bg-[#38bdf8]/15 text-[#38bdf8] border border-[#38bdf8]/30 font-bold">
-              BSC
-            </span>
+          <div className="p-3 rounded-lg bg-[#0b1325] border border-[#1e293b] flex items-center justify-between text-xs">
+            <span className="text-[#94a3b8]">Declared Micro-Entry:</span>
+            <span className="text-white font-mono font-bold">$10.00 USDT</span>
           </div>
-        </div>
 
-        <div className="space-y-1.5">
-          <label className="text-xs font-bold text-[#cbd5e1] uppercase tracking-wider">
-            Blockchain Transaction Hash (TxID) *
-          </label>
-          <input
-            type="text"
-            required
-            value={txHash}
-            onChange={(e) => setTxHash(e.target.value)}
-            placeholder="0x..."
-            className="w-full bg-[#0b1120] border border-[#d4af37]/30 text-white rounded-lg px-4 py-2.5 text-xs font-mono-num focus:outline-none focus:border-[#d4af37]"
-          />
-          <p className="text-[10px] text-[#94a3b8]">
-            Paste the TX hash generated after transferring $10 USDT on BSC.
-          </p>
-        </div>
-
-        <button
-          type="submit"
-          disabled={loading}
-          className="btn-primary w-full py-3 text-xs font-extrabold flex items-center justify-center gap-2 mt-2 disabled:opacity-60 cursor-pointer disabled:cursor-wait transition-all duration-150 active:scale-[0.98]"
-        >
-          {loading ? (
-            <>
-              <span className="w-3.5 h-3.5 border-2 border-black border-t-transparent rounded-full animate-spin" />
-              <span>Submitting Request...</span>
-            </>
-          ) : (
-            <>
-              <span>Submit Deposit for Verification</span>
-              <ArrowRight size={14} />
-            </>
-          )}
-        </button>
-      </form>
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full py-3 px-4 rounded-xl text-xs font-bold text-[#0b1120] bg-gradient-to-r from-[#d4af37] via-[#f3e5ab] to-[#d4af37] hover:brightness-110 transition-all flex items-center justify-center gap-2 shadow-lg disabled:opacity-50"
+          >
+            {loading ? "Verifying Transaction on BSC..." : "Submit Deposit for Branch Review"}
+            <ArrowRight size={16} />
+          </button>
+        </form>
+      )}
     </div>
   );
 }

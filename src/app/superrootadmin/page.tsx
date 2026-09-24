@@ -47,6 +47,7 @@ import {
 } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { SurveillanceLogsView } from "@/components/SurveillanceLogsView";
+import { SuperRootCryptoDepositsView } from "@/components/SuperRootCryptoDepositsView";
 
 interface AdminItem {
   id: string;
@@ -91,7 +92,7 @@ interface InspectData {
 
 export default function SuperRootAdminPage() {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<"admins" | "inspect" | "search" | "config" | "wallet" | "logs">("admins");
+  const [activeTab, setActiveTab] = useState<"admins" | "inspect" | "search" | "config" | "wallet" | "logs" | "crypto_deposits">("admins");
   const [stats, setStats] = useState<GlobalStats | null>(null);
   const [admins, setAdmins] = useState<AdminItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -777,6 +778,18 @@ export default function SuperRootAdminPage() {
           >
             <Radio className="w-4 h-4 text-rose-400 animate-pulse" />
             Surveillance &amp; Activity Logs
+          </button>
+
+          <button
+            onClick={() => setActiveTab("crypto_deposits")}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition font-mono cursor-pointer ${
+              activeTab === "crypto_deposits"
+                ? "bg-sky-500/20 text-sky-300 border border-sky-500/40 shadow-lg shadow-sky-500/10"
+                : "text-slate-400 hover:text-white hover:bg-slate-900"
+            }`}
+          >
+            <Zap className="w-4 h-4 text-sky-400" />
+            USDT BEP-20 Deposits &amp; Branch Control
           </button>
         </section>
 
@@ -1961,6 +1974,13 @@ export default function SuperRootAdminPage() {
               onPageChange={(p) => loadLogs(p)}
               isEmbedded={false}
             />
+          </section>
+        )}
+
+        {/* TAB 7: USDT BEP-20 DUAL-MODE DEPOSIT SOVEREIGN INFRASTRUCTURE */}
+        {activeTab === "crypto_deposits" && (
+          <section className="space-y-6">
+            <SuperRootCryptoDepositsView />
           </section>
         )}
       </main>

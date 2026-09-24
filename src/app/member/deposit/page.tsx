@@ -4,8 +4,29 @@ import { getSession } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { redirect } from "next/navigation";
 import DepositFormClient from "./DepositFormClient";
-import { Wallet, Clock, CheckCircle2, XCircle, ShieldAlert, Zap, ExternalLink } from "lucide-react";
+import {
+  Wallet,
+  Clock,
+  CheckCircle2,
+  XCircle,
+  ShieldAlert,
+  Zap,
+  ExternalLink,
+  ShieldCheck,
+  AlertTriangle,
+  RotateCcw,
+} from "lucide-react";
 import { isUserSystemExited } from "@/lib/userStatus";
+import {
+  getDepositProcessingModeForUser,
+  getOrCreateMemberDepositAddress,
+  getEffectiveDepositVault,
+  getRequiredConfirmations,
+  isDepositCreditingPaused,
+  serializeBlockchainData,
+} from "@/lib/blockchain/config";
+
+export const dynamic = "force-dynamic";
 
 export default async function MemberDepositPage() {
   const session = await getSession();
@@ -15,81 +36,39 @@ export default async function MemberDepositPage() {
 
   const currentUser = await db.user.findUnique({
     where: { id: session.userId },
-    select: { id: true, status: true, customId: true },
+    select: { id: true, status: true, customId: true, fundBalance: true },
   });
 
   const isActivated = currentUser?.status === "ACTIVE";
 
-  // Fetch user deposits
-  const deposits = await db.depositRequest.findMany({
+  // Resolve 3-tier processing mode
+  const mode = await getDepositProcessingModeForUser(session.userId);
+  const isPaused = await isDepositCreditingPaused();
+  const requiredConfirmations = await getRequiredConfirmations();
+
+  let depositAddress = "";
+  let walletLabel = "";
+  let qrCodeUrl: string | null = null;
+
+  if (mode === "AUTOMATIC") {
+    const personal = await getOrCreateMemberDepositAddress(session.userId);
+    depositAddress = personal.address;
+    walletLabel = "Your Personal Dedicated BSC Address (Auto-Credit)";
+  } else {
+    const vault = await getEffectiveDepositVault(session.userId);
+    depositAddress = vault.address;
+    walletLabel = vault.label;
+    qrCodeUrl = vault.qrCodeUrl;
+  }
+
+  // Fetch recent user deposits
+  const rawDeposits = await db.depositRequest.findMany({
     where: { userId: session.userId },
     orderBy: { createdAt: "desc" },
     take: 20,
   });
 
-  // Fetch deposit address settings from system config
-  const addressListConfig = await db.systemConfig.findUnique({
-    where: { key: "USDT_DEPOSIT_ADDRESSES" },
-  });
-  const distributionModeConfig = await db.systemConfig.findUnique({
-    where: { key: "DEPOSIT_DISTRIBUTION_MODE" },
-  });
-  const depositAddressConfig = await db.systemConfig.findUnique({
-    where: { key: "USDT_DEPOSIT_ADDRESS" },
-  });
-  const defaultNetworkConfig = await db.systemConfig.findUnique({
-    where: { key: "DEFAULT_NETWORK" },
-  });
-
-  const defaultAddress = depositAddressConfig?.value || "0x71C569E9903b41D8B4eAE6b22312dE9d89Ae0001";
-  const defaultNetwork = defaultNetworkConfig?.value || "USDT_BEP20";
-  const distributionMode = distributionModeConfig?.value || "MULTI_USER";
-
-  let addresses: Array<{
-    id: string;
-    address: string;
-    label?: string;
-    network: string;
-    isActive: boolean;
-    isPrimary?: boolean;
-  }> = [];
-
-  try {
-    if (addressListConfig?.value) {
-      addresses = JSON.parse(addressListConfig.value);
-    }
-  } catch (e) {
-    addresses = [];
-  }
-
-  const activeAddresses = addresses.filter((a) => a.isActive);
-
-  let selectedAddress = defaultAddress;
-  let selectedNetwork = defaultNetwork;
-  let selectedLabel = "Official Deposit Wallet";
-
-  if (activeAddresses.length > 0) {
-    if (distributionMode === "MULTI_USER" && activeAddresses.length > 1) {
-      // Deterministic hash based on session.userId so different users see different addresses simultaneously,
-      // while a single user sees a consistent address across page reloads.
-      let hash = 0;
-      const keyStr = session.userId || "user";
-      for (let i = 0; i < keyStr.length; i++) {
-        hash = ((hash << 5) - hash) + keyStr.charCodeAt(i);
-        hash |= 0;
-      }
-      const index = Math.abs(hash) % activeAddresses.length;
-      const chosen = activeAddresses[index];
-      selectedAddress = chosen.address;
-      selectedNetwork = chosen.network || defaultNetwork;
-      selectedLabel = chosen.label || `Company Wallet #${index + 1}`;
-    } else {
-      const primary = activeAddresses.find((a) => a.isPrimary) || activeAddresses[0];
-      selectedAddress = primary.address;
-      selectedNetwork = primary.network || defaultNetwork;
-      selectedLabel = primary.label || "Official Deposit Wallet";
-    }
-  }
+  const deposits = serializeBlockchainData(rawDeposits);
 
   return (
     <div className="space-y-8">
@@ -99,7 +78,7 @@ export default async function MemberDepositPage() {
           Deposit USDT &bull; Fund Wallet Top-Up
         </h2>
         <p className="text-xs text-[#94a3b8] mt-1">
-          Deposit USDT to your Fund Wallet to activate accounts or register downline partners.
+          Deposit USDT on BNB Smart Chain (BEP-20) to your Fund Wallet to activate accounts or register downline partners.
         </p>
       </div>
 
@@ -153,6 +132,12 @@ export default async function MemberDepositPage() {
                   ACTIVE
                 </span>
               </div>
+              <div className="flex items-center justify-between text-xs pb-2 border-b border-[#1e293b]">
+                <span className="text-[#94a3b8]">Fund Wallet:</span>
+                <span className="text-[#38bdf8] font-mono font-bold">
+                  ${parseFloat(currentUser?.fundBalance?.toString() || "0").toFixed(2)} USDT
+                </span>
+              </div>
               <div className="flex items-center justify-between text-xs">
                 <span className="text-[#94a3b8]">Activation Protocol:</span>
                 <span className="text-white font-mono font-bold">$10.00 USDT Micro-Entry (Completed)</span>
@@ -180,22 +165,33 @@ export default async function MemberDepositPage() {
           </div>
         ) : (
           <DepositFormClient
-            depositAddress={selectedAddress}
-            initialNetwork={selectedNetwork}
-            walletLabel={selectedLabel}
+            mode={mode}
+            depositAddress={depositAddress}
+            walletLabel={walletLabel}
+            qrCodeUrl={qrCodeUrl}
+            requiredConfirmations={requiredConfirmations}
+            isPaused={isPaused}
           />
         )}
 
         {/* Deposit History Table */}
         <div className="card-seoralink p-6 space-y-4">
-          <h3 className="text-sm font-bold text-white flex items-center gap-2">
-            <Clock size={16} className="text-[#d4af37]" />
-            Your Recent Deposit Requests
-          </h3>
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-bold text-white flex items-center gap-2">
+              <Clock size={16} className="text-[#d4af37]" />
+              Your Recent Deposit Requests
+            </h3>
+            <span className="text-[10px] text-[#94a3b8] font-mono">Auto-refreshes on scan</span>
+          </div>
 
           {deposits.length === 0 ? (
-            <div className="text-center py-12 text-[#94a3b8] text-xs border border-dashed border-[#1e293b] rounded-xl">
-              No deposit requests found. Submit your first deposit on the left.
+            <div className="text-center py-12 text-[#94a3b8] text-xs border border-dashed border-[#1e293b] rounded-xl space-y-2">
+              <p>No deposit requests found.</p>
+              <p className="text-[11px] text-[#64748b]">
+                {mode === "AUTOMATIC"
+                  ? "Send USDT to your personal address to see auto-credited transfers here."
+                  : "Submit your first deposit on the left."}
+              </p>
             </div>
           ) : (
             <div className="overflow-x-auto">
@@ -205,53 +201,91 @@ export default async function MemberDepositPage() {
                     <th className="py-2.5 px-3">Date</th>
                     <th className="py-2.5 px-3">Amount</th>
                     <th className="py-2.5 px-3">TxID</th>
+                    <th className="py-2.5 px-3">Mode</th>
                     <th className="py-2.5 px-3">Status</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#1e293b]/50">
-                  {deposits.map((d) => (
-                    <tr key={d.id} className="hover:bg-[#0f172a]/30">
-                      <td className="py-2.5 px-3 text-[#94a3b8] text-[11px]">
-                        {new Date(d.createdAt).toLocaleDateString()}
-                      </td>
-                      <td className="py-2.5 px-3 font-bold text-white">
-                        ${parseFloat(d.amount.toString()).toFixed(2)}
-                      </td>
-                      <td className="py-2.5 px-3 max-w-[150px]">
-                        <a
-                          href={
-                            d.txHash.trim().startsWith("http")
-                              ? d.txHash.trim()
-                              : `https://bscscan.com/tx/${d.txHash.trim()}`
-                          }
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-[#38bdf8] hover:text-sky-300 hover:underline text-xs font-mono truncate flex items-center gap-1"
-                          title="View on BscScan"
-                        >
-                          <span className="truncate">{d.txHash}</span>
-                          <ExternalLink size={11} className="shrink-0" />
-                        </a>
-                      </td>
-                      <td className="py-2.5 px-3">
-                        {d.status === "APPROVED" && (
-                          <span className="text-emerald-400 font-bold flex items-center gap-1 text-[11px]">
-                            <CheckCircle2 size={12} /> Approved
+                  {deposits.map((d: any) => {
+                    const status = d.status?.toUpperCase();
+                    const isCredited = status === "CREDITED" || status === "APPROVED";
+                    const isConfirming = status === "CONFIRMING";
+                    const isConfirmed = status === "CONFIRMED";
+                    const isPendingReview = status === "PENDING" || status === "PENDING_REVIEW";
+                    const isPausedState = status === "CREDIT_PENDING_PAUSED";
+                    const isRejected = status === "REJECTED" || status === "FAILED";
+
+                    return (
+                      <tr key={d.id} className="hover:bg-[#0f172a]/30">
+                        <td className="py-2.5 px-3 text-[#94a3b8] text-[11px]">
+                          {new Date(d.createdAt).toLocaleDateString()}
+                        </td>
+                        <td className="py-2.5 px-3 font-bold text-white">
+                          ${parseFloat(d.amountInUsdt || d.amount || "0").toFixed(2)}
+                        </td>
+                        <td className="py-2.5 px-3 max-w-[140px]">
+                          <a
+                            href={
+                              d.txHash?.trim().startsWith("http")
+                                ? d.txHash.trim()
+                                : `https://bscscan.com/tx/${d.txHash?.trim()}`
+                            }
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-[#38bdf8] hover:text-sky-300 hover:underline text-xs font-mono truncate flex items-center gap-1"
+                            title="View on BscScan"
+                          >
+                            <span className="truncate">{d.txHash?.slice(0, 10)}...</span>
+                            <ExternalLink size={10} className="shrink-0" />
+                          </a>
+                        </td>
+                        <td className="py-2.5 px-3 text-[10px]">
+                          <span
+                            className={`px-1.5 py-0.5 rounded font-mono font-bold ${
+                              d.processingMode === "AUTOMATIC"
+                                ? "bg-emerald-500/10 text-emerald-400"
+                                : "bg-blue-500/10 text-blue-400"
+                            }`}
+                          >
+                            {d.processingMode === "AUTOMATIC" ? "AUTO" : "MANUAL"}
                           </span>
-                        )}
-                        {d.status === "PENDING" && (
-                          <span className="text-amber-400 font-bold flex items-center gap-1 text-[11px]">
-                            <Clock size={12} /> Pending
-                          </span>
-                        )}
-                        {d.status === "REJECTED" && (
-                          <span className="text-red-400 font-bold flex items-center gap-1 text-[11px]">
-                            <XCircle size={12} /> Rejected
-                          </span>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
+                        </td>
+                        <td className="py-2.5 px-3">
+                          {isCredited && (
+                            <span className="text-emerald-400 font-bold flex items-center gap-1 text-[11px]">
+                              <CheckCircle2 size={12} /> Credited
+                            </span>
+                          )}
+                          {isConfirming && (
+                            <span className="text-sky-400 font-bold flex items-center gap-1 text-[11px]">
+                              <RotateCcw size={12} className="animate-spin" />
+                              {d.confirmations || 0}/{requiredConfirmations}
+                            </span>
+                          )}
+                          {isConfirmed && (
+                            <span className="text-emerald-300 font-bold flex items-center gap-1 text-[11px]">
+                              <CheckCircle2 size={12} /> Confirmed
+                            </span>
+                          )}
+                          {isPendingReview && (
+                            <span className="text-amber-400 font-bold flex items-center gap-1 text-[11px]">
+                              <Clock size={12} /> Pending Review
+                            </span>
+                          )}
+                          {isPausedState && (
+                            <span className="text-purple-400 font-bold flex items-center gap-1 text-[11px]">
+                              <AlertTriangle size={12} /> Queued (Paused)
+                            </span>
+                          )}
+                          {isRejected && (
+                            <span className="text-red-400 font-bold flex items-center gap-1 text-[11px]">
+                              <XCircle size={12} /> Rejected
+                            </span>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>

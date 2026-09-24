@@ -67,6 +67,7 @@ model User {
 
   usdtAddress        String?
   usdtNetwork        String?             @default("USDT_BEP20")
+  depositMode        String              @default("GLOBAL") // "GLOBAL", "AUTOMATIC", "MANUAL"
 
   currentTier        Int                 @default(0) // 0=Junior, 1=Zen ... 12=Ultima
   directCount        Int                 @default(0) // Active direct referrals
@@ -79,11 +80,13 @@ model User {
   createdAt          DateTime            @default(now())
   updatedAt          DateTime            @updatedAt
 
-  queueEntries       QueueEntry[]
-  ledgers            LedgerEntry[]
-  deposits           DepositRequest[]
-  withdrawals        WithdrawalRequest[]
-  tickets            SupportTicket[]
+  queueEntries            QueueEntry[]
+  ledgers                 LedgerEntry[]
+  deposits                DepositRequest[]
+  depositAddresses        DepositAddress[]
+  adminDepositPermissions AdminDepositPermission[] @relation("AdminDepositPermissions")
+  withdrawals             WithdrawalRequest[]
+  tickets                 SupportTicket[]
 
   @@index([customId])
   @@index([email])
@@ -137,18 +140,74 @@ model DepositRequest {
   id               String        @id @default(cuid())
   userId           String
   user             User          @relation(fields: [userId], references: [id])
-  amount           Decimal       @db.Decimal(20, 8)
+  amount           Decimal       @default(0.0) @db.Decimal(20, 8)
+  amountInUsdt     Decimal       @default(0.0) @db.Decimal(20, 8)
   txHash           String        @unique
   network          String        @default("USDT_BEP20")
+  tokenContract    String?
+  fromAddress      String?
+  toAddress        String?
+  blockNumber      BigInt?
+  confirmations    Int           @default(0)
+  processingMode   String        @default("MANUAL") // "AUTOMATIC" | "MANUAL"
+  status           String        @default("PENDING") // PENDING, CONFIRMING, CONFIRMED, CREDITED, PENDING_REVIEW, APPROVED, REJECTED, CREDIT_PENDING_PAUSED, FAILED
   screenshotUrl    String?
   adminNote        String?
-  status           RequestStatus @default(PENDING)
-  approvedAt       DateTime?
+  rejectionReason  String?
+  approvalNotes    String?
+  reviewedBy       String?
   approvedById     String?
+  detectedAt       DateTime?
+  confirmedAt      DateTime?
+  creditedAt       DateTime?
+  reviewedAt       DateTime?
+  approvedAt       DateTime?
   createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @default(now()) @updatedAt
 
   @@index([userId])
   @@index([status])
+  @@index([toAddress, tokenContract])
+  @@index([processingMode, status])
+  @@index([blockNumber])
+}
+
+model DepositAddress {
+  id              String        @id @default(cuid())
+  userId          String
+  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  network         String        @default("BSC")
+  asset           String        @default("USDT")
+  address         String        @unique
+  derivationIndex Int           @unique
+  status          String        @default("ACTIVE") // ACTIVE | INACTIVE
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@index([userId])
+  @@index([address])
+}
+
+model BlockchainCheckpoint {
+  id                 String    @id // "bsc_usdt_mainnet"
+  lastProcessedBlock BigInt
+  latestKnownBlock   BigInt
+  status             String    @default("IDLE") // IDLE | RUNNING
+  lastSuccessfulScan DateTime?
+  lastError          String?
+  updatedAt          DateTime  @updatedAt
+}
+
+model AdminDepositPermission {
+  id          String   @id @default(cuid())
+  adminId     String
+  admin       User     @relation("AdminDepositPermissions", fields: [adminId], references: [id], onDelete: Cascade)
+  permission  String
+  grantedById String?
+  createdAt   DateTime @default(now())
+
+  @@unique([adminId, permission])
+  @@index([adminId])
 }
 
 model WithdrawalRequest {

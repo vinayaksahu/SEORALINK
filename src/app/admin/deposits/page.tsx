@@ -4,22 +4,24 @@ import { db } from "@/lib/db";
 import { redirect } from "next/navigation";
 import DepositsTableClient from "./DepositsTableClient";
 import { Wallet } from "lucide-react";
+import { serializeBlockchainData } from "@/lib/blockchain/config";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 export default async function AdminDepositsPage() {
   const session = await getSession();
-  if (!session || (session.role !== "ADMIN" && session.role !== "SUPER_ADMIN")) {
+  if (!session || (session.role !== "ADMIN" && session.role !== "SUPER_ADMIN" && session.role !== "SUPER_ROOT_ADMIN")) {
     redirect("/adminlogin");
   }
 
+  const where: any = {};
+  if (session.role !== "SUPER_ROOT_ADMIN") {
+    where.user = { adminId: session.userId };
+  }
+
   const rawDeposits = await db.depositRequest.findMany({
-    where: {
-      user: {
-        adminId: session.userId,
-      },
-    },
+    where,
     orderBy: { createdAt: "desc" },
     include: {
       user: {
@@ -27,22 +29,14 @@ export default async function AdminDepositsPage() {
           customId: true,
           fullName: true,
           email: true,
+          adminId: true,
         },
       },
     },
     take: 100,
   });
 
-  const deposits = rawDeposits.map((d) => ({
-    id: d.id,
-    amount: d.amount.toString(),
-    txHash: d.txHash,
-    network: d.network,
-    status: d.status,
-    adminNote: d.adminNote,
-    createdAt: d.createdAt.toISOString(),
-    user: d.user,
-  }));
+  const deposits = serializeBlockchainData(rawDeposits);
 
   return (
     <div className="space-y-8">
@@ -52,7 +46,7 @@ export default async function AdminDepositsPage() {
           Deposit Verification Queue
         </h2>
         <p className="text-xs text-[#94a3b8] mt-1">
-          Review member blockchain transactions and credit verified funds to user Fund Wallets.
+          Review member blockchain transactions, verify on BNB Smart Chain, and credit verified funds to member Fund Wallets.
         </p>
       </div>
 

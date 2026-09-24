@@ -1,0 +1,1180 @@
+const fs = require('fs');
+const path = require('path');
+const { execSync } = require('child_process');
+
+const htmlContent = `<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <meta charset="UTF-8">
+  <title>SEORALINK 16x9 Presentation - Complete Hinglish Explanation</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap');
+
+    @page {
+      size: A4 portrait;
+      margin: 10mm 12mm 12mm 12mm;
+      @bottom-right {
+        content: counter(page);
+      }
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif;
+      background-color: #060911;
+      color: #e2e8f0;
+      font-size: 10.5px;
+      line-height: 1.45;
+    }
+
+    .cover-page {
+      page-break-after: always;
+      min-height: 265mm;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 20px 10px;
+    }
+
+    .page {
+      page-break-after: always;
+      min-height: 265mm;
+      padding: 10px 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .page:last-child {
+      page-break-after: avoid;
+    }
+
+    /* Header & Branding */
+    .doc-header {
+      background: linear-gradient(135deg, #0e1626, #060911);
+      border: 1px solid #1e293b;
+      border-left: 4px solid #d4af37;
+      border-radius: 12px;
+      padding: 14px 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+    }
+
+    .doc-title {
+      font-size: 20px;
+      font-weight: 900;
+      color: #ffffff;
+      letter-spacing: 0.5px;
+    }
+
+    .doc-title span {
+      color: #d4af37;
+    }
+
+    .doc-badge {
+      display: inline-block;
+      background: rgba(212, 175, 55, 0.15);
+      border: 1px solid #d4af37;
+      color: #f1c40f;
+      font-size: 9px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 20px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-left: 8px;
+    }
+
+    .doc-sub {
+      font-size: 10px;
+      color: #94a3b8;
+      margin-top: 3px;
+    }
+
+    /* Slide Card Container */
+    .slide-card {
+      background: #0b1120;
+      border: 1px solid #1e293b;
+      border-radius: 10px;
+      padding: 12px 14px;
+      margin-bottom: 12px;
+      position: relative;
+    }
+
+    .slide-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      padding-bottom: 6px;
+      margin-bottom: 8px;
+    }
+
+    .slide-pill {
+      background: #d4af37;
+      color: #000;
+      font-size: 9px;
+      font-weight: 800;
+      padding: 2px 7px;
+      border-radius: 4px;
+      letter-spacing: 0.5px;
+    }
+
+    .slide-title-en {
+      font-size: 12.5px;
+      font-weight: 800;
+      color: #ffffff;
+      flex: 1;
+      margin-left: 10px;
+    }
+
+    .slide-tag {
+      font-size: 8.5px;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 12px;
+      text-transform: uppercase;
+      background: rgba(56, 189, 248, 0.15);
+      border: 1px solid rgba(56, 189, 248, 0.4);
+      color: #38bdf8;
+    }
+
+    .slide-main-purpose {
+      background: rgba(56, 189, 248, 0.06);
+      border-left: 3px solid #38bdf8;
+      border-radius: 4px;
+      padding: 5px 8px;
+      margin-bottom: 8px;
+      font-size: 10px;
+      color: #bae6fd;
+    }
+
+    .slide-main-purpose strong {
+      color: #ffffff;
+    }
+
+    .explanation-block {
+      margin-bottom: 8px;
+    }
+
+    .explanation-title {
+      font-size: 9.5px;
+      font-weight: 800;
+      color: #d4af37;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 4px;
+    }
+
+    .explanation-text {
+      color: #cbd5e1;
+      font-size: 10px;
+      line-height: 1.5;
+    }
+
+    .explanation-text p {
+      margin-bottom: 4px;
+    }
+
+    .explanation-text ul {
+      margin-left: 14px;
+      margin-bottom: 4px;
+    }
+
+    .explanation-text li {
+      margin-bottom: 3px;
+    }
+
+    /* Key Numbers Grid */
+    .key-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+      margin: 6px 0;
+    }
+
+    .key-box {
+      background: #070a14;
+      border: 1px solid #1e293b;
+      border-radius: 6px;
+      padding: 5px 7px;
+      text-align: center;
+    }
+
+    .key-val {
+      font-size: 11px;
+      font-weight: 800;
+      color: #f1c40f;
+    }
+
+    .key-lbl {
+      font-size: 8px;
+      color: #94a3b8;
+      text-transform: uppercase;
+      margin-top: 1px;
+    }
+
+    /* Leader Tip */
+    .leader-tip {
+      background: rgba(16, 185, 129, 0.08);
+      border: 1px dashed rgba(16, 185, 129, 0.4);
+      border-radius: 6px;
+      padding: 5px 9px;
+      font-size: 9.5px;
+      color: #a7f3d0;
+      display: flex;
+      align-items: flex-start;
+      gap: 5px;
+    }
+
+    .leader-tip strong {
+      color: #10b981;
+      white-space: nowrap;
+    }
+
+    /* Mini Table */
+    .mini-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 9px;
+      margin: 6px 0;
+    }
+
+    .mini-table th {
+      background: #162032;
+      color: #38bdf8;
+      padding: 4px 6px;
+      text-align: left;
+      font-weight: 700;
+      border: 1px solid #1e293b;
+    }
+
+    .mini-table td {
+      padding: 3.5px 6px;
+      border: 1px solid #1e293b;
+      color: #cbd5e1;
+    }
+
+    .mini-table tr:nth-child(even) {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .footer {
+      border-top: 1px solid #1e293b;
+      padding-top: 6px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 8px;
+      color: #64748b;
+      margin-top: auto;
+    }
+
+    .footer a {
+      color: #d4af37;
+      text-decoration: none;
+    }
+
+    /* Cover Styling */
+    .cover-hero {
+      background: radial-gradient(circle at 50% 20%, #1e293b 0%, #0b1120 60%, #060911 100%);
+      border: 2px solid #d4af37;
+      border-radius: 16px;
+      padding: 35px 25px;
+      text-align: center;
+      margin: 15px 0;
+      box-shadow: 0 0 35px rgba(212, 175, 55, 0.15);
+    }
+
+    .cover-logo-title {
+      font-size: 32px;
+      font-weight: 900;
+      letter-spacing: 2px;
+      color: #ffffff;
+      margin-bottom: 6px;
+    }
+
+    .cover-logo-title span {
+      color: #d4af37;
+    }
+
+    .cover-tagline {
+      font-size: 13px;
+      color: #38bdf8;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-bottom: 18px;
+    }
+
+    .cover-desc {
+      font-size: 12px;
+      color: #cbd5e1;
+      max-width: 620px;
+      margin: 0 auto 24px auto;
+      line-height: 1.6;
+    }
+
+    .cover-metrics {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    .cover-metric-card {
+      background: rgba(15, 23, 42, 0.8);
+      border: 1px solid #334155;
+      border-radius: 10px;
+      padding: 10px;
+    }
+
+    .cover-metric-val {
+      font-size: 18px;
+      font-weight: 900;
+      color: #f1c40f;
+    }
+
+    .cover-metric-lbl {
+      font-size: 9px;
+      color: #94a3b8;
+      text-transform: uppercase;
+      margin-top: 3px;
+    }
+
+    .toc-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .toc-item {
+      background: #0b1120;
+      border: 1px solid #1e293b;
+      border-radius: 8px;
+      padding: 8px 12px;
+      font-size: 10px;
+      display: flex;
+      justify-content: space-between;
+      color: #cbd5e1;
+    }
+
+    .toc-item strong {
+      color: #f1c40f;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ================= COVER PAGE ================= -->
+  <div class="cover-page">
+    <div class="doc-header">
+      <div>
+        <div class="doc-title">SEORALINK <span>OFFICIAL GUIDE</span> <span class="doc-badge">HINGLISH EDITION</span></div>
+        <div class="doc-sub">16x9 Corporate Presentation (Version 4.0) • Complete Page-by-Page & Topic-by-Topic Guide</div>
+      </div>
+      <div style="text-align: right; font-size: 9px; color: #94a3b8;">
+        Origin: <strong>Seoul, South Korea</strong><br>
+        Portal: <strong style="color: #38bdf8;">seoralink.com</strong>
+      </div>
+    </div>
+
+    <div class="cover-hero">
+      <div class="cover-logo-title">SEORA<span>LINK</span></div>
+      <div class="cover-tagline">Korean Business Network • Global Affiliate Architecture</div>
+      <div class="cover-desc">
+        Yeh comprehensive guide <strong>SEORALINK_Presentation_16x9.pdf</strong> ke sabhi <strong>22 Pages (Slides)</strong> ka aasan Hinglish me complete topic-by-topic explanation hai. Har slide ka purpose, underlying mathematical engine, earnings calculation, aur leadership rules ko saral bhasha me samjhaya gaya hai taaki koi bhi leader ise asaani se samajh sake aur apni team ko pitch kar sake.
+      </div>
+
+      <div class="cover-metrics">
+        <div class="cover-metric-card">
+          <div class="cover-metric-val">$10 USDT</div>
+          <div class="cover-metric-lbl">Micro-Entry</div>
+        </div>
+        <div class="cover-metric-card">
+          <div class="cover-metric-val">12 Tiers</div>
+          <div class="cover-metric-lbl">Doubling Ladder</div>
+        </div>
+        <div class="cover-metric-card">
+          <div class="cover-metric-val">5% + 5%</div>
+          <div class="cover-metric-lbl">Dual Overrides</div>
+        </div>
+        <div class="cover-metric-card">
+          <div class="cover-metric-val">$18,432</div>
+          <div class="cover-metric-lbl">Net Peak Cash</div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div style="font-size: 11px; font-weight: 800; color: #d4af37; text-transform: uppercase; margin-bottom: 6px; letter-spacing: 0.5px;">
+        Table of Contents (22 Slides Overview)
+      </div>
+      <div class="toc-grid">
+        <div class="toc-item"><span><strong>Slides 01 - 04:</strong> Company Profile, Vision & 4 Mission Pillars</span> <span>Overview</span></div>
+        <div class="toc-item"><span><strong>Slides 05 - 08:</strong> 5-Stage Mechanics, Closed-Loop Engine & $10 Entry</span> <span>System Core</span></div>
+        <div class="toc-item"><span><strong>Slides 09 - 12:</strong> 3 Revenue Streams, 5% Direct & 5% Mentorship Scale</span> <span>Income Math</span></div>
+        <div class="toc-item"><span><strong>Slides 13 - 16:</strong> 2-ID Law, Tripod Model & Master 12-Rank Progression</span> <span>Rank Ladder</span></div>
+        <div class="toc-item"><span><strong>Slide 17:</strong> Capital Reserve Policy, 20% vs 10% & Single-Exit Rules</span> <span>Governance</span></div>
+        <div class="toc-item"><span><strong>Slides 18 - 22:</strong> Practical $10 to Ultima Journey, Strengths & Getting Started</span> <span>Roadmap</span></div>
+      </div>
+    </div>
+
+    <div class="footer">
+      <div>SEORALINK Institutional Presentation Master Guide • Hinglish Edition</div>
+      <div>Page 1 of 8 • <a href="https://seoralink.com">seoralink.com</a></div>
+    </div>
+  </div>
+
+  <!-- ================= PAGE 2: SLIDES 1, 2, 3 ================= -->
+  <div class="page">
+    <div>
+      <div class="doc-header" style="margin-bottom: 10px; padding: 8px 14px;">
+        <div style="font-size: 12px; font-weight: 800; color: #fff;">PART 1: CORPORATE FOUNDATION & STRATEGIC MISSION</div>
+        <div style="font-size: 9px; color: #94a3b8;">Slides 01, 02, 03</div>
+      </div>
+
+      <!-- SLIDE 1 -->
+      <div class="slide-card">
+        <div class="slide-card-header">
+          <span class="slide-pill">SLIDE 01</span>
+          <span class="slide-title-en">International Corporate Presentation (Cover Slide)</span>
+          <span class="slide-tag">Title & Overview</span>
+        </div>
+        <div class="slide-main-purpose">
+          <strong>Main Purpose:</strong> Platform ka official introduction aur sabhi 4 sabse bade key metrics ko ek jhalak me dikhana.
+        </div>
+        <div class="explanation-block">
+          <div class="explanation-title">Aasan Hinglish Me Samjhein:</div>
+          <div class="explanation-text">
+            <p>Yeh SEORALINK ka main title page hai. Isme company ne bataya hai ki yeh Seoul, South Korea ka international fintech affiliate network hai jo <strong>Universal Queue Progression</strong> (ek global single-line katar) aur <strong>Predictable Mathematical Advancement</strong> (ganitiya rules) par aadharit hai.</p>
+          </div>
+          <div class="key-grid">
+            <div class="key-box"><div class="key-val">$10 USDT</div><div class="key-lbl">Micro-Entry (No Risk)</div></div>
+            <div class="key-box"><div class="key-val">12 Tiers</div><div class="key-lbl">Doubling Ladder</div></div>
+            <div class="key-box"><div class="key-val">5% + 5%</div><div class="key-lbl">Direct + Team Bonus</div></div>
+            <div class="key-box"><div class="key-val">$18,432</div><div class="key-lbl">Net Peak Cashout</div></div>
+          </div>
+        </div>
+        <div class="leader-tip">
+          <strong>Leader Tip:</strong> New members ko batayein ki entry cost sirf $10 USDT (~₹900) hai, jisse koi financial risk nahi rehta aur conversion rate bahut high hota hai.
+        </div>
+      </div>
+
+      <!-- SLIDE 2 -->
+      <div class="slide-card">
+        <div class="slide-card-header">
+          <span class="slide-pill">SLIDE 02</span>
+          <span class="slide-title-en">About SEORALINK (Institutional Corporate Profile)</span>
+          <span class="slide-tag">Corporate Profile</span>
+        </div>
+        <div class="slide-main-purpose">
+          <strong>Main Purpose:</strong> Company ka foundation, corporate standards aur mathematical integrity ko establish karna.
+        </div>
+        <div class="explanation-block">
+          <div class="explanation-title">Is Slide Me 3 Main Pillars Bataye Gaye Hain:</div>
+          <div class="explanation-text">
+            <ul>
+              <li><strong>1. Korean Enterprise Foundation:</strong> South Korea ke strict corporate governance standards ke tahat banaya gaya transparent system jo commercial equity aur long-term stability deta hai.</li>
+              <li><strong>2. Global Affiliate Connectivity:</strong> Asia, Middle East (Dubai Finance Hub) aur worldwide affiliates ko ek single consolidated community queue me jodta hai.</li>
+              <li><strong>3. Predictable Mathematical Logic:</strong> Isme kisi admin ki manmani (corporate discretion) nahi chalti. Sabkuch pehle se nirdharit <strong>Universal 2-ID Progression Law</strong> aur smart-contract liquidity reserve par chalta hai.</li>
+            </ul>
+          </div>
+        </div>
+        <div class="leader-tip">
+          <strong>Leader Tip:</strong> Traditional fraud platforms me rules badal diye jaate hain, lekin yaha deterministic math engine hai jisme rules fix aur transparent hain.
+        </div>
+      </div>
+
+      <!-- SLIDE 3 -->
+      <div class="slide-card">
+        <div class="slide-card-header">
+          <span class="slide-pill">SLIDE 03</span>
+          <span class="slide-title-en">Strategic Purpose (Our Mission & 4 Core Pillars)</span>
+          <span class="slide-tag">Mission & Mandate</span>
+        </div>
+        <div class="slide-main-purpose">
+          <strong>Main Purpose:</strong> SEORALINK ka core mandate samjhana: Community momentum se individual financial growth kaise hoti hai.
+        </div>
+        <div class="explanation-block">
+          <div class="explanation-title">The 4 Strategic Pillars:</div>
+          <div class="explanation-text">
+            <ul>
+              <li><strong>01. PEOPLE (Low-barrier Entry):</strong> Entry sirf $10 hai, sabke liye 100% equal opportunity hai, aur zero friction hai.</li>
+              <li><strong>02. OPPORTUNITY (Wealth Escalation):</strong> Har direct par turant 5% ($0.50) cash milta hai aur Peak Rank $20,480 tak badhta hai.</li>
+              <li><strong>03. NETWORK (Collective Power):</strong> Universal Single-Leg line jaha worldwide community ka har ek naya member purane members ko aage badhata hai.</li>
+              <li><strong>04. GROWTH (Compounding Scale):</strong> 1 direct mentee se $2,047.50 tak mentorship override, 100% upgrade roll-over, aur Ultima par $18,432 net peak cashout.</li>
+            </ul>
+          </div>
+        </div>
+        <div class="leader-tip">
+          <strong>Leader Tip:</strong> Har member ka focus 4th pillar par hona chahiye — team ko mentor karke unhe ranks me aage badhana sabse badi passive income create karta hai.
+        </div>
+      </div>
+    </div>
+
+    <div class="footer">
+      <div>SEORALINK 16x9 Complete Hinglish Guide • Slides 01–03</div>
+      <div>Page 2 of 8 • <a href="https://seoralink.com">seoralink.com</a></div>
+    </div>
+  </div>
+
+  <!-- ================= PAGE 3: SLIDES 4, 5, 6 ================= -->
+  <div class="page">
+    <div>
+      <div class="doc-header" style="margin-bottom: 10px; padding: 8px 14px;">
+        <div style="font-size: 12px; font-weight: 800; color: #fff;">PART 2: EXPANSION ROADMAP & OPERATIONAL MECHANICS</div>
+        <div style="font-size: 9px; color: #94a3b8;">Slides 04, 05, 06</div>
+      </div>
+
+      <!-- SLIDE 4 -->
+      <div class="slide-card">
+        <div class="slide-card-header">
+          <span class="slide-pill">SLIDE 04</span>
+          <span class="slide-title-en">Our Vision: Korea → Asia → Global (Global Horizon)</span>
+          <span class="slide-tag">Expansion Roadmap</span>
+        </div>
+        <div class="slide-main-purpose">
+          <strong>Main Purpose:</strong> Company ka 3-phase international scaling roadmap dikhana.
+        </div>
+        <div class="explanation-block">
+          <div class="explanation-title">Expansion ke 3 Phases:</div>
+          <div class="explanation-text">
+            <ul>
+              <li><strong>Phase 01 • Foundation (Established):</strong> Seoul Central HQ me 2-ID universal queue algorithm aur $10 micro-entry engine ka safal launch.</li>
+              <li><strong>Phase 02 • Regional Scale (Active Expansion):</strong> Pan-Asian & Middle East Corridor — Dubai Finance Nexus, Japan, Singapore aur Southeast Asia me leadership councils ka gathan.</li>
+              <li><strong>Phase 03 • Global Scale (Strategic Roadmap):</strong> 100+ global markets me USDT non-custodial distributed settlements ke sath integration.</li>
+            </ul>
+          </div>
+        </div>
+        <div class="leader-tip">
+          <strong>Leader Tip:</strong> Dubai aur Seoul ke hubs ke karan international community tezi se jud rahi hai, jisse queue velocity continuous rehti hai.
+        </div>
+      </div>
+
+      <!-- SLIDE 5 -->
+      <div class="slide-card">
+        <div class="slide-card-header">
+          <span class="slide-pill">SLIDE 05</span>
+          <span class="slide-title-en">How SEORALINK Works (Operational Mechanics)</span>
+          <span class="slide-tag">Step-by-Step Flow</span>
+        </div>
+        <div class="slide-main-purpose">
+          <strong>Main Purpose:</strong> $10 micro-entry se lekar $18,432 Ultima tak ke 5-stage progression ko simplify karna.
+        </div>
+        <div class="explanation-block">
+          <div class="explanation-title">5-Stage Working Process:</div>
+          <div class="explanation-text">
+            <ol style="margin-left: 14px;">
+              <li><strong>01. PARTICIPATE (Activation):</strong> $10 USDT se account activate hota hai aur universal queue me permanent locked position milti hai.</li>
+              <li><strong>02. BUILD NETWORK (Direct Flow):</strong> Direct members sponsor karo, instant 5% ($0.50) cash flow wallet me pao.</li>
+              <li><strong>03. ACHIEVE RANK (Queue Power):</strong> Global FIFO queue automatically aapke niche 2 matching units place karti hai (2-ID Match).</li>
+              <li><strong>04. EARN REWARDS (Growth Cycle):</strong> Yaha user ke paas CHOICE hoti hai: <strong>80% net cashout lekar queue se exit karo</strong>, YA fir <strong>hold karke 100% full value ke sath next tier me double karo</strong>.</li>
+              <li><strong>05. SCALE TO TOP (Ultima Apex):</strong> R12 (Ultima) tak cycle karo jaha 90% net cash ($18,432 USDT) direct wallet me milta hai.</li>
+            </ol>
+          </div>
+        </div>
+        <div class="leader-tip">
+          <strong>Leader Tip:</strong> Stage 4 sabse crucial hai — yahi 'Rolling Auto-Upgrade' system hai jo $10 ko bina additional investment ke $20,480 tak bada karta hai!
+        </div>
+      </div>
+
+      <!-- SLIDE 6 -->
+      <div class="slide-card">
+        <div class="slide-card-header">
+          <span class="slide-pill">SLIDE 06</span>
+          <span class="slide-title-en">Business Model Structure (System Architecture)</span>
+          <span class="slide-tag">Economic Engine</span>
+        </div>
+        <div class="slide-main-purpose">
+          <strong>Main Purpose:</strong> Input Layer, Central Engine, aur Output Layer ka mathematical relationship samjhana.
+        </div>
+        <div class="explanation-block">
+          <div class="explanation-title">3-Layer Architectural Design:</div>
+          <div class="explanation-text">
+            <ul>
+              <li><strong>Input Layer ($10 Entry):</strong> $10 aate hi instant FIFO sequence me queue entry hoti hai aur sponsor ko $0.50 credit hota hai.</li>
+              <li><strong>Central Engine (2-ID Model & 2:1 Ratio):</strong> Aapke niche jaise hi 2 IDs aati hain, 100% rank complete hota hai. Koi Left/Right balancing ya leg splitting nahi chahiye!</li>
+              <li><strong>Output Layer (Dual Wealth):</strong> Direct sponsor cash + $2,047.50 upline overrides + Peak Ultima $18,432 net cashout.</li>
+              <li><strong>Sustainability Mechanism:</strong> Intermediate ranks (R1–R11) par 20% protocol reserve katar ki liquidity ko continuous banaye rakhta hai.</li>
+            </ul>
+          </div>
+        </div>
+        <div class="leader-tip">
+          <strong>Leader Tip:</strong> 2:1 ratio ka matlab: 2 incoming units me se ek unit cashout/hold value banti hai aur doosri unit system liquidity aur momentum ko sustain karti hai.
+        </div>
+      </div>
+    </div>
+
+    <div class="footer">
+      <div>SEORALINK 16x9 Complete Hinglish Guide • Slides 04–06</div>
+      <div>Page 3 of 8 • <a href="https://seoralink.com">seoralink.com</a></div>
+    </div>
+  </div>
+
+  <!-- ================= PAGE 4: SLIDES 7, 8, 9 ================= -->
+  <div class="page">
+    <div>
+      <div class="doc-header" style="margin-bottom: 10px; padding: 8px 14px;">
+        <div style="font-size: 12px; font-weight: 800; color: #fff;">PART 3: ACTIVATION PACKAGE & MULTIPLE REVENUE STREAMS</div>
+        <div style="font-size: 9px; color: #94a3b8;">Slides 07, 08, 09</div>
+      </div>
+
+      <!-- SLIDE 7 -->
+      <div class="slide-card">
+        <div class="slide-card-header">
+          <span class="slide-pill">SLIDE 07</span>
+          <span class="slide-title-en">Activation Package: $10 USDT (Participation Suite)</span>
+          <span class="slide-tag">Package Rights</span>
+        </div>
+        <div class="slide-main-purpose">
+          <strong>Main Purpose:</strong> $10 one-time account activation me member ko kya-kya milta hai.
+        </div>
+        <div class="explanation-block">
+          <div class="explanation-title">4 Core Rights with $10:</div>
+          <div class="explanation-text">
+            <ul>
+              <li><strong>01. Queue Position (Timestamped):</strong> Global single-line community katar me guaranteed FIFO order me permanent sthan.</li>
+              <li><strong>02. Direct Referral Rights (Instant):</strong> Unlimited direct partners ko sponsor karne ka adhikar, har referral par $0.50 instant wallet credit.</li>
+              <li><strong>03. Rank Advancement (12 Tiers):</strong> Zen ($10) se lekar Ultima ($20,480) tak 12 doubling tiers me aage badhne ki eligibility.</li>
+              <li><strong>04. Upline Overrides (Compounding):</strong> Apne direct mentees ke har rank upgrade par 5% override (ek partner se up to $2,047.50).</li>
+            </ul>
+          </div>
+        </div>
+        <div class="leader-tip">
+          <strong>Leader Tip:</strong> Zero monthly charges hain, koi renewal fee nahi hai — yeh lifetime active queue standing package hai.
+        </div>
+      </div>
+
+      <!-- SLIDE 8 -->
+      <div class="slide-card">
+        <div class="slide-card-header">
+          <span class="slide-pill">SLIDE 08</span>
+          <span class="slide-title-en">The Universal Value Flow (Capital Dynamics)</span>
+          <span class="slide-tag">Cashout vs Upgrade</span>
+        </div>
+        <div class="slide-main-purpose">
+          <strong>Main Purpose:</strong> 2-ID match hone par user ke paas Cashout Exit aur Auto-Upgrade ka kya vikalp hota hai.
+        </div>
+        <div class="explanation-block">
+          <div class="explanation-title">Value Flow ke 4 Stages:</div>
+          <div class="explanation-text">
+            <ul>
+              <li><strong>01. Activation & Entry:</strong> $10 entry, sponsor ko instant 5% ($0.50) credit.</li>
+              <li><strong>02. Single-Leg Positioning:</strong> Global FIFO line automatically 2 matching units aapke niche place karti hai.</li>
+              <li><strong>03. Rank Reward Choice:</strong> 
+                <br>&bull; <em>Option A (Cashout Exit):</em> Agar user intermediate rank (Tier 1-11) par withdraw karta hai, to 80% net cash milta hai aur ID queue se permanently exit ho jaati hai.
+                <br>&bull; <em>Option B (Auto-Upgrade):</em> Agar user hold karta hai, to 100% full value agle doubling tier me roll-over ho jaati hai.
+              </li>
+              <li><strong>04. Upline Mentorship Override:</strong> Har upgrade par sponsor ko upgraded tier value ka 5% ($0.50 se $1,024.00) real-time milta hai.</li>
+            </ul>
+          </div>
+        </div>
+        <div class="leader-tip">
+          <strong>Leader Tip:</strong> Smart leaders intermediate ranks par cashout nahi karte, balki hold karke Ultima ($18,432) tak pahuchte hain jaha 90% payout milta hai aur ID lifetime active rehti hai!
+        </div>
+      </div>
+
+      <!-- SLIDE 9 -->
+      <div class="slide-card">
+        <div class="slide-card-header">
+          <span class="slide-pill">SLIDE 09</span>
+          <span class="slide-title-en">Multiple Revenue Streams (Compensation Suite)</span>
+          <span class="slide-tag">3 Income Engines</span>
+        </div>
+        <div class="slide-main-purpose">
+          <strong>Main Purpose:</strong> 3 alag-alag income streams ko clearly compare karna.
+        </div>
+        <div class="explanation-block">
+          <div class="explanation-title">Overview of the 3 Streams:</div>
+          <div class="explanation-text">
+            <ul>
+              <li><strong>Stream 1 • Instant (5% Direct Sponsor):</strong> Har direct referral par $0.50 instant cash. Unlimited width.</li>
+              <li><strong>Stream 2 • Compounding (5% Upline Upgrade):</strong> Direct mentees ke rank upgrades se 12 tiers me $2,047.50 per mentee. 10 mentees = $20,475.</li>
+              <li><strong>Stream 3 • Leadership (12 Rank Rewards):</strong> Rolling 2x auto-upgrade $10 se $20,480 tak. Intermediate exit pe 80% net, aur Ultima par 90% net ($18,432).</li>
+            </ul>
+          </div>
+          <div class="key-grid">
+            <div class="key-box"><div class="key-val">$0.50 USDT</div><div class="key-lbl">Per Direct Referral</div></div>
+            <div class="key-box"><div class="key-val">$2,047.50</div><div class="key-lbl">Per Mentee to Ultima</div></div>
+            <div class="key-box"><div class="key-val">$20,480</div><div class="key-lbl">Peak Rank Pool</div></div>
+            <div class="key-box"><div class="key-val">$18,432</div><div class="key-lbl">Ultima Net Cashout</div></div>
+          </div>
+        </div>
+        <div class="leader-tip">
+          <strong>Leader Tip:</strong> Yeh 3 engines milkar daily instant cashflow aur massive long-term wealth dono provide karte hain.
+        </div>
+      </div>
+    </div>
+
+    <div class="footer">
+      <div>SEORALINK 16x9 Complete Hinglish Guide • Slides 07–09</div>
+      <div>Page 4 of 8 • <a href="https://seoralink.com">seoralink.com</a></div>
+    </div>
+  </div>
+
+  <!-- ================= PAGE 5: SLIDES 10, 11, 12 ================= -->
+  <div class="page">
+    <div>
+      <div class="doc-header" style="margin-bottom: 10px; padding: 8px 14px;">
+        <div style="font-size: 12px; font-weight: 800; color: #fff;">PART 4: INCOME STREAM DEEP-DIVES (DIRECT & MENTORSHIP)</div>
+        <div style="font-size: 9px; color: #94a3b8;">Slides 10, 11, 12</div>
+      </div>
+
+      <!-- SLIDE 10 -->
+      <div class="slide-card">
+        <div class="slide-card-header">
+          <span class="slide-pill">SLIDE 10</span>
+          <span class="slide-title-en">Income Stream 01: 5% Direct Sponsor Reward</span>
+          <span class="slide-tag">Referral Scaling</span>
+        </div>
+        <div class="slide-main-purpose">
+          <strong>Main Purpose:</strong> Direct sponsorship ki mechanics aur scaling potential dikhana.
+        </div>
+        <div class="explanation-block">
+          <div class="explanation-title">Formula & Scaling Matrix:</div>
+          <div class="explanation-text">
+            <p><strong>Formula:</strong> $10.00 Entry × 5% = <strong>$0.50 USDT per Referral</strong> (Real-time instant credit).</p>
+            <p>&bull; <strong>Unlimited Frontline:</strong> Aap 10, 50, 100 ya 500 members sponsor kar sakte hain, koi limit nahi hai.</p>
+            <p>&bull; <strong>Rank Qualification:</strong> Directs lagane se hi aapke aage ke ranks unlock hote hain (Pure 12 tiers ke liye total maximum sirf 6 directs chahiye!).</p>
+          </div>
+          <table class="mini-table">
+            <thead><tr><th>Direct Partners</th><th>Instant Direct Cash</th><th>Direct Partners</th><th>Instant Direct Cash</th></tr></thead>
+            <tbody>
+              <tr><td>10 Directs</td><td>$5.00 USDT</td><td>100 Directs</td><td>$50.00 USDT</td></tr>
+              <tr><td>25 Directs</td><td>$12.50 USDT</td><td>250 Directs</td><td>$125.00 USDT</td></tr>
+              <tr><td>50 Directs</td><td>$25.00 USDT</td><td>500 Directs</td><td>$250.00 USDT</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="leader-tip">
+          <strong>Leader Tip:</strong> Direct lagana sirf $0.50 ke liye nahi hai — har direct partner ek 'Golden Goose' hai jo aage chal kar $2,047.50 ka override dega!
+        </div>
+      </div>
+
+      <!-- SLIDE 11 -->
+      <div class="slide-card">
+        <div class="slide-card-header">
+          <span class="slide-pill">SLIDE 11</span>
+          <span class="slide-title-en">Income Stream 02 (Part 1): 5% Upline Upgrade (Ranks 1 to 6)</span>
+          <span class="slide-tag">Zen to Orbit Overrides</span>
+        </div>
+        <div class="slide-main-purpose">
+          <strong>Main Purpose:</strong> Tiers 1–6 tak direct mentees ke upgrade hone par milne wale 5% overrides ka breakdown.
+        </div>
+        <div class="explanation-block">
+          <div class="explanation-title">Tiers 1 to 6 Breakdown (Zen to Orbit):</div>
+          <table class="mini-table">
+            <thead><tr><th>Rank Tier</th><th>Rank Value</th><th>5% Upline Reward</th><th>Cumulative Override</th></tr></thead>
+            <tbody>
+              <tr><td>Zen (Tier 1)</td><td>$10</td><td>$0.50</td><td>$0.50</td></tr>
+              <tr><td>Alpha (Tier 2)</td><td>$20</td><td>$1.00</td><td>$1.50</td></tr>
+              <tr><td>Nova (Tier 3)</td><td>$40</td><td>$2.00</td><td>$3.50</td></tr>
+              <tr><td>Valt (Tier 4)</td><td>$80</td><td>$4.00</td><td>$7.50</td></tr>
+              <tr><td>Apex (Tier 5)</td><td>$160</td><td>$8.00</td><td>$15.50</td></tr>
+              <tr><td>Orbit (Tier 6)</td><td>$320</td><td>$16.00</td><td><strong>$31.50</strong></td></tr>
+            </tbody>
+          </table>
+          <div class="explanation-text" style="margin-top: 4px;">
+            <p>&bull; 1 Mentee Tier 6 pahuche to: <strong>$31.50 USDT</strong> | 10 Mentees: <strong>$315.00 USDT</strong> | 25 Mentees: <strong>$787.50 USDT</strong>.</p>
+          </div>
+        </div>
+        <div class="leader-tip">
+          <strong>Leader Tip:</strong> Jab aapki team ke members queue me aage badhte hain, to unka upgrade automatically hota hai aur aapko bina kuch kiye wallet me 5% override milta hai.
+        </div>
+      </div>
+
+      <!-- SLIDE 12 -->
+      <div class="slide-card">
+        <div class="slide-card-header">
+          <span class="slide-pill">SLIDE 12</span>
+          <span class="slide-title-en">Income Stream 02 (Part 2): 5% Upline Upgrade (Ranks 7 to 12)</span>
+          <span class="slide-tag">High-Tier Leverage</span>
+        </div>
+        <div class="slide-main-purpose">
+          <strong>Main Purpose:</strong> Tiers 7–12 (Prime se Ultima) tak massive compounding mentorship earnings dikhana.
+        </div>
+        <div class="explanation-block">
+          <div class="explanation-title">Tiers 7 to 12 Breakdown (Prime to Ultima):</div>
+          <table class="mini-table">
+            <thead><tr><th>Rank Tier</th><th>Rank Value</th><th>5% Upline Reward</th><th>Cumulative Override</th></tr></thead>
+            <tbody>
+              <tr><td>Prime (Tier 7)</td><td>$640</td><td>$32.00</td><td>$63.50</td></tr>
+              <tr><td>Elite (Tier 8)</td><td>$1,280</td><td>$64.00</td><td>$127.50</td></tr>
+              <tr><td>Titan (Tier 9)</td><td>$2,560</td><td>$128.00</td><td>$255.50</td></tr>
+              <tr><td>Royal (Tier 10)</td><td>$5,120</td><td>$256.00</td><td>$511.50</td></tr>
+              <tr><td>Legend (Tier 11)</td><td>$10,240</td><td>$512.00</td><td>$1,023.50</td></tr>
+              <tr><td>Ultima (Tier 12)</td><td>$20,480</td><td>$1,024.00</td><td><strong>$2,047.50</strong></td></tr>
+            </tbody>
+          </table>
+          <div class="explanation-text" style="margin-top: 4px;">
+            <p><strong>Full-Cycle Leverage:</strong> 1 Direct complete hone par: <strong>$2,047.50</strong> | 5 Directs: <strong>$10,237.50</strong> | 10 Directs: <strong>$20,475.00</strong> | 20 Directs: <strong>$40,950.00 USDT!</strong></p>
+          </div>
+        </div>
+        <div class="leader-tip">
+          <strong>Leader Tip:</strong> Sirf 10 active leaders develop karke Ultima tak guide karne se $20,475 (~₹18 Lakhs) ki solid passive earnings banti hai!
+        </div>
+      </div>
+    </div>
+
+    <div class="footer">
+      <div>SEORALINK 16x9 Complete Hinglish Guide • Slides 10–12</div>
+      <div>Page 5 of 8 • <a href="https://seoralink.com">seoralink.com</a></div>
+    </div>
+  </div>
+
+  <!-- ================= PAGE 6: SLIDES 13, 14, 15 ================= -->
+  <div class="page">
+    <div>
+      <div class="doc-header" style="margin-bottom: 10px; padding: 8px 14px;">
+        <div style="font-size: 12px; font-weight: 800; color: #fff;">PART 5: THE 2-ID LAW & 12 PROGRESSIVE RANKS</div>
+        <div style="font-size: 9px; color: #94a3b8;">Slides 13, 14, 15</div>
+      </div>
+
+      <!-- SLIDE 13 -->
+      <div class="slide-card">
+        <div class="slide-card-header">
+          <span class="slide-pill">SLIDE 13</span>
+          <span class="slide-title-en">Single-Leg Queue & The 2-ID Law (Core Engine)</span>
+          <span class="slide-tag">Tripod Mathematical Law</span>
+        </div>
+        <div class="slide-main-purpose">
+          <strong>Main Purpose:</strong> Signature Tripod Qualification Model aur 2:1 mathematical engine ke niyam samjhana.
+        </div>
+        <div class="explanation-block">
+          <div class="explanation-title">3 Core Principles of the Engine:</div>
+          <div class="explanation-text">
+            <ul>
+              <li><strong>Principle 01: Universal Single-Leg:</strong> Poori duniya ke sabhi affiliates ek hi single FIFO timestamped sequence me aate hain. No left/right legs, no balancing, no split matrix, zero spillover loss.</li>
+              <li><strong>Principle 02: The 2-ID Law:</strong> Kisi bhi rank ko complete karne ke liye aapke niche worldwide order se exactly <strong>2 matching qualified units</strong> aana zaroori hai.</li>
+              <li><strong>Principle 03: 2:1 Mathematical Engine:</strong>
+                <br>&bull; 1st Global Unit Placed = 50% Cycle Completion.
+                <br>&bull; 2nd Global Unit Placed = 100% Full Completion.
+                <br>&bull; Yeh 2 units fund karti hain: (1) Exit lene par 80% net cashout, ya (2) Agle tier me 100% rolling auto-upgrade!
+              </li>
+            </ul>
+          </div>
+        </div>
+        <div class="leader-tip">
+          <strong>Leader Tip:</strong> Traditional binary plans me ek leg bhaagti hai aur doosri leg me matching na hone se paisa doobta hai. Yaha 100% volume single line me kaam karta hai.
+        </div>
+      </div>
+
+      <!-- SLIDE 14 -->
+      <div class="slide-card">
+        <div class="slide-card-header">
+          <span class="slide-pill">SLIDE 14</span>
+          <span class="slide-title-en">Progressive Ranks 1 to 6: Zen to Orbit (Rank Progression Part 1)</span>
+          <span class="slide-tag">Tripod T1 to T6</span>
+        </div>
+        <div class="slide-main-purpose">
+          <strong>Main Purpose:</strong> Tiers 1 se 6 tak signature 3-node tripod qualification model aur direct requirements dikhana.
+        </div>
+        <div class="explanation-block">
+          <div class="explanation-title">Ranks 1 to 6 Tripod Qualifications:</div>
+          <table class="mini-table">
+            <thead><tr><th>Rank (Tier)</th><th>Entry Value</th><th>Required Directs</th><th>Units Placed Below</th><th>Rank Reward</th><th>Upline Override</th></tr></thead>
+            <tbody>
+              <tr><td>Zen (Tier 1)</td><td>$10</td><td>2 Directs</td><td>2 Junior IDs</td><td>$10</td><td>$0.50</td></tr>
+              <tr><td>Alpha (Tier 2)</td><td>$20</td><td>2 Directs</td><td>2 Zen (T1) IDs</td><td>$20</td><td>$1.00</td></tr>
+              <tr><td>Nova (Tier 3)</td><td>$40</td><td>3 Directs</td><td>2 Alpha (T2) IDs</td><td>$40</td><td>$2.00</td></tr>
+              <tr><td>Valt (Tier 4)</td><td>$80</td><td>3 Directs</td><td>2 Nova (T3) IDs</td><td>$80</td><td>$4.00</td></tr>
+              <tr><td>Apex (Tier 5)</td><td>$160</td><td>3 Directs</td><td>2 Valt (T4) IDs</td><td>$160</td><td>$8.00</td></tr>
+              <tr><td>Orbit (Tier 6)</td><td>$320</td><td>4 Directs</td><td>2 Apex (T5) IDs</td><td>$320</td><td>$16.00</td></tr>
+            </tbody>
+          </table>
+          <div class="explanation-text" style="margin-top: 4px;">
+            <p><strong>Rolling Progression:</strong> Agar aap cashout nahi lete, to aapka $10 bina kisi nayi jeb ke kharch ke badhkar $320 (Orbit) ban jata hai.</p>
+          </div>
+        </div>
+        <div class="leader-tip">
+          <strong>Leader Tip:</strong> Tier 1-2 ke liye 2 directs, Tier 3-5 ke liye 3 directs, aur Tier 6 ke liye 4 directs zaroori hote hain.
+        </div>
+      </div>
+
+      <!-- SLIDE 15 -->
+      <div class="slide-card">
+        <div class="slide-card-header">
+          <span class="slide-pill">SLIDE 15</span>
+          <span class="slide-title-en">Progressive Ranks 7 to 12: Prime to Ultima (Rank Progression Part 2)</span>
+          <span class="slide-tag">High Tiers & Apex</span>
+        </div>
+        <div class="slide-main-purpose">
+          <strong>Main Purpose:</strong> Tiers 7 se 12 tak doubling ladders aur pinnacle Ultima ($18,432 Net Cashout) ki details.
+        </div>
+        <div class="explanation-block">
+          <div class="explanation-title">Ranks 7 to 12 Tripod Qualifications:</div>
+          <table class="mini-table">
+            <thead><tr><th>Rank (Tier)</th><th>Entry Value</th><th>Required Directs</th><th>Units Below</th><th>Rank Reward</th><th>Upline Override</th></tr></thead>
+            <tbody>
+              <tr><td>Prime (Tier 7)</td><td>$640</td><td>4 Directs</td><td>2 Orbit (T6) IDs</td><td>$640</td><td>$32.00</td></tr>
+              <tr><td>Elite (Tier 8)</td><td>$1,280</td><td>4 Directs</td><td>2 Prime (T7) IDs</td><td>$1,280</td><td>$64.00</td></tr>
+              <tr><td>Titan (Tier 9)</td><td>$2,560</td><td>5 Directs</td><td>2 Elite (T8) IDs</td><td>$2,560</td><td>$128.00</td></tr>
+              <tr><td>Royal (Tier 10)</td><td>$5,120</td><td>5 Directs</td><td>2 Titan (T9) IDs</td><td>$5,120</td><td>$256.00</td></tr>
+              <tr><td>Legend (Tier 11)</td><td>$10,240</td><td>6 Directs</td><td>2 Royal (T10) IDs</td><td>$10,240</td><td>$512.00</td></tr>
+              <tr style="background: rgba(212, 175, 55, 0.15);"><td><strong>Ultima (Tier 12)</strong></td><td>$20,480</td><td>6 Directs</td><td>2 Legend (T11) IDs</td><td>$20,480</td><td>$1,024.00</td></tr>
+            </tbody>
+          </table>
+          <div class="explanation-text" style="margin-top: 4px;">
+            <p><strong>Pinnacle Peak:</strong> Rank 12 (Ultima) complete hote hi cycle complete hoti hai aur 90% net liquidity unlock hoti hai: <strong>$18,432.00 USDT Net Cashout!</strong></p>
+          </div>
+        </div>
+        <div class="leader-tip">
+          <strong>Leader Tip:</strong> Pure 12 ranks ko unlock karne ke liye maximum sirf <strong>6 direct partners</strong> chahiye!
+        </div>
+      </div>
+    </div>
+
+    <div class="footer">
+      <div>SEORALINK 16x9 Complete Hinglish Guide • Slides 13–15</div>
+      <div>Page 6 of 8 • <a href="https://seoralink.com">seoralink.com</a></div>
+    </div>
+  </div>
+
+  <!-- ================= PAGE 7: SLIDES 16, 17, 18 ================= -->
+  <div class="page">
+    <div>
+      <div class="doc-header" style="margin-bottom: 10px; padding: 8px 14px;">
+        <div style="font-size: 12px; font-weight: 800; color: #fff;">PART 6: MASTER PROGRESSION MATRIX & CAPITAL RESERVE GOVERNANCE</div>
+        <div style="font-size: 9px; color: #94a3b8;">Slides 16, 17, 18</div>
+      </div>
+
+      <!-- SLIDE 16 -->
+      <div class="slide-card">
+        <div class="slide-card-header">
+          <span class="slide-pill">SLIDE 16</span>
+          <span class="slide-title-en">The 12 Progressive Ranks (Master Progression Matrix)</span>
+          <span class="slide-tag">Master Matrix Table</span>
+        </div>
+        <div class="slide-main-purpose">
+          <strong>Main Purpose:</strong> Sabhi 12 ranks ka full institutional overview: Entry, Directs, Cashout Exit, Auto-Upgrade, aur Upline Bonus.
+        </div>
+        <div class="explanation-block">
+          <div class="explanation-title">Master Matrix Summary:</div>
+          <table class="mini-table">
+            <thead><tr><th>Rank</th><th>Directs</th><th>Rank Value</th><th>Exit Net (80%)</th><th>If Held (Auto-Upgrade)</th><th>5% Upline</th></tr></thead>
+            <tbody>
+              <tr><td>Junior (T0)</td><td>0</td><td>$10 Entry</td><td>—</td><td>Enters Zen ($10)</td><td>$0.50 (Direct)</td></tr>
+              <tr><td>Zen (T1)</td><td>2</td><td>$10</td><td>$8.00 (80%)</td><td>Rolls to Alpha ($20)</td><td>$0.50</td></tr>
+              <tr><td>Alpha (T2)</td><td>2</td><td>$20</td><td>$16.00 (80%)</td><td>Rolls to Nova ($40)</td><td>$1.00</td></tr>
+              <tr><td>Nova (T3)</td><td>3</td><td>$40</td><td>$32.00 (80%)</td><td>Rolls to Valt ($80)</td><td>$2.00</td></tr>
+              <tr><td>Valt (T4)</td><td>3</td><td>$80</td><td>$64.00 (80%)</td><td>Rolls to Apex ($160)</td><td>$4.00</td></tr>
+              <tr><td>Apex (T5)</td><td>3</td><td>$160</td><td>$128.00 (80%)</td><td>Rolls to Orbit ($320)</td><td>$8.00</td></tr>
+              <tr><td>Orbit (T6)</td><td>4</td><td>$320</td><td>$256.00 (80%)</td><td>Rolls to Prime ($640)</td><td>$16.00</td></tr>
+              <tr><td>Prime (T7)</td><td>4</td><td>$640</td><td>$512.00 (80%)</td><td>Rolls to Elite ($1,280)</td><td>$32.00</td></tr>
+              <tr><td>Elite (T8)</td><td>4</td><td>$1,280</td><td>$1,024.00 (80%)</td><td>Rolls to Titan ($2,560)</td><td>$64.00</td></tr>
+              <tr><td>Titan (T9)</td><td>5</td><td>$2,560</td><td>$2,048.00 (80%)</td><td>Rolls to Royal ($5,120)</td><td>$128.00</td></tr>
+              <tr><td>Royal (T10)</td><td>5</td><td>$5,120</td><td>$4,096.00 (80%)</td><td>Rolls to Legend ($10,240)</td><td>$256.00</td></tr>
+              <tr><td>Legend (T11)</td><td>6</td><td>$10,240</td><td>$8,192.00 (80%)</td><td>Rolls to Ultima ($20,480)</td><td>$512.00</td></tr>
+              <tr style="background: rgba(212, 175, 55, 0.15);"><td><strong>Ultima (T12)</strong></td><td>6</td><td>$20,480</td><td><strong>$18,432 (90%🔥)</strong></td><td>Cycle Complete (Apex)</td><td>$1,024.00</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="leader-tip">
+          <strong>Leader Tip:</strong> Yeh single table pure plan ka heart hai. Har member ko dikhayein ki $10 hold karne se value $20,480 tak exponential multiply hoti hai.
+        </div>
+      </div>
+
+      <!-- SLIDE 17 -->
+      <div class="slide-card">
+        <div class="slide-card-header">
+          <span class="slide-pill">SLIDE 17</span>
+          <span class="slide-title-en">Capital Reserve & Withdrawal Rules (Reserve Policy)</span>
+          <span class="slide-tag">Governance & Exit Protocol</span>
+        </div>
+        <div class="slide-main-purpose">
+          <strong>Main Purpose:</strong> Protocol reserve economics aur account status ke kade niyam samjhana.
+        </div>
+        <div class="explanation-block">
+          <div class="explanation-title">Strict Protocol Rules (Ranks 1-11 vs Rank 12):</div>
+          <div class="explanation-text">
+            <ul>
+              <li><strong>Ranks 1 to 11 (Permanent Exit Rule):</strong> Agar koi member intermediate rank (Tier 1 se 11) par apna rank reward withdraw karta hai, to:
+                <br>&bull; 80% net cashout milta hai aur 20% protocol reserve me chala jata hai.
+                <br>&bull; <strong>ID Permanently Deactivated/Banned:</strong> Woh ID system se permanently band ho jaati hai aur dobara kabhi reactivate nahi ho sakti. Uske aage ke saare commissions aur queue rights forfeit ho jaate hain.
+              </li>
+              <li><strong>Rank 12 (Ultima Exclusive - Lifetime Active ID):</strong> Jab member Rank 12 (Ultima) par pahuchta hai:
+                <br>&bull; Sirf 10% deduction lagta hai aur poora <strong>$18,432.00 USDT Net Cashout</strong> milta hai!
+                <br>&bull; <strong>Lifetime Active Status:</strong> ID hamesha ke liye ACTIVE rehti hai aur woh unlimited direct referrals ($0.50) aur 5% team mentorship overrides ($2,047.50/partner) zindagibhar kamata rehta hai!
+              </li>
+              <li><strong>Commission Wallet Withdrawals:</strong> Direct sponsor ($0.50) aur 5% mentorship overrides par flat 10% fee lagti hai aur ID hamesha ACTIVE rehti hai!</li>
+            </ul>
+          </div>
+        </div>
+        <div class="leader-tip">
+          <strong>Leader Tip:</strong> Single-Exit protocol isliye banaya gaya hai taaki log beech me paise nikal kar system ki katar ko slow na karein. Jo leader Ultima tak hold karta hai, wahi asli wealth banata hai.
+        </div>
+      </div>
+
+      <!-- SLIDE 18 -->
+      <div class="slide-card">
+        <div class="slide-card-header">
+          <span class="slide-pill">SLIDE 18</span>
+          <span class="slide-title-en">User Progression: $10 to Ultima (Practical Journey)</span>
+          <span class="slide-tag">4 Journey Phases</span>
+        </div>
+        <div class="slide-main-purpose">
+          <strong>Main Purpose:</strong> Ek aam member ki $10 se lekar Ultima tak ki journey ko 4 practical phases me dikhana.
+        </div>
+        <div class="explanation-block">
+          <div class="explanation-title">The 4 Progression Phases:</div>
+          <div class="explanation-text">
+            <ul>
+              <li><strong>Phase 01 • Activation & Zen:</strong> $10 activate kiya, 2 directs sponsor kiye ($1.00 kamaya) aur Zen ($10) me pravesh kiya (Exit: $8, ya Roll to Alpha $20).</li>
+              <li><strong>Phase 02 • Core Ladder (T2–T6):</strong> Value double hoti hai: Alpha ($20) &rarr; Nova ($40) &rarr; Valt ($80) &rarr; Apex ($160) &rarr; Orbit ($320). Total directs required: 4. (Orbit Exit: $256, ya Roll to Prime $640).</li>
+              <li><strong>Phase 03 • High Tiers (T7–T11):</strong> Prime ($640) &rarr; Elite ($1,280) &rarr; Titan ($2,560) &rarr; Royal ($5,120) &rarr; Legend ($10,240). Total directs required: 6. (Legend Exit: $8,192, ya Roll to Ultima $20,480).</li>
+              <li><strong>Phase 04 • Pinnacle Ultima:</strong> Ultima ($20,480) achieve kiya. 90% net cash ($18,432.00) withdraw kiya aur lifetime active ID ke sath exit kiya!</li>
+            </ul>
+          </div>
+        </div>
+        <div class="leader-tip">
+          <strong>Leader Tip:</strong> Pure safar me har direct referral bhi $2,047.50 ka cumulative override generate karta hai.
+        </div>
+      </div>
+    </div>
+
+    <div class="footer">
+      <div>SEORALINK 16x9 Complete Hinglish Guide • Slides 16–18</div>
+      <div>Page 7 of 8 • <a href="https://seoralink.com">seoralink.com</a></div>
+    </div>
+  </div>
+
+  <!-- ================= PAGE 8: SLIDES 19, 20, 21, 22 ================= -->
+  <div class="page">
+    <div>
+      <div class="doc-header" style="margin-bottom: 10px; padding: 8px 14px;">
+        <div style="font-size: 12px; font-weight: 800; color: #fff;">PART 7: ADVANTAGES, ONBOARDING ROADMAP & GOVERNANCE</div>
+        <div style="font-size: 9px; color: #94a3b8;">Slides 19, 20, 21, 22</div>
+      </div>
+
+      <!-- SLIDE 19 -->
+      <div class="slide-card">
+        <div class="slide-card-header">
+          <span class="slide-pill">SLIDE 19</span>
+          <span class="slide-title-en">Why Partner with SEORALINK? (Competitive Strengths)</span>
+          <span class="slide-tag">4 Competitive Edges</span>
+        </div>
+        <div class="slide-main-purpose">
+          <strong>Main Purpose:</strong> SEORALINK ko doosre networking platforms se alag aur superior sabit karna.
+        </div>
+        <div class="explanation-block">
+          <div class="explanation-title">4 Big Advantages:</div>
+          <div class="explanation-text">
+            <ul>
+              <li><strong>1. Korean Corporate Governance:</strong> South Korea ki commercial excellence, systematic precision aur unyielding transparency.</li>
+              <li><strong>2. Universal Single-Leg Synergy:</strong> Poori duniya ki ek hi line, koi leg balancing nahi, zero spillover loss, 100% community momentum.</li>
+              <li><strong>3. Predictable 2-ID Progression Law:</strong> Niche exactly 2 matching units aane par automatic progression. Zero human bias, 100% automated smart routing.</li>
+              <li><strong>4. Balanced Capital Sustainability:</strong> 20% protocol reserve liquidity ensure karta hai, aur Ultima par 90% net cashout ($18,432) unlock karta hai.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- SLIDE 20 -->
+      <div class="slide-card">
+        <div class="slide-card-header">
+          <span class="slide-pill">SLIDE 20</span>
+          <span class="slide-title-en">How to Get Started (Onboarding Roadmap)</span>
+          <span class="slide-tag">5 Action Steps</span>
+        </div>
+        <div class="slide-main-purpose">
+          <strong>Main Purpose:</strong> Naye member ko pehle din kya karna hai, uska step-by-step action plan dena.
+        </div>
+        <div class="explanation-block">
+          <div class="explanation-title">5 Straightforward Steps:</div>
+          <div class="explanation-text">
+            <p><strong>01 Register:</strong> Sponsor ke link se free sign up karein.</p>
+            <p><strong>02 Activate:</strong> $10 USDT fund karke apni FIFO queue position permanently lock karein.</p>
+            <p><strong>03 Share:</strong> Apna link share karein aur unlimited partners par 5% ($0.50) instant cash kamayein.</p>
+            <p><strong>04 Qualify:</strong> 2 se 6 direct criteria ko meet karke ranks unlock karein.</p>
+            <p><strong>05 Scale:</strong> Global community volume ke sath cycle karke Ultima ($18,432) tak scale karein.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- SLIDE 21 -->
+      <div class="slide-card">
+        <div class="slide-card-header">
+          <span class="slide-pill">SLIDE 21</span>
+          <span class="slide-title-en">Key Operating Rules & Governance (Operational Principles)</span>
+          <span class="slide-tag">Rules & Parameters</span>
+        </div>
+        <div class="slide-main-purpose">
+          <strong>Main Purpose:</strong> Transparency aur continuity ke liye sabhi essential operating rules ko summarise karna.
+        </div>
+        <div class="explanation-block">
+          <div class="explanation-title">Core Operating Rules:</div>
+          <div class="explanation-text">
+            <ul>
+              <li><strong>Cumulative Direct Criteria:</strong> T1-T2: 2 Directs | T3-T5: 3 Directs | T6-T8: 4 Directs | T9-T10: 5 Directs | T11-T12: 6 Directs. (Max 6 Directs for full 12-tier cycle).</li>
+              <li><strong>The 2-ID Placement Law:</strong> Har rank par exactly 2 matching units FIFO queue se automatically place hoti hain. Zero leg balancing required.</li>
+              <li><strong>Withdrawal & Account Status:</strong> Ranks 1-11 Exit = 20% deduction & permanent ban. Ultima = 10% fee ($18,432 net) & lifetime active ID. Commission withdrawals = 10% fee.</li>
+              <li><strong>Deterministic Execution:</strong> Real-time automated smart contract settlements, direct member-to-wallet execution.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- SLIDE 22 -->
+      <div class="slide-card" style="margin-bottom: 0;">
+        <div class="slide-card-header">
+          <span class="slide-pill">SLIDE 22</span>
+          <span class="slide-title-en">Thank You & Welcome to SEORALINK (Official Invitation)</span>
+          <span class="slide-tag">Conclusion & CTA</span>
+        </div>
+        <div class="slide-main-purpose">
+          <strong>Main Purpose:</strong> Closing call-to-action aur official links.
+        </div>
+        <div class="explanation-block">
+          <div class="explanation-text">
+            <p>SEORALINK global business networking ke naye daur me sabhi visionary entrepreneurs ka swagat karta hai. Sirf $10 USDT se shuru karke automated daily returns aur leadership rank rewards hasil karein.</p>
+            <p style="margin-top: 4px;">
+              <strong>🌐 Official Web Portal:</strong> <span style="color: #38bdf8;">seoralink.com</span> &nbsp;|&nbsp; 
+              <strong>🏢 Headquarters:</strong> Seoul, South Korea &nbsp;|&nbsp; 
+              <strong>💼 Architecture:</strong> Single-Leg Universal Queue
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer">
+      <div>SEORALINK 16x9 Complete Hinglish Guide • Slides 19–22 (End of Guide)</div>
+      <div>Page 8 of 8 • <a href="https://seoralink.com">seoralink.com</a></div>
+    </div>
+  </div>
+
+</body>
+</html>
+`;
+
+const htmlFilePath = path.join(__dirname, '..', 'PDF', 'SEORALINK_Presentation_Explanation_Hinglish.html');
+const pdfFilePath = path.join(__dirname, '..', 'PDF', 'SEORALINK_Presentation_Explanation_Hinglish.pdf');
+
+fs.writeFileSync(htmlFilePath, htmlContent, 'utf8');
+console.log('✅ HTML generated successfully at:', htmlFilePath);
+
+console.log('🚀 Rendering PDF via Chrome headless...');
+const chromePath = 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe';
+const chromeCmd = `"${chromePath}" --headless=new --disable-gpu --no-pdf-header-footer --print-to-pdf="${pdfFilePath}" "${htmlFilePath}"`;
+
+try {
+  execSync(chromeCmd, { stdio: 'inherit' });
+  console.log('🎉 PDF generated successfully at:', pdfFilePath);
+  const stats = fs.statSync(pdfFilePath);
+  console.log(`📄 File size: ${stats.size} bytes`);
+} catch (err) {
+  console.error('❌ Error generating PDF:', err.message);
+  process.exit(1);
+}
