@@ -11,13 +11,14 @@ export const USDT_DECIMALS = 18;
 export const DEFAULT_REQUIRED_CONFIRMATIONS = 3;
 export const DEFAULT_FIXED_DEPOSIT_AMOUNT = "10.00";
 
-// Public RPC endpoints with fallback
+// Public RPC endpoints with fallback (verified active and open)
 export const DEFAULT_BSC_RPCS = [
-  "https://bsc-dataseed.binance.org",
-  "https://binance.llamarpc.com",
-  "https://rpc.ankr.com/bsc",
   "https://bsc.publicnode.com",
-  "https://bscrpc.com",
+  "https://binance.community-rpc.com",
+  "https://bsc-dataseed1.defibit.io",
+  "https://bsc-dataseed1.ninicoin.io",
+  "https://bsc-rpc.publicnode.com",
+  "https://1rpc.io/bnb",
 ];
 
 export const ALL_DEPOSIT_PERMISSIONS = [

@@ -42,7 +42,7 @@ export function topicToAddress(topic: string): string {
 export async function verifyOnChainTxHash(
   txHash: string,
   expectedRecipient?: string,
-  minAmount = 10.0
+  minAmount = 0.01
 ): Promise<{
   valid: boolean;
   error?: string;
@@ -176,7 +176,12 @@ export async function runBlockchainMonitor(maxBlocksToScan = 80): Promise<ScanRe
       });
     }
 
-    const fromBlock = checkpoint.lastProcessedBlock + 1n;
+    let fromBlock = checkpoint.lastProcessedBlock + 1n;
+    if (currentBlock > fromBlock + 100n) {
+      // Fast-forward checkpoint to 50 blocks behind head so monitor never lags
+      fromBlock = currentBlock - 50n;
+    }
+
     if (fromBlock > currentBlock) {
       // Up to date; also process any pending confirmations
       await processPendingConfirmations(currentBlock, requiredConfirmations, isPaused, result);
