@@ -131,7 +131,7 @@ export default function DepositFormClient({
       {/* Flexible Amount Notice */}
       <div className="p-4 rounded-xl border border-emerald-500/30 bg-emerald-950/20 space-y-1">
         <p className="text-xs text-[#cbd5e1] leading-relaxed">
-          Send <strong className="text-emerald-300">any amount of USDT (BEP-20)</strong> directly to the designated receiving address below (e.g. <strong>$0.50, $1.00, $10.00, $50.00+</strong>).
+          Send <strong className="text-emerald-300">any amount of USDT (BEP-20)</strong> directly to the designated receiving address below.
         </p>
         <p className="text-[11px] text-[#94a3b8]">
           Whatever net amount arrives on-chain at the receiving address will be <strong>immediately credited to your Fund Wallet</strong> upon {requiredConfirmations} block confirmations (~9 seconds).
@@ -191,7 +191,7 @@ export default function DepositFormClient({
           </div>
           <div>
             <span className="text-[#64748b] block text-[9px] uppercase font-bold">Accepted Amount</span>
-            <span className="text-emerald-400 font-bold">Any Amount (Min 0.01 USDT)</span>
+            <span className="text-emerald-400 font-bold">Any Amount (USDT BEP-20)</span>
           </div>
           <div>
             <span className="text-[#64748b] block text-[9px] uppercase font-bold">BscScan Explorer</span>
