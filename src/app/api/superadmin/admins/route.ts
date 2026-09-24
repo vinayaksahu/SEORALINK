@@ -45,10 +45,10 @@ export async function GET() {
         ] = await Promise.all([
           db.user.count({ where: { adminId: adm.id, role: "USER" } }),
           db.user.count({ where: { adminId: adm.id, role: "USER", status: "ACTIVE" } }),
-          db.depositRequest.count({ where: { user: { adminId: adm.id }, status: "PENDING" } }),
+          db.depositRequest.count({ where: { user: { adminId: adm.id }, status: { in: ["PENDING", "PENDING_REVIEW", "CONFIRMING"] } } }),
           db.withdrawalRequest.count({ where: { user: { adminId: adm.id }, status: "PENDING" } }),
           db.depositRequest.aggregate({
-            where: { user: { adminId: adm.id }, status: "APPROVED" },
+            where: { user: { adminId: adm.id }, status: { in: ["APPROVED", "CREDITED"] } },
             _sum: { amount: true },
           }),
           db.withdrawalRequest.aggregate({

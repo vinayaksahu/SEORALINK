@@ -33,10 +33,10 @@ export async function GET() {
       db.user.count({ where: { role: "USER", status: "ACTIVE" } }),
       db.queueEntry.count(),
       db.queueEntry.count({ where: { status: "WAITING" } }),
-      db.depositRequest.count({ where: { status: "PENDING" } }),
+      db.depositRequest.count({ where: { status: { in: ["PENDING", "PENDING_REVIEW", "CONFIRMING"] } } }),
       db.withdrawalRequest.count({ where: { status: "PENDING" } }),
       db.depositRequest.aggregate({
-        where: { status: "APPROVED" },
+        where: { status: { in: ["APPROVED", "CREDITED"] } },
         _sum: { amount: true },
       }),
       db.withdrawalRequest.aggregate({

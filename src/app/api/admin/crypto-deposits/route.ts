@@ -155,7 +155,8 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: "Missing 'deposit.verify' permission" }, { status: 403 });
       }
 
-      const verification = await verifyOnChainTxHash(deposit.txHash, deposit.toAddress || undefined, 10.0);
+      const minAmount = 0.01;
+      const verification = await verifyOnChainTxHash(deposit.txHash, deposit.toAddress || undefined, minAmount);
       return NextResponse.json(
         serializeBlockchainData({
           success: true,

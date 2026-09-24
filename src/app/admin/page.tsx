@@ -35,9 +35,11 @@ export default async function AdminOverviewPage() {
   ] = await Promise.all([
     db.user.count({ where: userFilter }),
     db.user.count({ where: { ...userFilter, status: "ACTIVE" } }),
-    db.depositRequest.count({ where: { ...userRelationFilter, status: "PENDING" } }),
+    db.depositRequest.count({
+      where: { ...userRelationFilter, status: { in: ["PENDING", "PENDING_REVIEW", "CONFIRMING"] } },
+    }),
     db.depositRequest.aggregate({
-      where: { ...userRelationFilter, status: "APPROVED" },
+      where: { ...userRelationFilter, status: { in: ["APPROVED", "CREDITED"] } },
       _sum: { amount: true },
     }),
     db.withdrawalRequest.count({ where: { ...userRelationFilter, status: "PENDING" } }),
