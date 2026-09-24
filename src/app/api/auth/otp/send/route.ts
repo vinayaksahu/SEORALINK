@@ -45,8 +45,46 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Invalid OTP purpose" }, { status: 400 });
     }
 
-    // Check if feature is enabled
-    const isEnabled = await isOtpFeatureEnabled(purpose);
+    // Resolve branch adminId from session, sponsor code, or target email
+    let resolvedAdminId: string | null = null;
+    const session = await getSession();
+    if (session) {
+      if (session.role === "ADMIN" || session.role === "SUPER_ADMIN") {
+        resolvedAdminId = session.userId;
+      } else if (session.adminId) {
+        resolvedAdminId = session.adminId;
+      } else {
+        const u = await db.user.findUnique({
+          where: { id: session.userId },
+          select: { adminId: true },
+        });
+        resolvedAdminId = u?.adminId || null;
+      }
+    } else if (sponsorCode) {
+      const sp = await db.user.findFirst({
+        where: {
+          OR: [
+            { customId: { equals: sponsorCode.trim(), mode: "insensitive" } },
+            { referralCode: { equals: sponsorCode.trim(), mode: "insensitive" } },
+          ],
+        },
+        select: { id: true, role: true, adminId: true },
+      });
+      if (sp) {
+        resolvedAdminId = (sp.role === "ADMIN" || sp.role === "SUPER_ADMIN") ? sp.id : sp.adminId;
+      }
+    } else if (email) {
+      const u = await db.user.findUnique({
+        where: { email: email.toLowerCase().trim() },
+        select: { id: true, role: true, adminId: true },
+      });
+      if (u) {
+        resolvedAdminId = (u.role === "ADMIN" || u.role === "SUPER_ADMIN") ? u.id : u.adminId;
+      }
+    }
+
+    // Check if feature is enabled for this branch
+    const isEnabled = await isOtpFeatureEnabled(purpose, resolvedAdminId);
     if (!isEnabled) {
       return NextResponse.json({
         success: true,
@@ -184,6 +222,7 @@ export async function POST(req: Request) {
       email: targetEmail,
       purpose,
       recipientName,
+      adminId: resolvedAdminId,
     });
 
     if (!result.success) {

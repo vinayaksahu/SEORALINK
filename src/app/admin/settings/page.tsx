@@ -14,27 +14,40 @@ export default async function AdminSettingsPage() {
     redirect("/adminlogin");
   }
 
-  const addressConfig = await db.systemConfig.findUnique({
-    where: { key: "USDT_DEPOSIT_ADDRESS" },
-  });
-  const addressesListConfig = await db.systemConfig.findUnique({
-    where: { key: "USDT_DEPOSIT_ADDRESSES" },
-  });
-  const distributionConfig = await db.systemConfig.findUnique({
-    where: { key: "DEPOSIT_DISTRIBUTION_MODE" },
-  });
-  const networkConfig = await db.systemConfig.findUnique({
-    where: { key: "DEFAULT_NETWORK" },
-  });
+  const adminId = session.userId;
 
-  const usdtAddress = addressConfig?.value || "0x71C569E9903b41D8B4eAE6b22312dE9d89Ae0001";
-  const network = networkConfig?.value || "USDT_BEP20";
-  const distributionMode = distributionConfig?.value || "MULTI_USER";
+  // Retrieve branch-scoped configurations with fallback to global
+  const [
+    scopedAddr,
+    scopedAdminAddr,
+    globalAddr,
+    scopedAddrsList,
+    globalAddrsList,
+    scopedDist,
+    globalDist,
+    scopedNet,
+    globalNet,
+  ] = await Promise.all([
+    db.systemConfig.findUnique({ where: { key: `USDT_DEPOSIT_ADDRESS_${adminId}` } }),
+    db.systemConfig.findUnique({ where: { key: `ADMIN_DEPOSIT_ADDRESS_${adminId}` } }),
+    db.systemConfig.findUnique({ where: { key: "USDT_DEPOSIT_ADDRESS" } }),
+    db.systemConfig.findUnique({ where: { key: `USDT_DEPOSIT_ADDRESSES_${adminId}` } }),
+    db.systemConfig.findUnique({ where: { key: "USDT_DEPOSIT_ADDRESSES" } }),
+    db.systemConfig.findUnique({ where: { key: `DEPOSIT_DISTRIBUTION_MODE_${adminId}` } }),
+    db.systemConfig.findUnique({ where: { key: "DEPOSIT_DISTRIBUTION_MODE" } }),
+    db.systemConfig.findUnique({ where: { key: `DEFAULT_NETWORK_${adminId}` } }),
+    db.systemConfig.findUnique({ where: { key: "DEFAULT_NETWORK" } }),
+  ]);
+
+  const usdtAddress = scopedAddr?.value || scopedAdminAddr?.value || globalAddr?.value || "0x71C569E9903b41D8B4eAE6b22312dE9d89Ae0001";
+  const network = scopedNet?.value || globalNet?.value || "USDT_BEP20";
+  const distributionMode = scopedDist?.value || globalDist?.value || "MULTI_USER";
+  const addressesListValue = scopedAddrsList?.value || globalAddrsList?.value;
 
   let initialAddresses = [];
   try {
-    if (addressesListConfig?.value) {
-      initialAddresses = JSON.parse(addressesListConfig.value);
+    if (addressesListValue) {
+      initialAddresses = JSON.parse(addressesListValue);
     }
   } catch (e) {
     initialAddresses = [];
@@ -53,8 +66,8 @@ export default async function AdminSettingsPage() {
     ];
   }
 
-  const otpSettings = await getAllOtpSettings();
-  const requireActiveSponsor = await isRequireActiveSponsorEnabled();
+  const otpSettings = await getAllOtpSettings(adminId);
+  const requireActiveSponsor = await isRequireActiveSponsorEnabled(adminId);
 
   return (
     <div className="space-y-8">

@@ -128,6 +128,7 @@ export default function SuperRootAdminPage() {
   const [universalLoading, setUniversalLoading] = useState(false);
 
   // System Config states
+  const [configBranch, setConfigBranch] = useState<string>("GLOBAL");
   const [configForm, setConfigForm] = useState({
     depositAddresses: "",
     depositDistributionMode: "SINGLE",
@@ -226,10 +227,11 @@ export default function SuperRootAdminPage() {
     }
   };
 
-  const loadConfigs = async () => {
+  const loadConfigs = async (targetBranch?: string) => {
+    const branch = targetBranch !== undefined ? targetBranch : configBranch;
     try {
       setConfigLoading(true);
-      const res = await fetch("/api/superadmin/config");
+      const res = await fetch(`/api/superadmin/config?adminId=${branch}`);
       if (res.ok) {
         const data = await res.json();
         const c = data.configs || {};
@@ -516,6 +518,7 @@ export default function SuperRootAdminPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          adminId: configBranch,
           configs: {
             USDT_DEPOSIT_ADDRESSES: configForm.depositAddresses,
             DEPOSIT_DISTRIBUTION_MODE: configForm.depositDistributionMode,
@@ -531,8 +534,13 @@ export default function SuperRootAdminPage() {
       });
       const data = await res.json();
       if (res.ok) {
-        setConfigMsg("Global system configurations saved live successfully!");
-        setTimeout(() => setConfigMsg(null), 3500);
+        setConfigMsg(
+          data.message ||
+            (configBranch === "GLOBAL"
+              ? "Global system configurations saved live successfully!"
+              : `Isolated branch configurations for Admin ${configBranch} saved successfully!`)
+        );
+        setTimeout(() => setConfigMsg(null), 4000);
       } else {
         setConfigMsg(data.error || "Failed to save configuration");
       }
@@ -1662,6 +1670,53 @@ export default function SuperRootAdminPage() {
               </div>
             )}
 
+            {/* Multi-Admin Isolated Branch Scope Selector */}
+            <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 space-y-3">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div className="space-y-0.5">
+                  <label className="text-xs font-mono font-bold uppercase tracking-wider text-rose-400 flex items-center gap-2">
+                    <Building2 className="w-4 h-4 text-rose-400" />
+                    Target Branch Isolation Scope
+                  </label>
+                  <p className="text-[11px] text-slate-400">
+                    Select whether to configure the global platform fallback or a specific parallel admin branch.
+                  </p>
+                </div>
+
+                <select
+                  value={configBranch}
+                  onChange={(e) => {
+                    const newBranch = e.target.value;
+                    setConfigBranch(newBranch);
+                    loadConfigs(newBranch);
+                  }}
+                  className="px-3.5 py-2 rounded-xl bg-slate-900 border border-slate-700 text-xs text-white font-mono font-bold outline-none focus:border-rose-500 cursor-pointer"
+                >
+                  <option value="GLOBAL">🌐 Global Platform Defaults (Fallback)</option>
+                  {admins.map((adm) => (
+                    <option key={adm.id} value={adm.customId}>
+                      🏢 Branch Admin {adm.customId} ({adm.fullName})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div
+                className={`p-3 rounded-xl border text-[11px] font-mono flex items-center gap-2 ${
+                  configBranch === "GLOBAL"
+                    ? "bg-slate-900/60 border-slate-700/60 text-slate-300"
+                    : "bg-amber-500/10 border-amber-500/30 text-amber-300"
+                }`}
+              >
+                <Info className="w-4 h-4 shrink-0" />
+                <span>
+                  {configBranch === "GLOBAL"
+                    ? "Configuring GLOBAL fallback parameters. Branches that have not defined custom settings inherit these values."
+                    : `Active Scope: ISOLATED BRANCH ${configBranch}. Changes made here strictly apply to ${configBranch} and will NEVER alter other admins or global defaults.`}
+                </span>
+              </div>
+            </div>
+
             <form onSubmit={handleSaveConfigs} className="space-y-6">
               {/* Primary Deposit Wallet */}
               <div className="space-y-4 border-b border-slate-800 pb-6">
@@ -1811,7 +1866,11 @@ export default function SuperRootAdminPage() {
                 disabled={configSaving}
                 className="w-full py-3 rounded-xl bg-gradient-to-r from-rose-600 to-rose-700 hover:from-rose-500 hover:to-rose-600 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-rose-600/25 transition disabled:opacity-50 cursor-pointer font-mono"
               >
-                {configSaving ? "Saving Live Configurations..." : "Save Global Configurations"}
+                {configSaving
+                  ? "Saving Configurations..."
+                  : configBranch === "GLOBAL"
+                  ? "Save Global Platform Configurations"
+                  : `Save Isolated Branch Configurations for Admin ${configBranch}`}
               </button>
             </form>
           </section>

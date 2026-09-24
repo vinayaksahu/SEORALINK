@@ -1,6 +1,7 @@
 import { db, withDbRetry } from "@/lib/db";
 import { mnemonicToAccount, generateMnemonic, english } from "viem/accounts";
 import Decimal from "decimal.js";
+import { getBranchSystemConfig } from "@/lib/adminBranchConfig";
 
 // BSC Mainnet Constants
 export const BSC_CHAIN_ID = 56;
@@ -224,7 +225,12 @@ export async function getEffectiveDepositVault(userId: string): Promise<{
     const user = await db.user.findUnique({
       where: { id: userId },
       select: {
+        id: true,
+        role: true,
         adminId: true,
+        usdtAddress: true,
+        fullName: true,
+        customId: true,
         assignedAdmin: {
           select: {
             id: true,
@@ -236,25 +242,60 @@ export async function getEffectiveDepositVault(userId: string): Promise<{
       },
     });
 
-    if (user?.adminId && user.assignedAdmin) {
-      const adminId = user.adminId;
-      // 1. Check SystemConfig for ADMIN_DEPOSIT_ADDRESS_{adminId}
-      const adminAddrConfig = await db.systemConfig.findUnique({
-        where: { key: `ADMIN_DEPOSIT_ADDRESS_${adminId}` },
-      });
-      const adminQrConfig = await db.systemConfig.findUnique({
-        where: { key: `ADMIN_DEPOSIT_QR_${adminId}` },
+    // Check if the user is an admin or has an assigned branch admin
+    const targetAdmin =
+      user?.role === "ADMIN" || user?.role === "SUPER_ADMIN"
+        ? { id: user.id, fullName: user.fullName, customId: user.customId, usdtAddress: user.usdtAddress }
+        : user?.assignedAdmin || null;
+
+    if (targetAdmin) {
+      const adminRef = targetAdmin.id;
+      const [addrRes, distRes, addrsListRes] = await Promise.all([
+        getBranchSystemConfig("USDT_DEPOSIT_ADDRESS", adminRef),
+        getBranchSystemConfig("DEPOSIT_DISTRIBUTION_MODE", adminRef),
+        getBranchSystemConfig("USDT_DEPOSIT_ADDRESSES", adminRef),
+      ]);
+
+      let chosenAddress = addrRes.value || targetAdmin.usdtAddress;
+
+      // If MULTI_USER mode is active for this admin branch, pick a deterministic address from their pool
+      if (distRes.value === "MULTI_USER" && addrsListRes.value) {
+        try {
+          const list = JSON.parse(addrsListRes.value);
+          const activeList = Array.isArray(list) ? list.filter((a: any) => a && a.isActive && a.address) : [];
+          if (activeList.length > 0) {
+            let hash = 0;
+            for (let i = 0; i < userId.length; i++) {
+              hash = (hash << 5) - hash + userId.charCodeAt(i);
+              hash |= 0;
+            }
+            const idx = Math.abs(hash) % activeList.length;
+            chosenAddress = activeList[idx].address;
+          }
+        } catch {
+          // keep chosenAddress fallback
+        }
+      }
+
+      const adminQrConfig = await db.systemConfig.findFirst({
+        where: {
+          key: {
+            in: [
+              `ADMIN_DEPOSIT_QR_${targetAdmin.id}`,
+              `ADMIN_DEPOSIT_QR_${targetAdmin.customId}`,
+            ],
+          },
+        },
       });
 
-      const vaultAddress = adminAddrConfig?.value || user.assignedAdmin.usdtAddress;
-      if (vaultAddress && vaultAddress.trim().startsWith("0x")) {
+      if (chosenAddress && chosenAddress.trim().startsWith("0x")) {
         return {
-          address: vaultAddress.trim(),
+          address: chosenAddress.trim(),
           qrCodeUrl: adminQrConfig?.value || null,
-          label: `Branch Vault (${user.assignedAdmin.fullName} - ${user.assignedAdmin.customId})`,
+          label: `Branch Vault (${targetAdmin.fullName} - ${targetAdmin.customId})`,
           source: "ADMIN_BRANCH",
-          adminId: user.assignedAdmin.id,
-          adminName: user.assignedAdmin.fullName,
+          adminId: targetAdmin.id,
+          adminName: targetAdmin.fullName,
         };
       }
     }

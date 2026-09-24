@@ -23,24 +23,24 @@ const PURPOSE_LABELS: Record<OtpPurpose, string> = {
   PROFILE_UPDATE: "Profile & Wallet Update",
 };
 
+import { getBranchSystemConfig } from "@/lib/adminBranchConfig";
+
 /**
  * Check if OTP is enabled for a given operation.
+ * Scoped to specific admin branch if adminId provided, otherwise falls back to global default.
  * Defaults to true if setting is not yet explicitly configured.
  */
-export async function isOtpFeatureEnabled(purpose: OtpPurpose): Promise<boolean> {
+export async function isOtpFeatureEnabled(purpose: OtpPurpose, adminId?: string | null): Promise<boolean> {
   try {
     const configKey = PURPOSE_CONFIG_KEYS[purpose];
-    const config = await db.systemConfig.findUnique({
-      where: { key: configKey },
-      select: { value: true },
-    });
+    const { value } = await getBranchSystemConfig(configKey, adminId);
 
-    if (!config) {
-      // Default enabled
+    if (value === null) {
+      // Default: enabled
       return true;
     }
 
-    return config.value === "true" || config.value === "1";
+    return value === "true" || value === "1";
   } catch (err) {
     console.error(`[isOtpFeatureEnabled Error for ${purpose}]`, err);
     return true; // Safe fallback to secure default
@@ -48,25 +48,23 @@ export async function isOtpFeatureEnabled(purpose: OtpPurpose): Promise<boolean>
 }
 
 /**
- * Fetch all OTP governance statuses in a single call for Admin or Client check
+ * Fetch all OTP governance statuses in a single call for Admin or Client check.
+ * Scoped to specific admin branch if adminId provided.
  */
-export async function getAllOtpSettings(): Promise<Record<OtpPurpose, boolean>> {
+export async function getAllOtpSettings(adminId?: string | null): Promise<Record<OtpPurpose, boolean>> {
   try {
-    const configs = await db.systemConfig.findMany({
-      where: {
-        key: {
-          in: Object.values(PURPOSE_CONFIG_KEYS),
-        },
-      },
-    });
-
-    const configMap = new Map(configs.map((c) => [c.key, c.value]));
+    const [reg, forgot, withdr, prof] = await Promise.all([
+      getBranchSystemConfig(PURPOSE_CONFIG_KEYS.REGISTRATION, adminId),
+      getBranchSystemConfig(PURPOSE_CONFIG_KEYS.FORGOT_PASSWORD, adminId),
+      getBranchSystemConfig(PURPOSE_CONFIG_KEYS.WITHDRAWAL, adminId),
+      getBranchSystemConfig(PURPOSE_CONFIG_KEYS.PROFILE_UPDATE, adminId),
+    ]);
 
     return {
-      REGISTRATION: configMap.get(PURPOSE_CONFIG_KEYS.REGISTRATION) !== "false",
-      FORGOT_PASSWORD: configMap.get(PURPOSE_CONFIG_KEYS.FORGOT_PASSWORD) !== "false",
-      WITHDRAWAL: configMap.get(PURPOSE_CONFIG_KEYS.WITHDRAWAL) !== "false",
-      PROFILE_UPDATE: configMap.get(PURPOSE_CONFIG_KEYS.PROFILE_UPDATE) !== "false",
+      REGISTRATION: reg.value === null ? true : reg.value === "true" || reg.value === "1",
+      FORGOT_PASSWORD: forgot.value === null ? true : forgot.value === "true" || forgot.value === "1",
+      WITHDRAWAL: withdr.value === null ? true : withdr.value === "true" || withdr.value === "1",
+      PROFILE_UPDATE: prof.value === null ? false : prof.value === "true" || prof.value === "1",
     };
   } catch (err) {
     console.error("[getAllOtpSettings Error]", err);
@@ -86,15 +84,17 @@ export async function generateAndSendOtp({
   email,
   purpose,
   recipientName = "Member",
+  adminId,
 }: {
   email: string;
   purpose: OtpPurpose;
   recipientName?: string;
+  adminId?: string | null;
 }): Promise<{ success: boolean; message: string; cooldownSeconds?: number }> {
   const cleanEmail = email.toLowerCase().trim();
 
   // 1. Check if OTP is required for this action
-  const isEnabled = await isOtpFeatureEnabled(purpose);
+  const isEnabled = await isOtpFeatureEnabled(purpose, adminId);
   if (!isEnabled) {
     return {
       success: true,
@@ -178,13 +178,15 @@ export async function validateAndConsumeOtp({
   email,
   code,
   purpose,
+  adminId,
 }: {
   email: string;
   code?: string | null;
   purpose: OtpPurpose;
+  adminId?: string | null;
 }): Promise<{ success: boolean; error?: string }> {
   // 1. If feature is disabled by Admin, bypass check
-  const isEnabled = await isOtpFeatureEnabled(purpose);
+  const isEnabled = await isOtpFeatureEnabled(purpose, adminId);
   if (!isEnabled) {
     return { success: true };
   }
