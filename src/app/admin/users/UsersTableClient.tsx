@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { TIER_NAMES } from "@/lib/constants";
+import MemberAuditModal from "@/components/MemberAuditModal";
 import {
   Pencil,
   Zap,
@@ -49,6 +50,7 @@ export interface UserItem {
 export default function UsersTableClient({ initialUsers }: { initialUsers: UserItem[] }) {
   const router = useRouter();
   const [users, setUsers] = useState<UserItem[]>(initialUsers);
+  const [auditTargetId, setAuditTargetId] = useState<string | null>(null);
 
   // Edit Modal State
   const [editingUser, setEditingUser] = useState<UserItem | null>(null);
@@ -453,8 +455,16 @@ export default function UsersTableClient({ initialUsers }: { initialUsers: UserI
                   )}
                 </td>
 
-                <td className="py-3 px-4 text-[#38bdf8] font-bold">
-                  T{u.currentTier} ({TIER_NAMES[u.currentTier]})
+                <td className="py-3 px-4">
+                  <button
+                    type="button"
+                    onClick={() => setAuditTargetId(u.id)}
+                    className="group inline-flex items-center gap-1.5 font-bold text-[#38bdf8] hover:text-amber-300 transition-colors text-left cursor-pointer"
+                    title="Click to view full Rank & Commission Audit"
+                  >
+                    <span>T{u.currentTier} ({TIER_NAMES[u.currentTier]})</span>
+                    <Trophy size={11} className="text-amber-400 opacity-60 group-hover:opacity-100 transition-opacity" />
+                  </button>
                 </td>
 
                 <td className="py-3 px-4 font-bold text-white">{u.directCount}</td>
@@ -564,6 +574,16 @@ export default function UsersTableClient({ initialUsers }: { initialUsers: UserI
 
                 <td className="py-3 px-4 text-right">
                   <div className="flex items-center justify-end gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => setAuditTargetId(u.id)}
+                      className="px-2.5 py-1 rounded-lg bg-amber-500/15 text-amber-300 hover:bg-amber-500 hover:text-black border border-amber-500/30 font-sans font-bold text-[11px] transition-all inline-flex items-center gap-1 cursor-pointer active:scale-95 whitespace-nowrap shadow-sm"
+                      title={`Audit Rank Record & Commission Ledger for ${u.fullName} (${u.customId})`}
+                    >
+                      <Trophy size={12} className="text-amber-400" />
+                      <span>Audit</span>
+                    </button>
+
                     <button
                       type="button"
                       onClick={() => openSendFundModal(u, "10")}
@@ -1121,6 +1141,13 @@ export default function UsersTableClient({ initialUsers }: { initialUsers: UserI
           </div>
         );
       })()}
+
+      {/* ================= MEMBER RANK & COMMISSION AUDIT MODAL ================= */}
+      <MemberAuditModal
+        identifier={auditTargetId}
+        isOpen={!!auditTargetId}
+        onClose={() => setAuditTargetId(null)}
+      />
     </div>
   );
 }

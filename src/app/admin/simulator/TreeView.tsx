@@ -26,7 +26,9 @@ import {
   X,
   Play,
   ArrowRight,
+  Trophy,
 } from "lucide-react";
+import MemberAuditModal from "@/components/MemberAuditModal";
 
 export interface TreeNodeData {
   id: string;
@@ -98,6 +100,7 @@ export default function TreeView({ onSelectForForm }: TreeViewProps) {
 
   // Selected Target User for Action Console
   const [selectedUser, setSelectedUser] = useState<FlatUserData | null>(null);
+  const [auditTargetId, setAuditTargetId] = useState<string | null>(null);
 
   // Simulation execution in Tree
   const [executing, setExecuting] = useState(false);
@@ -614,22 +617,34 @@ export default function TreeView({ onSelectForForm }: TreeViewProps) {
                         : selectedUser.missingDirects > 0 ? `${selectedUser.missingDirects} Missing` : "Ready to Advance"}
                     </div>
                   </div>
-                  {onSelectForForm && (
+                  <div className="flex items-center gap-2">
                     <button
                       type="button"
-                      disabled={isSelectedUserExited}
-                      onClick={() => !isSelectedUserExited && onSelectForForm(selectedUser.customId)}
-                      className={`px-3 py-2 rounded-xl font-bold flex items-center gap-1.5 transition-colors ${
-                        isSelectedUserExited
-                          ? "bg-slate-800/40 text-slate-600 border border-slate-800 cursor-not-allowed opacity-40"
-                          : "bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 cursor-pointer"
-                      }`}
-                      title={isSelectedUserExited ? "Simulator Disabled for Exited User" : "Configure in Standard Simulator Form"}
+                      onClick={() => setAuditTargetId(selectedUser.customId)}
+                      className="px-3 py-2 rounded-xl font-bold flex items-center gap-1.5 transition-colors bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/40 cursor-pointer shadow-sm shadow-amber-500/10 text-xs"
+                      title="Inspect Rank Progression & Commission Ledger"
                     >
-                      <Sliders size={14} />
-                      <span>Open Form</span>
+                      <Trophy size={14} className="text-amber-400" />
+                      <span>Audit Rank & Commissions</span>
                     </button>
-                  )}
+
+                    {onSelectForForm && (
+                      <button
+                        type="button"
+                        disabled={isSelectedUserExited}
+                        onClick={() => !isSelectedUserExited && onSelectForForm(selectedUser.customId)}
+                        className={`px-3 py-2 rounded-xl font-bold flex items-center gap-1.5 transition-colors ${
+                          isSelectedUserExited
+                            ? "bg-slate-800/40 text-slate-600 border border-slate-800 cursor-not-allowed opacity-40"
+                            : "bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 cursor-pointer"
+                        }`}
+                        title={isSelectedUserExited ? "Simulator Disabled for Exited User" : "Configure in Standard Simulator Form"}
+                      >
+                        <Sliders size={14} />
+                        <span>Open Form</span>
+                      </button>
+                    )}
+                  </div>
                 </div>
               );
             })()}
@@ -941,6 +956,13 @@ export default function TreeView({ onSelectForForm }: TreeViewProps) {
           })()}
         </div>
       )}
+
+      {/* ================= MEMBER RANK & COMMISSION AUDIT MODAL ================= */}
+      <MemberAuditModal
+        identifier={auditTargetId}
+        isOpen={!!auditTargetId}
+        onClose={() => setAuditTargetId(null)}
+      />
     </div>
   );
 }
