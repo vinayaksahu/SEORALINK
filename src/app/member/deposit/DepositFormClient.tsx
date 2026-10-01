@@ -45,9 +45,7 @@ export default function DepositFormClient({
   const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string>("");
 
   useEffect(() => {
-    if (qrCodeUrl) {
-      setQrCodeDataUrl(qrCodeUrl);
-    } else if (depositAddress) {
+    if (depositAddress) {
       QRCode.toDataURL(depositAddress, {
         width: 240,
         margin: 1.5,
@@ -57,7 +55,12 @@ export default function DepositFormClient({
         },
       })
         .then((url) => setQrCodeDataUrl(url))
-        .catch((err) => console.error("QR Code generation error:", err));
+        .catch((err) => {
+          console.error("QR Code generation error:", err);
+          if (qrCodeUrl) setQrCodeDataUrl(qrCodeUrl);
+        });
+    } else if (qrCodeUrl) {
+      setQrCodeDataUrl(qrCodeUrl);
     }
   }, [depositAddress, qrCodeUrl]);
 

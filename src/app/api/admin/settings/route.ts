@@ -143,10 +143,11 @@ export async function POST(req: Request) {
 
     const adminIds = [targetAdmin.id, targetAdmin.customId];
     let primaryAddress = usdtAddress ? usdtAddress.trim() : "";
+    let sanitizedAddresses: any[] = [];
 
     // 1. Process and save branch-isolated deposit addresses
     if (Array.isArray(depositAddresses) && depositAddresses.length > 0) {
-      const sanitizedAddresses = depositAddresses
+      sanitizedAddresses = depositAddresses
         .filter((item: any) => item && typeof item.address === "string" && item.address.trim().length > 0)
         .map((item: any, idx: number) => ({
           id: item.id || `addr_${Date.now()}_${idx}`,
@@ -222,6 +223,35 @@ export async function POST(req: Request) {
         where: { id: targetAdmin.id },
         data: { usdtAddress: primaryAddress },
       });
+
+      // If Master Administrator (SL000001) updates settings, also mirror to global platform fallback
+      if (targetAdmin.customId === "SL000001" || session.role === "SUPER_ROOT_ADMIN") {
+        await Promise.all([
+          db.systemConfig.upsert({
+            where: { key: "USDT_DEPOSIT_ADDRESS" },
+            update: { value: primaryAddress },
+            create: { key: "USDT_DEPOSIT_ADDRESS", value: primaryAddress },
+          }),
+          ...(distributionMode
+            ? [
+                db.systemConfig.upsert({
+                  where: { key: "DEPOSIT_DISTRIBUTION_MODE" },
+                  update: { value: distributionMode },
+                  create: { key: "DEPOSIT_DISTRIBUTION_MODE", value: distributionMode },
+                }),
+              ]
+            : []),
+          ...(sanitizedAddresses && sanitizedAddresses.length > 0
+            ? [
+                db.systemConfig.upsert({
+                  where: { key: "USDT_DEPOSIT_ADDRESSES" },
+                  update: { value: JSON.stringify(sanitizedAddresses) },
+                  create: { key: "USDT_DEPOSIT_ADDRESSES", value: JSON.stringify(sanitizedAddresses) },
+                }),
+              ]
+            : []),
+        ]);
+      }
     }
 
     // 4. Branch blockchain network

@@ -11,6 +11,7 @@ import {
   serializeBlockchainData,
   DEFAULT_BSC_USDT_CONTRACT,
 } from "@/lib/blockchain/config";
+import { getBranchSystemConfig } from "@/lib/adminBranchConfig";
 import { verifyOnChainTxHash } from "@/lib/blockchain/monitor";
 import { executeLedgerTransaction } from "@/lib/ledger";
 import { recordActivity } from "@/lib/auditLogger";
@@ -137,6 +138,30 @@ export async function POST(req: Request) {
     // Verify transaction on-chain directly via BSC JSON-RPC
     const vault = await getEffectiveDepositVault(session.userId);
     const candidateAddresses = [vault.address.toLowerCase()];
+
+    // Also include any active addresses from the branch pool or global pool
+    try {
+      const uRecord = await db.user.findUnique({
+        where: { id: session.userId },
+        select: { adminId: true, assignedAdmin: { select: { id: true, customId: true } } },
+      });
+      const targetRef = uRecord?.assignedAdmin?.id || uRecord?.adminId;
+      const addrsListRes = await getBranchSystemConfig("USDT_DEPOSIT_ADDRESSES", targetRef);
+      if (addrsListRes.value) {
+        const pool = JSON.parse(addrsListRes.value);
+        if (Array.isArray(pool)) {
+          for (const item of pool) {
+            if (item && item.isActive !== false && item.address) {
+              const lower = item.address.trim().toLowerCase();
+              if (lower.startsWith("0x") && !candidateAddresses.includes(lower)) {
+                candidateAddresses.push(lower);
+              }
+            }
+          }
+        }
+      }
+    } catch {}
+
     const personal = await db.depositAddress.findFirst({
       where: { userId: session.userId, status: "ACTIVE" },
       select: { address: true },

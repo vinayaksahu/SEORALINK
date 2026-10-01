@@ -25,7 +25,22 @@ import {
   Copy,
   ChevronDown,
   ChevronUp,
+  Shuffle,
+  Users,
+  ShieldCheck,
+  Plus,
+  Trash2,
+  Star,
 } from "lucide-react";
+
+export interface DepositAddressItem {
+  id: string;
+  address: string;
+  label?: string;
+  network?: string;
+  isActive?: boolean;
+  isPrimary?: boolean;
+}
 
 interface DiagnosticsData {
   rpcStatus: string;
@@ -58,6 +73,9 @@ interface AdminBranchItem {
   effectiveMode: "AUTOMATIC" | "MANUAL";
   dedicatedVaultAddress: string;
   dedicatedVaultQr: string;
+  distributionMode?: "MULTI_USER" | "SINGLE";
+  depositAddresses?: DepositAddressItem[];
+  poolCount?: number;
   activePermissions: string[];
   totalMembers: number;
   pendingDepositsCount: number;
@@ -191,12 +209,126 @@ export function SuperRootCryptoDepositsView() {
     }
   };
 
+  const [editDistributionMode, setEditDistributionMode] = useState<"MULTI_USER" | "SINGLE">("MULTI_USER");
+  const [editAddresses, setEditAddresses] = useState<DepositAddressItem[]>([]);
+  const [newAddressInput, setNewAddressInput] = useState("");
+  const [newLabelInput, setNewLabelInput] = useState("");
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [poolError, setPoolError] = useState("");
+
+  const handleToggleActive = (id: string) => {
+    setPoolError("");
+    setEditAddresses((prev) =>
+      prev.map((item) => {
+        if (item.id === id) {
+          const activeCount = prev.filter((a) => a.isActive !== false).length;
+          if (item.isActive !== false && activeCount <= 1) {
+            setPoolError("At least one deposit address must remain active.");
+            return item;
+          }
+          return { ...item, isActive: item.isActive === false };
+        }
+        return item;
+      })
+    );
+  };
+
+  const handleSetPrimary = (id: string) => {
+    setPoolError("");
+    setEditAddresses((prev) =>
+      prev.map((item) => {
+        const isTarget = item.id === id;
+        if (isTarget) {
+          setEditVaultAddress(item.address);
+        }
+        return {
+          ...item,
+          isPrimary: isTarget,
+          isActive: isTarget ? true : item.isActive,
+        };
+      })
+    );
+  };
+
+  const handleDeleteAddress = (id: string) => {
+    setPoolError("");
+    if (editAddresses.length <= 1) {
+      setPoolError("Cannot delete the only configured deposit address.");
+      return;
+    }
+    const itemToDelete = editAddresses.find((a) => a.id === id);
+    if (itemToDelete?.isPrimary) {
+      setPoolError("Cannot delete the primary address. Please set another address as primary first.");
+      return;
+    }
+    setEditAddresses((prev) => prev.filter((item) => item.id !== id));
+  };
+
+  const handleAddAddress = (e: React.FormEvent) => {
+    e.preventDefault();
+    setPoolError("");
+
+    const trimmed = newAddressInput.trim();
+    if (!trimmed) {
+      setPoolError("Wallet address cannot be empty.");
+      return;
+    }
+
+    if (!trimmed.startsWith("0x") || trimmed.length !== 42) {
+      setPoolError("Please enter a valid BNB Smart Chain (BEP-20) address starting with 0x (42 characters).");
+      return;
+    }
+
+    if (editAddresses.some((a) => a.address.toLowerCase() === trimmed.toLowerCase())) {
+      setPoolError("This wallet address is already added in the pool.");
+      return;
+    }
+
+    const isFirst = editAddresses.length === 0;
+    const newItem: DepositAddressItem = {
+      id: `addr_${Date.now()}`,
+      address: trimmed,
+      label: newLabelInput.trim() || `Wallet ${editAddresses.length + 1}`,
+      network: "USDT_BEP20",
+      isActive: true,
+      isPrimary: isFirst,
+    };
+
+    if (isFirst) {
+      setEditVaultAddress(trimmed);
+    }
+
+    setEditAddresses((prev) => [...prev, newItem]);
+    setNewAddressInput("");
+    setNewLabelInput("");
+    setShowAddForm(false);
+  };
+
   const openAdminEditor = (adm: AdminBranchItem) => {
     setEditingAdmin(adm);
     setSelectedPerms([...adm.activePermissions]);
     setEditVaultAddress(adm.dedicatedVaultAddress || "");
     setEditVaultQr(adm.dedicatedVaultQr || "");
     setEditDepositMode(adm.depositMode || "GLOBAL");
+    setEditDistributionMode(adm.distributionMode || "MULTI_USER");
+    let pool = adm.depositAddresses || [];
+    if (pool.length === 0 && adm.dedicatedVaultAddress) {
+      pool = [
+        {
+          id: "addr_1",
+          address: adm.dedicatedVaultAddress,
+          label: `${adm.fullName} Dedicated Vault`,
+          network: "USDT_BEP20",
+          isActive: true,
+          isPrimary: true,
+        },
+      ];
+    }
+    setEditAddresses(pool);
+    setShowAddForm(false);
+    setNewAddressInput("");
+    setNewLabelInput("");
+    setPoolError("");
   };
 
   const handleSaveAdminConfig = async () => {
@@ -213,6 +345,8 @@ export function SuperRootCryptoDepositsView() {
           vaultAddress: editVaultAddress,
           vaultQrUrl: editVaultQr,
           permissions: selectedPerms,
+          distributionMode: editDistributionMode,
+          depositAddresses: editAddresses,
         }),
       });
       const data = await res.json();
@@ -603,12 +737,26 @@ export function SuperRootCryptoDepositsView() {
                       </span>
                     </td>
 
-                    <td className="py-3 px-4 max-w-[200px]">
+                    <td className="py-3 px-4 max-w-[240px]">
                       {adm.dedicatedVaultAddress ? (
-                        <div className="flex items-center gap-1">
-                          <span className="truncate text-sky-400 font-mono text-[11px]">
-                            {adm.dedicatedVaultAddress}
-                          </span>
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            {adm.distributionMode === "MULTI_USER" ? (
+                              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold font-mono bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                                Multi-User Dynamic ({adm.poolCount && adm.poolCount > 1 ? `${adm.poolCount} Wallets` : "Active Pool"})
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold font-mono bg-amber-500/15 text-amber-400 border border-amber-500/30">
+                                Single Primary Address
+                              </span>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <span className="truncate text-sky-400 font-mono text-[11px]" title={adm.dedicatedVaultAddress}>
+                              {adm.dedicatedVaultAddress}
+                            </span>
+                          </div>
                         </div>
                       ) : (
                         <span className="text-[10px] text-slate-500 italic">Default Company Vault</span>
@@ -705,19 +853,219 @@ export function SuperRootCryptoDepositsView() {
               </div>
             </div>
 
-            {/* Dedicated Vault Address */}
-            <div className="space-y-1">
-              <label className="text-xs font-bold text-[#cbd5e1]">Dedicated Branch Deposit Address (Vault)</label>
-              <input
-                type="text"
-                value={editVaultAddress}
-                onChange={(e) => setEditVaultAddress(e.target.value)}
-                placeholder="0x... (leave empty to use default company vault)"
-                className="w-full bg-[#0b1325] border border-[#1e293b] rounded-lg px-3 py-2 text-xs font-mono text-white placeholder-slate-600"
-              />
-              <p className="text-[10px] text-slate-400">
-                Updating this dedicated address isolates this branch without affecting any other admins.
+            {/* Distribution Strategy Selector */}
+            <div className="space-y-3 bg-[#070e1b] p-3.5 rounded-xl border border-[#1e293b]">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-1.5">
+                  <Shuffle size={14} className="text-[#38bdf8]" />
+                  Deposit Address Distribution Strategy
+                </label>
+                <span
+                  className={`text-[9px] uppercase font-bold px-2 py-0.5 rounded font-mono border ${
+                    editDistributionMode === "MULTI_USER"
+                      ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/30"
+                      : "bg-amber-500/20 text-amber-400 border-amber-500/30"
+                  }`}
+                >
+                  {editDistributionMode === "MULTI_USER" ? "Dynamic Multi-User Active" : "Single Wallet Mode"}
+                </span>
+              </div>
+              <p className="text-[11px] text-[#94a3b8]">
+                Choose whether different members see different dedicated vault addresses simultaneously, or everyone uses a single primary vault.
               </p>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
+                <button
+                  type="button"
+                  onClick={() => setEditDistributionMode("MULTI_USER")}
+                  className={`p-3 rounded-lg text-left transition-all border ${
+                    editDistributionMode === "MULTI_USER"
+                      ? "bg-[#0b1325] border-[#38bdf8] ring-1 ring-[#38bdf8]/40 text-white"
+                      : "bg-[#0b1325]/50 border-[#1e293b] text-[#94a3b8] hover:border-[#334155]"
+                  }`}
+                >
+                  <div className="flex items-center gap-2 font-bold text-xs text-white">
+                    <Users size={14} className="text-[#38bdf8]" />
+                    Multi-User Dynamic Distribution
+                  </div>
+                  <p className="text-[10px] text-[#94a3b8] mt-1 leading-relaxed">
+                    Users under this branch are evenly assigned different active addresses from the pool. Different members depositing see separate vault addresses.
+                  </p>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setEditDistributionMode("SINGLE")}
+                  className={`p-3 rounded-lg text-left transition-all border ${
+                    editDistributionMode === "SINGLE"
+                      ? "bg-[#0b1325] border-[#d4af37] ring-1 ring-[#d4af37]/40 text-white"
+                      : "bg-[#0b1325]/50 border-[#1e293b] text-[#94a3b8] hover:border-[#334155]"
+                  }`}
+                >
+                  <div className="flex items-center gap-2 font-bold text-xs text-white">
+                    <ShieldCheck size={14} className="text-[#d4af37]" />
+                    Single Primary Address
+                  </div>
+                  <p className="text-[10px] text-[#94a3b8] mt-1 leading-relaxed">
+                    All members under this branch will see only the primary official deposit address regardless of pool size.
+                  </p>
+                </button>
+              </div>
+            </div>
+
+            {/* Dedicated Vault Address Pool */}
+            <div className="space-y-3 bg-[#070e1b] p-3.5 rounded-xl border border-[#1e293b]">
+              <div className="flex items-center justify-between">
+                <div>
+                  <label className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-1.5">
+                    <Building2 size={14} className="text-[#d4af37]" />
+                    Dedicated Vault Addresses Pool ({editAddresses.length})
+                  </label>
+                  <p className="text-[10px] text-[#94a3b8] mt-0.5">
+                    Active wallets: <strong className="text-emerald-400">{editAddresses.filter((a) => a.isActive !== false).length}</strong>/{editAddresses.length}
+                  </p>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setShowAddForm(!showAddForm)}
+                  className="px-2.5 py-1 text-[11px] font-bold rounded bg-[#38bdf8]/15 hover:bg-[#38bdf8]/25 text-[#38bdf8] border border-[#38bdf8]/30 flex items-center gap-1 transition-colors"
+                >
+                  <Plus size={13} />
+                  Add Address
+                </button>
+              </div>
+
+              {poolError && (
+                <div className="p-2.5 rounded bg-red-500/10 border border-red-500/30 text-red-400 text-xs flex items-center gap-2">
+                  <AlertTriangle size={14} className="shrink-0" />
+                  <span>{poolError}</span>
+                </div>
+              )}
+
+              {/* Add Address Form */}
+              {showAddForm && (
+                <div className="p-3 rounded-lg bg-[#0b1325] border border-[#38bdf8]/40 space-y-2">
+                  <div className="text-xs font-bold text-white">Add New Address to Pool</div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <input
+                      type="text"
+                      placeholder="0x... (42 chars BSC BEP-20 address)"
+                      value={newAddressInput}
+                      onChange={(e) => setNewAddressInput(e.target.value)}
+                      className="bg-[#070e1b] border border-[#1e293b] rounded px-2.5 py-1.5 text-xs font-mono text-white placeholder-slate-600 focus:outline-none focus:border-[#38bdf8]"
+                    />
+                    <input
+                      type="text"
+                      placeholder="Label (e.g. Hot Wallet 2)"
+                      value={newLabelInput}
+                      onChange={(e) => setNewLabelInput(e.target.value)}
+                      className="bg-[#070e1b] border border-[#1e293b] rounded px-2.5 py-1.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-[#38bdf8]"
+                    />
+                  </div>
+                  <div className="flex items-center justify-end gap-2 pt-1">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowAddForm(false);
+                        setPoolError("");
+                      }}
+                      className="px-2.5 py-1 text-xs text-slate-400 hover:text-white"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleAddAddress}
+                      className="px-3 py-1 text-xs font-bold rounded bg-[#38bdf8] text-[#0b1120] hover:bg-[#38bdf8]/90"
+                    >
+                      Confirm Add
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Address List */}
+              <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
+                {editAddresses.map((item, idx) => {
+                  const isActive = item.isActive !== false;
+                  const isPrimary = item.isPrimary || item.address.toLowerCase() === editVaultAddress.toLowerCase();
+
+                  return (
+                    <div
+                      key={item.id || idx}
+                      className={`p-2.5 rounded-lg border flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs transition-all ${
+                        isPrimary
+                          ? "bg-[#0b1325] border-[#d4af37]/60 ring-1 ring-[#d4af37]/20"
+                          : "bg-[#0b1325]/70 border-[#1e293b]"
+                      }`}
+                    >
+                      <div className="space-y-0.5 min-w-0 flex-1">
+                        <div className="flex items-center gap-2">
+                          <span className="font-mono text-[10px] text-slate-500 font-bold">#{idx + 1}</span>
+                          <span className="font-bold text-white truncate text-[11px]">{item.label || `Wallet ${idx + 1}`}</span>
+                          <span className="px-1.5 py-0.2 rounded text-[9px] font-mono bg-sky-500/10 text-sky-400 border border-sky-500/20">
+                            BEP-20
+                          </span>
+                          {isPrimary && (
+                            <span className="px-1.5 py-0.2 rounded text-[9px] font-bold font-mono bg-[#d4af37]/20 text-[#d4af37] border border-[#d4af37]/40 flex items-center gap-1">
+                              <Star size={10} className="fill-[#d4af37]" /> Primary
+                            </span>
+                          )}
+                        </div>
+                        <div className="font-mono text-[11px] text-slate-300 truncate">{item.address}</div>
+                      </div>
+
+                      <div className="flex items-center gap-1.5 shrink-0 self-end sm:self-center">
+                        {!isPrimary && (
+                          <button
+                            type="button"
+                            onClick={() => handleSetPrimary(item.id)}
+                            className="px-2 py-0.5 text-[10px] font-bold rounded bg-[#d4af37]/10 hover:bg-[#d4af37]/20 text-[#d4af37] border border-[#d4af37]/30 transition-colors"
+                          >
+                            Make Primary
+                          </button>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => handleToggleActive(item.id)}
+                          className={`px-2 py-0.5 text-[10px] font-bold rounded border transition-colors ${
+                            isActive
+                              ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/25"
+                              : "bg-slate-800 text-slate-400 border-slate-700 hover:text-white"
+                          }`}
+                        >
+                          {isActive ? "Active" : "Inactive"}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteAddress(item.id)}
+                          disabled={editAddresses.length <= 1 || isPrimary}
+                          className="p-1 rounded text-red-400 hover:text-red-300 hover:bg-red-500/10 disabled:opacity-30 disabled:pointer-events-none"
+                          title="Delete address"
+                        >
+                          <Trash2 size={13} />
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Primary Address Quick Sync Box */}
+              <div className="pt-2 border-t border-[#1e293b] space-y-1">
+                <label className="text-[11px] font-bold text-[#cbd5e1] flex items-center justify-between">
+                  <span>Primary Dedicated Vault Address</span>
+                  <span className="text-[9px] text-[#94a3b8] font-normal">Automatically synced with Primary item</span>
+                </label>
+                <input
+                  type="text"
+                  value={editVaultAddress}
+                  onChange={(e) => setEditVaultAddress(e.target.value)}
+                  placeholder="0x... (leave empty to use default company vault)"
+                  className="w-full bg-[#0b1325] border border-[#1e293b] rounded-lg px-3 py-1.5 text-xs font-mono text-white placeholder-slate-600 focus:outline-none focus:border-[#d4af37]"
+                />
+              </div>
             </div>
 
             {/* Dedicated Vault QR Code URL */}
@@ -730,6 +1078,9 @@ export function SuperRootCryptoDepositsView() {
                 placeholder="https://... or data:image/png..."
                 className="w-full bg-[#0b1325] border border-[#1e293b] rounded-lg px-3 py-2 text-xs font-mono text-white placeholder-slate-600"
               />
+              <p className="text-[10px] text-slate-400">
+                In Dynamic Multi-User mode, QR codes are automatically generated directly matching each member&apos;s individually assigned receiving address.
+              </p>
             </div>
 
             {/* Granular RBAC Checkboxes (17 capabilities) */}

@@ -45,6 +45,17 @@ export async function getBranchSystemConfig(
       const identifiers = await resolveAdminIdentifiers(adminRef);
       const branchKeys = identifiers.map((id) => `${baseKey}_${id}`);
 
+      // Cross-match deposit vault address keys so ADMIN_DEPOSIT_ADDRESS and USDT_DEPOSIT_ADDRESS are interchangeable
+      if (baseKey === "USDT_DEPOSIT_ADDRESS") {
+        for (const id of identifiers) {
+          branchKeys.push(`ADMIN_DEPOSIT_ADDRESS_${id}`);
+        }
+      } else if (baseKey === "ADMIN_DEPOSIT_ADDRESS") {
+        for (const id of identifiers) {
+          branchKeys.push(`USDT_DEPOSIT_ADDRESS_${id}`);
+        }
+      }
+
       const branchRecord = await db.systemConfig.findFirst({
         where: { key: { in: branchKeys } },
         select: { value: true },

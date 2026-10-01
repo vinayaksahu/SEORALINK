@@ -220,6 +220,8 @@ export async function getEffectiveDepositVault(userId: string): Promise<{
   source: "ADMIN_BRANCH" | "GLOBAL_FALLBACK";
   adminId: string | null;
   adminName: string | null;
+  distributionMode: "MULTI_USER" | "SINGLE";
+  poolSize: number;
 }> {
   try {
     const user = await db.user.findUnique({
@@ -243,37 +245,88 @@ export async function getEffectiveDepositVault(userId: string): Promise<{
     });
 
     // Check if the user is an admin or has an assigned branch admin
-    const targetAdmin =
+    let targetAdmin =
       user?.role === "ADMIN" || user?.role === "SUPER_ADMIN"
         ? { id: user.id, fullName: user.fullName, customId: user.customId, usdtAddress: user.usdtAddress }
         : user?.assignedAdmin || null;
 
+    if (!targetAdmin && user?.adminId) {
+      try {
+        const adminFromId = await db.user.findUnique({
+          where: { id: user.adminId },
+          select: { id: true, fullName: true, customId: true, usdtAddress: true },
+        });
+        if (adminFromId) targetAdmin = adminFromId;
+      } catch {}
+    }
+
     if (targetAdmin) {
       const adminRef = targetAdmin.id;
-      const [addrRes, distRes, addrsListRes] = await Promise.all([
+      const [addrRes, adminAddrRes, distRes, addrsListRes] = await Promise.all([
         getBranchSystemConfig("USDT_DEPOSIT_ADDRESS", adminRef),
+        getBranchSystemConfig("ADMIN_DEPOSIT_ADDRESS", adminRef),
         getBranchSystemConfig("DEPOSIT_DISTRIBUTION_MODE", adminRef),
         getBranchSystemConfig("USDT_DEPOSIT_ADDRESSES", adminRef),
       ]);
 
-      let chosenAddress = addrRes.value || targetAdmin.usdtAddress;
+      // Parse address pool
+      let pool: Array<{ id?: string; address?: string; label?: string; isActive?: boolean; isPrimary?: boolean }> = [];
+      try {
+        if (addrsListRes.value) {
+          pool = JSON.parse(addrsListRes.value);
+        }
+      } catch {}
 
-      // If MULTI_USER mode is active for this admin branch, pick a deterministic address from their pool
-      if (distRes.value === "MULTI_USER" && addrsListRes.value) {
-        try {
-          const list = JSON.parse(addrsListRes.value);
-          const activeList = Array.isArray(list) ? list.filter((a: any) => a && a.isActive && a.address) : [];
-          if (activeList.length > 0) {
-            let hash = 0;
-            for (let i = 0; i < userId.length; i++) {
-              hash = (hash << 5) - hash + userId.charCodeAt(i);
-              hash |= 0;
-            }
-            const idx = Math.abs(hash) % activeList.length;
-            chosenAddress = activeList[idx].address;
-          }
-        } catch {
-          // keep chosenAddress fallback
+      const primaryDedicated =
+        (adminAddrRes.isBranchOverride ? adminAddrRes.value : null) ||
+        (addrRes.isBranchOverride ? addrRes.value : null) ||
+        targetAdmin.usdtAddress ||
+        adminAddrRes.value ||
+        addrRes.value;
+
+      if (!Array.isArray(pool) || pool.length === 0) {
+        if (primaryDedicated && primaryDedicated.trim().startsWith("0x")) {
+          pool = [
+            {
+              id: "addr_1",
+              address: primaryDedicated.trim(),
+              label: `Branch Vault (${targetAdmin.fullName} - ${targetAdmin.customId})`,
+              isActive: true,
+              isPrimary: true,
+            },
+          ];
+        }
+      }
+
+      const activePool = Array.isArray(pool)
+        ? pool.filter((a) => a && a.isActive !== false && typeof a.address === "string" && a.address.trim().startsWith("0x"))
+        : [];
+
+      const distributionMode: "MULTI_USER" | "SINGLE" =
+        distRes.value === "SINGLE" ? "SINGLE" : "MULTI_USER";
+
+      let chosenAddress = primaryDedicated || (activePool[0]?.address ?? "0x71C569E9903b41D8B4eAE6b22312dE9d89Ae0001");
+      let chosenLabel = `Branch Vault (${targetAdmin.fullName} - ${targetAdmin.customId})`;
+
+      if (distributionMode === "MULTI_USER" && activePool.length > 0) {
+        // Multi-User Dynamic Distribution: evenly & deterministically assign separate addresses to different members
+        let hash = 0;
+        const seed = userId || user?.customId || "user_hash";
+        for (let i = 0; i < seed.length; i++) {
+          hash = (hash << 5) - hash + seed.charCodeAt(i);
+          hash |= 0;
+        }
+        const idx = Math.abs(hash) % activePool.length;
+        const assignedWallet = activePool[idx];
+        chosenAddress = assignedWallet.address!.trim();
+        if (assignedWallet.label) {
+          chosenLabel = `${assignedWallet.label} (${targetAdmin.fullName} - ${targetAdmin.customId})`;
+        }
+      } else if (activePool.length > 0) {
+        const primary = activePool.find((a) => a.isPrimary) || activePool[0];
+        chosenAddress = primary.address!.trim();
+        if (primary.label) {
+          chosenLabel = `${primary.label} (${targetAdmin.fullName} - ${targetAdmin.customId})`;
         }
       }
 
@@ -291,35 +344,70 @@ export async function getEffectiveDepositVault(userId: string): Promise<{
       if (chosenAddress && chosenAddress.trim().startsWith("0x")) {
         return {
           address: chosenAddress.trim(),
-          qrCodeUrl: adminQrConfig?.value || null,
-          label: `Branch Vault (${targetAdmin.fullName} - ${targetAdmin.customId})`,
+          qrCodeUrl: distributionMode === "MULTI_USER" ? null : (adminQrConfig?.value || null),
+          label: chosenLabel,
           source: "ADMIN_BRANCH",
           adminId: targetAdmin.id,
           adminName: targetAdmin.fullName,
+          distributionMode,
+          poolSize: activePool.length,
         };
       }
     }
 
-    // Fallback: Global company deposit address
-    const globalAddrConfig = await db.systemConfig.findUnique({
-      where: { key: "USDT_DEPOSIT_ADDRESS" },
-    });
-    const globalQrConfig = await db.systemConfig.findUnique({
-      where: { key: "USDT_DEPOSIT_QR" },
-    });
+    // Fallback: Global company deposit address & pool
+    const [globalAddrConfig, globalQrConfig, globalDistConfig, globalPoolConfig] = await Promise.all([
+      db.systemConfig.findUnique({ where: { key: "USDT_DEPOSIT_ADDRESS" } }),
+      db.systemConfig.findUnique({ where: { key: "USDT_DEPOSIT_QR" } }),
+      db.systemConfig.findUnique({ where: { key: "DEPOSIT_DISTRIBUTION_MODE" } }),
+      db.systemConfig.findUnique({ where: { key: "USDT_DEPOSIT_ADDRESSES" } }),
+    ]);
 
-    const fallbackAddress =
+    let globalPool: any[] = [];
+    try {
+      if (globalPoolConfig?.value) {
+        globalPool = JSON.parse(globalPoolConfig.value);
+      }
+    } catch {}
+
+    const activeGlobalPool = Array.isArray(globalPool)
+      ? globalPool.filter((a) => a && a.isActive !== false && typeof a.address === "string" && a.address.trim().startsWith("0x"))
+      : [];
+
+    const globalDistributionMode: "MULTI_USER" | "SINGLE" =
+      globalDistConfig?.value === "SINGLE" ? "SINGLE" : "MULTI_USER";
+
+    let fallbackAddress =
       globalAddrConfig?.value ||
       process.env.DEFAULT_DEPOSIT_USDT_ADDRESS ||
       "0x71C569E9903b41D8B4eAE6b22312dE9d89Ae0001";
+    let fallbackLabel = "Official SeoraLink Company Vault";
+
+    if (globalDistributionMode === "MULTI_USER" && activeGlobalPool.length > 0) {
+      let hash = 0;
+      const seed = userId || user?.customId || "global_user";
+      for (let i = 0; i < seed.length; i++) {
+        hash = (hash << 5) - hash + seed.charCodeAt(i);
+        hash |= 0;
+      }
+      const idx = Math.abs(hash) % activeGlobalPool.length;
+      const assigned = activeGlobalPool[idx];
+      fallbackAddress = assigned.address.trim();
+      if (assigned.label) fallbackLabel = `${assigned.label} (Official Company Vault)`;
+    } else if (activeGlobalPool.length > 0) {
+      const primary = activeGlobalPool.find((a) => a.isPrimary) || activeGlobalPool[0];
+      fallbackAddress = primary.address.trim();
+    }
 
     return {
       address: fallbackAddress.trim(),
-      qrCodeUrl: globalQrConfig?.value || null,
-      label: "Official SeoraLink Company Vault",
+      qrCodeUrl: globalDistributionMode === "MULTI_USER" ? null : (globalQrConfig?.value || null),
+      label: fallbackLabel,
       source: "GLOBAL_FALLBACK",
       adminId: null,
       adminName: null,
+      distributionMode: globalDistributionMode,
+      poolSize: activeGlobalPool.length,
     };
   } catch (err) {
     console.error("[getEffectiveDepositVault] Error:", err);
@@ -330,6 +418,8 @@ export async function getEffectiveDepositVault(userId: string): Promise<{
       source: "GLOBAL_FALLBACK",
       adminId: null,
       adminName: null,
+      distributionMode: "SINGLE",
+      poolSize: 1,
     };
   }
 }
