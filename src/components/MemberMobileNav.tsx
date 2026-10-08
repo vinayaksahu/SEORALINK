@@ -69,8 +69,12 @@ export function MemberMobileNav({ user, isImpersonating }: MemberMobileNavProps)
     { href: "/member/dashboard", label: "Dashboard", icon: LayoutDashboard },
     { href: "/member/profile", label: "My Profile", icon: User },
     { href: "/member/queue", label: "Tripod Queue", icon: GitCommit },
-    { href: "/member/activate", label: "Activate $10", icon: Zap },
-    { href: "/member/deposit", label: "Deposit USDT", icon: Wallet },
+    ...(user.status !== "ACTIVE"
+      ? [
+          { href: "/member/activate", label: "Activate $10", icon: Zap },
+          { href: "/member/deposit", label: "Deposit USDT", icon: Wallet },
+        ]
+      : []),
     { href: "/member/withdraw", label: "Withdraw", icon: ArrowUpRight },
     { href: "/member/team", label: "Team Network", icon: Users },
     { href: "/member/ledger", label: "Ledger History", icon: FileText },

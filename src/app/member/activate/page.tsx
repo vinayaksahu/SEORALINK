@@ -1,62 +1,32 @@
-'use client';
-
-import React, { useState, useEffect } from "react";
+import React from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { Zap, CheckCircle, AlertCircle, ArrowRight, Wallet, RefreshCw } from "lucide-react";
+import { getSession } from "@/lib/auth";
+import { db } from "@/lib/db";
+import { redirect } from "next/navigation";
+import { Zap, CheckCircle2, ArrowRight, LayoutDashboard, GitCommit } from "lucide-react";
+import ActivateFormClient from "./ActivateFormClient";
 
-export default function MemberActivatePage() {
-  const router = useRouter();
-  const [user, setUser] = useState<any>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
+export const dynamic = "force-dynamic";
 
-  useEffect(() => {
-    fetchUser();
-  }, []);
+export default async function MemberActivatePage() {
+  const session = await getSession();
+  if (!session) redirect("/login");
 
-  const fetchUser = async () => {
-    try {
-      const res = await fetch("/api/auth/me");
-      const data = await res.json();
-      if (res.ok && data.user) {
-        setUser(data.user);
-      }
-    } catch (err) {
-      console.error(err);
-    }
-  };
+  const user = await db.user.findUnique({
+    where: { id: session.userId },
+    select: {
+      id: true,
+      customId: true,
+      fullName: true,
+      status: true,
+      currentTier: true,
+      fundBalance: true,
+    },
+  });
 
-  const handleActivate = async () => {
-    setError("");
-    setSuccess("");
-    setLoading(true);
+  if (!user) redirect("/login");
 
-    try {
-      const res = await fetch("/api/member/activate", {
-        method: "POST",
-      });
-
-      const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.error || "Activation failed");
-      }
-
-      setSuccess(data.message || "Account activated successfully!");
-      fetchUser();
-      setTimeout(() => {
-        router.push("/member/dashboard");
-      }, 1500);
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fundBal = user ? parseFloat(user.fundBalance) : 0;
-  const isFundSufficient = fundBal >= 10.0;
+  const isActivated = user.status === "ACTIVE";
 
   return (
     <div className="max-w-2xl mx-auto space-y-8">
@@ -70,104 +40,61 @@ export default function MemberActivatePage() {
         </p>
       </div>
 
-      <div className="card-seoralink p-8 space-y-6 bg-[#0d1424] border-[#d4af37]/40 shadow-2xl">
-        {error && (
-          <div className="p-3.5 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-xs flex items-center gap-2">
-            <AlertCircle size={16} className="flex-shrink-0" />
-            <span>{error}</span>
+      {isActivated ? (
+        <div className="card-seoralink p-8 space-y-6 bg-[#0d1424] border-emerald-500/40 shadow-2xl text-center">
+          <div className="w-16 h-16 rounded-full bg-emerald-500/10 border-2 border-emerald-500/40 flex items-center justify-center mx-auto text-emerald-400">
+            <CheckCircle2 size={36} />
           </div>
-        )}
 
-        {success && (
-          <div className="p-3.5 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs flex items-center gap-2">
-            <CheckCircle size={16} className="flex-shrink-0" />
-            <span>{success}</span>
-          </div>
-        )}
-
-        {/* Status Check */}
-        {user?.status === "ACTIVE" ? (
-          <div className="text-center py-6 space-y-3">
-            <CheckCircle size={48} className="text-[#10b981] mx-auto" />
-            <h3 className="text-lg font-bold text-white">Your Account is Already Active!</h3>
-            <p className="text-xs text-[#94a3b8] max-w-sm mx-auto">
-              You are currently active in Tier {user.currentTier}. View your queue position and progress in the dashboard.
+          <div className="space-y-2">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+              STATUS: ALREADY ACTIVE
+            </div>
+            <h3 className="text-xl font-bold text-white">Your Account is Already Active!</h3>
+            <p className="text-xs text-[#94a3b8] max-w-md mx-auto leading-relaxed">
+              Your $10 Micro-Entry has been successfully activated. You are currently active in the universal single-leg queue (Tier {user.currentTier}). No further activation is required.
             </p>
-            <div className="pt-4">
-              <Link href="/member/queue" className="btn-primary px-6 py-2.5 text-xs font-bold inline-flex items-center gap-1.5">
-                View Queue Status <ArrowRight size={14} />
-              </Link>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3 max-w-sm mx-auto pt-2 text-left bg-[#070a14] p-4 rounded-xl border border-[#1e293b]">
+            <div>
+              <div className="text-[10px] text-[#94a3b8] uppercase font-mono-num">Current Rank</div>
+              <div className="text-sm font-bold text-[#d4af37] font-mono-num mt-0.5">Tier {user.currentTier}</div>
+            </div>
+            <div>
+              <div className="text-[10px] text-[#94a3b8] uppercase font-mono-num">Member ID</div>
+              <div className="text-sm font-bold text-white font-mono-num mt-0.5">{user.customId}</div>
             </div>
           </div>
-        ) : (
-          <div className="space-y-6">
-            {/* Balance Overview */}
-            <div className="p-4 rounded-xl border border-[#38bdf8]/30 bg-[#0b1120] flex items-center justify-between">
-              <div>
-                <div className="text-[10px] font-mono-num uppercase text-[#94a3b8]">Available Fund Wallet Balance</div>
-                <div className="text-2xl font-mono-num font-bold text-[#38bdf8] mt-1">
-                  ${fundBal.toFixed(2)} USDT
-                </div>
-              </div>
 
-              {!isFundSufficient && (
-                <Link href="/member/deposit" className="btn-secondary px-3.5 py-2 text-xs font-bold flex items-center gap-1">
-                  <Wallet size={14} /> Top Up Balance
-                </Link>
-              )}
-            </div>
-
-            {/* Micro-Entry Breakdown */}
-            <div className="space-y-3 text-xs bg-[#0b1120]/60 p-4 rounded-xl border border-[#1e293b]">
-              <div className="flex justify-between py-1 text-[#94a3b8]">
-                <span>Activation Fee:</span>
-                <span className="font-bold text-white font-mono-num">$10.00 USDT</span>
-              </div>
-              <div className="flex justify-between py-1 text-[#94a3b8]">
-                <span>Direct Sponsor Commission (5%):</span>
-                <span className="font-bold text-[#10b981] font-mono-num">$0.50 USDT (Instant)</span>
-              </div>
-              <div className="flex justify-between py-1 text-[#94a3b8]">
-                <span>Queue Placement:</span>
-                <span className="font-bold text-[#d4af37]">Tier 0 (Junior FIFO Line)</span>
-              </div>
-            </div>
-
-            {/* Activate CTA */}
-            {isFundSufficient ? (
-              <button
-                onClick={handleActivate}
-                disabled={loading}
-                className="btn-primary w-full py-3.5 text-xs font-extrabold flex items-center justify-center gap-2 disabled:opacity-60 shadow-lg cursor-pointer disabled:cursor-wait transition-all duration-150 active:scale-[0.98]"
-              >
-                {loading ? (
-                  <>
-                    <RefreshCw size={15} className="animate-spin text-black" />
-                    <span>Processing Queue Placement...</span>
-                  </>
-                ) : (
-                  <>
-                    <span>Confirm & Activate ($10 USDT)</span>
-                    <Zap size={15} />
-                  </>
-                )}
-              </button>
-            ) : (
-              <div className="text-center space-y-3 pt-2">
-                <p className="text-xs text-amber-400 font-medium">
-                  You need at least $10.00 in your Fund Wallet to activate.
-                </p>
-                <Link
-                  href="/member/deposit"
-                  className="btn-primary w-full py-3 text-xs font-bold inline-flex items-center justify-center gap-2"
-                >
-                  Deposit Funds ($10 USDT) &rarr;
-                </Link>
-              </div>
-            )}
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-4">
+            <Link
+              href="/member/dashboard"
+              className="btn-primary w-full sm:w-auto px-6 py-2.5 text-xs font-bold inline-flex items-center justify-center gap-2"
+            >
+              <LayoutDashboard size={14} /> Go to Dashboard
+            </Link>
+            <Link
+              href="/member/queue"
+              className="btn-secondary w-full sm:w-auto px-6 py-2.5 text-xs font-bold inline-flex items-center justify-center gap-2 border-[#1e293b]"
+            >
+              <GitCommit size={14} /> View Tripod Queue <ArrowRight size={14} />
+            </Link>
           </div>
-        )}
-      </div>
+        </div>
+      ) : (
+        <ActivateFormClient
+          initialUser={{
+            id: user.id,
+            customId: user.customId,
+            fullName: user.fullName,
+            status: user.status,
+            currentTier: user.currentTier,
+            fundBalance: parseFloat(user.fundBalance?.toString() || "0"),
+          }}
+        />
+      )}
     </div>
   );
 }

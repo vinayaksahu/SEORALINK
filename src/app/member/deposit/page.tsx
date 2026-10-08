@@ -15,6 +15,7 @@ import {
   ShieldCheck,
   AlertTriangle,
   RotateCcw,
+  GitCommit,
 } from "lucide-react";
 import { isUserSystemExited } from "@/lib/userStatus";
 import {
@@ -92,21 +93,62 @@ export default async function MemberDepositPage() {
               This member account has executed the single-exit rank cashout protocol and has officially concluded its participation in the SEORALINK network. Under system exit rules, fund deposits are permanently disabled for retired IDs.
             </p>
           </div>
-        ) : (
-          <div className="space-y-4">
-            {isActivated && (
-              <div className="p-3.5 rounded-xl border border-emerald-500/40 bg-emerald-500/10 flex items-center justify-between">
-                <div className="flex items-center gap-2.5">
-                  <CheckCircle2 size={18} className="text-emerald-400 shrink-0" />
-                  <div>
-                    <span className="text-xs font-bold text-white block">Account Active &bull; Fund Wallet Top-Up</span>
-                    <span className="text-[11px] text-emerald-200/80">
-                      Balance: ${parseFloat(currentUser?.fundBalance?.toString() || "0").toFixed(2)} USDT. Deposits credit directly to your Fund Wallet.
-                    </span>
-                  </div>
+        ) : isActivated ? (
+          <div className="card-seoralink p-6 sm:p-8 space-y-6 bg-[#0d1424] border-emerald-500/40 shadow-xl">
+            <div className="flex items-center gap-4">
+              <div className="w-14 h-14 rounded-full bg-emerald-500/10 border-2 border-emerald-500/40 flex items-center justify-center text-emerald-400 shrink-0">
+                <CheckCircle2 size={32} />
+              </div>
+              <div>
+                <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                  STATUS: ALREADY ACTIVE
+                </div>
+                <h3 className="text-lg font-bold text-white mt-1">
+                  Account Already Activated
+                </h3>
+                <p className="text-xs text-[#94a3b8] mt-0.5">
+                  Your $10 USDT micro-entry fee has already been paid and activated.
+                </p>
+              </div>
+            </div>
+
+            <div className="p-4 rounded-xl border border-[#38bdf8]/30 bg-[#0b1120] flex items-center justify-between">
+              <div>
+                <div className="text-[10px] font-mono-num uppercase text-[#94a3b8]">Fund Wallet Balance</div>
+                <div className="text-2xl font-mono-num font-bold text-[#38bdf8] mt-0.5">
+                  ${parseFloat(currentUser?.fundBalance?.toString() || "0").toFixed(2)} USDT
                 </div>
               </div>
-            )}
+              <div className="text-right">
+                <div className="text-[10px] font-mono-num uppercase text-[#94a3b8]">Member ID</div>
+                <div className="text-sm font-bold text-[#d4af37] font-mono-num mt-0.5">
+                  {currentUser?.customId}
+                </div>
+              </div>
+            </div>
+
+            <p className="text-xs text-[#cbd5e1] leading-relaxed bg-[#070a14] p-4 rounded-xl border border-[#1e293b]">
+              Your account is fully activated in the universal single-leg queue. No further deposit is required to participate in rank progressions or earn commissions.
+            </p>
+
+            <div className="flex flex-col sm:flex-row items-center gap-3">
+              <Link
+                href="/member/dashboard"
+                className="btn-primary w-full sm:flex-1 py-2.5 text-xs font-bold text-center flex items-center justify-center gap-1.5"
+              >
+                Go to Dashboard
+              </Link>
+              <Link
+                href="/member/queue"
+                className="btn-secondary w-full sm:flex-1 py-2.5 text-xs font-bold text-center flex items-center justify-center gap-1.5 border-[#1e293b]"
+              >
+                <GitCommit size={14} /> View Tripod Queue
+              </Link>
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-4">
             <DepositFormClient
               mode={mode}
               depositAddress={depositAddress}
