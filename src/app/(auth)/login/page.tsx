@@ -5,11 +5,11 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Logo } from "@/components/Logo";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { Lock, Mail, ArrowRight, AlertCircle } from "lucide-react";
+import { Lock, User, ArrowRight, AlertCircle } from "lucide-react";
 
 export default function LoginPage() {
   const router = useRouter();
-  const [identifier, setIdentifier] = useState(""); // Email or Custom ID (e.g. SL108420)
+  const [identifier, setIdentifier] = useState(""); // Member ID (e.g. SL595592) or Username (e.g. soyun123)
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -71,19 +71,22 @@ export default function LoginPage() {
           <form onSubmit={handleLogin} className="space-y-4">
             <div className="space-y-1.5">
               <label className="text-xs font-bold text-slate-700 dark:text-[#cbd5e1] uppercase tracking-wider">
-                Email or Member ID
+                Member ID or Username
               </label>
               <div className="relative">
-                <Mail size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-[#64748b]" />
+                <User size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-[#64748b]" />
                 <input
                   type="text"
                   required
                   value={identifier}
                   onChange={(e) => setIdentifier(e.target.value)}
-                  placeholder="e.g. member@seoralink.com or SL108420"
-                  className="w-full bg-slate-50 dark:bg-[#0b1120] border border-slate-300 dark:border-[#d4af37]/30 text-slate-900 dark:text-white rounded-lg pl-10 pr-4 py-2.5 text-xs font-medium focus:outline-none focus:border-[#d4af37]"
+                  placeholder="e.g. SL595592 or soyun123"
+                  className="w-full bg-slate-50 dark:bg-[#0b1120] border border-slate-300 dark:border-[#d4af37]/30 text-slate-900 dark:text-white rounded-lg pl-10 pr-4 py-2.5 text-xs font-mono font-bold focus:outline-none focus:border-[#d4af37]"
                 />
               </div>
+              <p className="text-[10.5px] text-slate-500 dark:text-[#94a3b8]">
+                Sign in with your unique Member ID (e.g. SL595592) or Username (e.g. soyun123).
+              </p>
             </div>
 
             <div className="space-y-1.5">

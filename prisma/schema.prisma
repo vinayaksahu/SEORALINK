@@ -46,8 +46,9 @@ enum TransactionType {
 model User {
   id                 String              @id @default(cuid())
   customId           String              @unique // e.g. "SL839102"
+  username           String?             @unique // e.g. "soyun123"
   fullName           String
-  email              String              @unique
+  email              String
   phone              String?
   passwordHash       String
   transactionPin     String?
@@ -89,6 +90,7 @@ model User {
   tickets                 SupportTicket[]
 
   @@index([customId])
+  @@index([username])
   @@index([email])
   @@index([sponsorId])
   @@index([adminId])

@@ -13,6 +13,10 @@ function RegisterForm() {
   const searchParams = useSearchParams();
 
   const [fullName, setFullName] = useState("");
+  const [username, setUsername] = useState("");
+  const [checkingUsername, setCheckingUsername] = useState(false);
+  const [usernameValid, setUsernameValid] = useState<boolean | null>(null);
+  const [usernameError, setUsernameError] = useState("");
   const [email, setEmail] = useState("");
   const [selectedCountry, setSelectedCountry] = useState<Country>(DEFAULT_COUNTRY);
   const [phoneDigits, setPhoneDigits] = useState("");
@@ -54,9 +58,53 @@ function RegisterForm() {
     }
   }, [otpCooldown]);
 
+  // Real-time Username Availability Check
+  useEffect(() => {
+    const trimmed = username.trim().toLowerCase();
+    if (!trimmed) {
+      setUsernameValid(null);
+      setUsernameError("");
+      setCheckingUsername(false);
+      return;
+    }
+
+    if (trimmed.length < 3) {
+      setUsernameValid(false);
+      setUsernameError("Username must be at least 3 characters.");
+      setCheckingUsername(false);
+      return;
+    }
+
+    setCheckingUsername(true);
+    const timer = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/auth/check-username?username=${encodeURIComponent(trimmed)}`);
+        const data = await res.json();
+        if (res.ok && data.available) {
+          setUsernameValid(true);
+          setUsernameError("");
+        } else {
+          setUsernameValid(false);
+          setUsernameError(data.error || "Username is not available.");
+        }
+      } catch {
+        setUsernameValid(null);
+        setUsernameError("");
+      } finally {
+        setCheckingUsername(false);
+      }
+    }, 350);
+
+    return () => clearTimeout(timer);
+  }, [username]);
+
   const handleSendOtp = async () => {
     if (isFormDisabled) {
       setError("Cannot dispatch verification code with an inactive or invalid sponsor referral code.");
+      return;
+    }
+    if (!username.trim() || usernameValid === false) {
+      setError(usernameError || "Please enter a valid, unique username first.");
       return;
     }
     if (!email || !email.includes("@")) {
@@ -72,6 +120,7 @@ function RegisterForm() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           purpose: "REGISTRATION",
+          username: username.trim().toLowerCase(),
           email: email.trim(),
           fullName: fullName.trim() || undefined,
           sponsorCode: sponsorCode.trim(),
@@ -145,6 +194,11 @@ function RegisterForm() {
       return;
     }
 
+    if (!username.trim() || usernameValid === false) {
+      setError(usernameError || "Please enter a valid, unique username.");
+      return;
+    }
+
     if (otpEnabled && (!otpCode || otpCode.trim().length !== 6)) {
       setError("Please enter the 6-digit verification code sent to your email.");
       return;
@@ -162,6 +216,7 @@ function RegisterForm() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           fullName,
+          username: username.trim().toLowerCase(),
           email,
           phone: fullPhone,
           password,
@@ -283,6 +338,54 @@ function RegisterForm() {
               </div>
             </div>
 
+            {/* Unique Username */}
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-[#cbd5e1] uppercase tracking-wider flex items-center justify-between">
+                <span>Unique Username *</span>
+                {checkingUsername ? (
+                  <span className="text-[#d4af37] font-semibold text-[11px] animate-pulse">
+                    Checking availability...
+                  </span>
+                ) : usernameValid === true ? (
+                  <span className="text-[#10b981] font-bold text-[11px] flex items-center gap-1">
+                    <CheckCircle size={12} /> Available (@{username.trim().toLowerCase()})
+                  </span>
+                ) : usernameValid === false ? (
+                  <span className="text-red-400 font-bold text-[11px] flex items-center gap-1">
+                    <AlertCircle size={12} /> Unavailable
+                  </span>
+                ) : null}
+              </label>
+              <div className="relative">
+                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#d4af37] font-mono font-bold text-xs select-none">
+                  @
+                </span>
+                <input
+                  type="text"
+                  required
+                  maxLength={20}
+                  disabled={isFormDisabled}
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ""))}
+                  placeholder="e.g. soyun123"
+                  className={`w-full bg-[#0b1120] border text-white rounded-lg pl-9 pr-4 py-2.5 text-xs font-mono font-bold focus:outline-none transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:bg-slate-900/60 ${
+                    usernameValid === false
+                      ? "border-red-500/70 focus:border-red-500"
+                      : usernameValid === true
+                      ? "border-emerald-500/70 focus:border-emerald-500"
+                      : "border-[#d4af37]/30 focus:border-[#d4af37]"
+                  }`}
+                />
+              </div>
+              {usernameValid === false && usernameError ? (
+                <p className="text-[11px] text-red-400 font-medium">{usernameError}</p>
+              ) : (
+                <p className="text-[10.5px] text-[#94a3b8]">
+                  Used for signing in alongside your unique Member ID (e.g. SL595592 or soyun123).
+                </p>
+              )}
+            </div>
+
             {/* Email */}
             <div className="space-y-1.5">
               <label className="text-xs font-bold text-[#cbd5e1] uppercase tracking-wider">
@@ -300,6 +403,9 @@ function RegisterForm() {
                   className="w-full bg-[#0b1120] border border-[#d4af37]/30 text-white rounded-lg pl-10 pr-4 py-2.5 text-xs font-medium focus:outline-none focus:border-[#d4af37] disabled:opacity-40 disabled:cursor-not-allowed disabled:bg-slate-900/60"
                 />
               </div>
+              <p className="text-[10.5px] text-[#94a3b8]">
+                Multiple accounts can be created using the same email ID.
+              </p>
             </div>
 
             {/* Email Verification OTP (when enabled by Admin) */}
@@ -421,7 +527,7 @@ function RegisterForm() {
                   disabled={isFormDisabled}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="At least 6 characters"
+                  placeholder="At least 8 characters (letters + numbers)"
                   className="w-full bg-[#0b1120] border border-[#d4af37]/30 text-white rounded-lg pl-10 pr-4 py-2.5 text-xs font-medium focus:outline-none focus:border-[#d4af37] disabled:opacity-40 disabled:cursor-not-allowed disabled:bg-slate-900/60"
                 />
               </div>
@@ -429,7 +535,7 @@ function RegisterForm() {
 
             <button
               type="submit"
-              disabled={loading || isFormDisabled || checkingSponsor}
+              disabled={loading || isFormDisabled || checkingSponsor || checkingUsername || usernameValid === false}
               className="btn-primary w-full py-3 text-xs font-bold flex items-center justify-center gap-2 mt-4 disabled:opacity-40 disabled:cursor-not-allowed"
             >
               {loading ? "Creating Account..." : "Complete Registration"}

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { hashPassword, createSessionToken } from "@/lib/auth";
-import { generateCustomId } from "@/lib/utils";
+import { generateCustomId, validateUsernameFormat } from "@/lib/utils";
 import { cookies } from "next/headers";
 import { isUserSystemExited } from "@/lib/userStatus";
 import { validateAndConsumeOtp } from "@/lib/otp";
@@ -24,14 +24,24 @@ export async function POST(req: Request) {
       );
     }
 
-    const { fullName, email, phone, password, sponsorCode, otpCode } = await req.json();
+    const { fullName, username, email, phone, password, sponsorCode, otpCode } = await req.json();
 
-    if (!fullName || !email || !password) {
+    if (!fullName || !username || !email || !password) {
       return NextResponse.json(
-        { error: "Full name, email, and password are required" },
+        { error: "Full name, username, email, and password are required" },
         { status: 400 }
       );
     }
+
+    // Validate unique username format & security rules
+    const usernameCheck = validateUsernameFormat(username);
+    if (!usernameCheck.valid) {
+      return NextResponse.json(
+        { error: usernameCheck.error || "Invalid username format" },
+        { status: 400 }
+      );
+    }
+    const cleanUsername = usernameCheck.normalized;
 
     if (typeof password !== "string" || password.length < 8) {
       return NextResponse.json(
@@ -49,13 +59,20 @@ export async function POST(req: Request) {
       );
     }
 
-    // Check if email already registered
-    const existing = await db.user.findUnique({
-      where: { email: email.toLowerCase().trim() },
+    // Check if username is already taken (or collides with any customId / referralCode)
+    const existingUsername = await db.user.findFirst({
+      where: {
+        OR: [
+          { username: { equals: cleanUsername, mode: "insensitive" } },
+          { customId: { equals: cleanUsername, mode: "insensitive" } },
+          { referralCode: { equals: cleanUsername, mode: "insensitive" } },
+        ],
+      },
+      select: { id: true },
     });
-    if (existing) {
+    if (existingUsername) {
       return NextResponse.json(
-        { error: "Email address is already registered" },
+        { error: `Username "${cleanUsername}" is already taken. Please choose a different unique username.` },
         { status: 400 }
       );
     }
@@ -85,7 +102,7 @@ export async function POST(req: Request) {
           OR: [
             { customId: { equals: code, mode: "insensitive" } },
             { referralCode: { equals: code, mode: "insensitive" } },
-            { email: { equals: code.toLowerCase(), mode: "insensitive" } },
+            { username: { equals: code.toLowerCase(), mode: "insensitive" } },
           ],
           NOT: [
             { role: "SUPER_ROOT_ADMIN" },
@@ -161,6 +178,7 @@ export async function POST(req: Request) {
     const user = await db.user.create({
       data: {
         customId,
+        username: cleanUsername,
         referralCode: customId,
         fullName: fullName.trim(),
         email: email.toLowerCase().trim(),
@@ -177,6 +195,7 @@ export async function POST(req: Request) {
     const token = await createSessionToken({
       userId: user.id,
       customId: user.customId,
+      username: user.username,
       role: user.role,
       email: user.email,
       fullName: user.fullName,
@@ -198,6 +217,7 @@ export async function POST(req: Request) {
       user: {
         id: user.id,
         customId: user.customId,
+        username: user.username,
         fullName: user.fullName,
         email: user.email,
         status: user.status,

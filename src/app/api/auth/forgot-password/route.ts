@@ -20,7 +20,15 @@ export async function POST(req: Request) {
       );
     }
 
-    const { email, otpCode, newPassword } = await req.json();
+    const { identifier, email, otpCode, newPassword } = await req.json();
+
+    const cleanIdentifier = identifier ? identifier.trim() : "";
+    if (!cleanIdentifier) {
+      return NextResponse.json(
+        { error: "Member ID or Username is required to identify your account" },
+        { status: 400 }
+      );
+    }
 
     const cleanEmail = email ? email.toLowerCase().trim() : "";
     if (!cleanEmail || !cleanEmail.includes("@")) {
@@ -30,15 +38,15 @@ export async function POST(req: Request) {
       );
     }
 
-    // Email rate limit: max 3 reset attempts per 5 minutes
-    const emailLimit = await checkRateLimitAsync(`forgot:email:${cleanEmail}`, {
+    // Account + Email rate limit: max 3 reset attempts per 5 minutes
+    const emailLimit = await checkRateLimitAsync(`forgot:acc:${cleanIdentifier.toLowerCase()}:${cleanEmail}`, {
       maxRequests: 3,
       windowSeconds: 300,
     });
     if (!emailLimit.success) {
       return rateLimitResponse(
         emailLimit.resetInSeconds,
-        `Too many password reset requests for this email. Please wait ${Math.ceil(emailLimit.resetInSeconds / 60)} minutes.`
+        `Too many password reset requests for this account. Please wait ${Math.ceil(emailLimit.resetInSeconds / 60)} minutes.`
       );
     }
 
@@ -58,15 +66,21 @@ export async function POST(req: Request) {
       );
     }
 
-    // 1. Verify user exists
-    const user = await db.user.findUnique({
-      where: { email: cleanEmail },
-      select: { id: true, email: true, fullName: true },
+    // 1. Verify exact user account exists matching BOTH Member ID/Username AND Email
+    const user = await db.user.findFirst({
+      where: {
+        email: { equals: cleanEmail, mode: "insensitive" },
+        OR: [
+          { customId: { equals: cleanIdentifier, mode: "insensitive" } },
+          { username: { equals: cleanIdentifier.toLowerCase(), mode: "insensitive" } },
+        ],
+      },
+      select: { id: true, customId: true, username: true, email: true, fullName: true },
     });
 
     if (!user) {
       return NextResponse.json(
-        { error: "No account found matching this email address" },
+        { error: "No account found matching both this Member ID/Username and email address" },
         { status: 404 }
       );
     }
@@ -85,7 +99,7 @@ export async function POST(req: Request) {
       );
     }
 
-    // 3. Hash new password and update user record
+    // 3. Hash new password and update ONLY the targeted user record
     const passwordHash = await hashPassword(newPassword);
 
     await db.user.update({
@@ -95,7 +109,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json({
       success: true,
-      message: "Your password has been reset successfully! You may now sign in with your new password.",
+      message: `Password for ${user.customId}${user.username ? ` (@${user.username})` : ""} has been reset successfully! You may now sign in with your new password.`,
     });
   } catch (error: any) {
     console.error("[Forgot Password Error]", error);

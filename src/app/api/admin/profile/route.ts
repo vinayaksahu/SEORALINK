@@ -93,14 +93,18 @@ export async function PATCH(req: Request) {
       );
     }
 
-    // Check if email changed and is taken
+    // Check if email changed and is taken by another admin
     if (trimmedEmail !== existingAdmin.email.toLowerCase()) {
-      const emailInUse = await db.user.findUnique({
-        where: { email: trimmedEmail },
+      const emailInUse = await db.user.findFirst({
+        where: {
+          email: trimmedEmail,
+          role: { in: ["ADMIN", "SUPER_ADMIN", "SUPER_ROOT_ADMIN"] },
+          NOT: { id: session.userId },
+        },
       });
-      if (emailInUse && emailInUse.id !== session.userId) {
+      if (emailInUse) {
         return NextResponse.json(
-          { error: "This email address is already registered with another account." },
+          { error: "This email address is already registered with another administrator account." },
           { status: 400 }
         );
       }

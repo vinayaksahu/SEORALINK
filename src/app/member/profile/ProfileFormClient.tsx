@@ -33,6 +33,7 @@ interface ProfileFormClientProps {
   user: {
     id: string;
     customId: string;
+    username?: string | null;
     fullName: string;
     email: string;
     phone: string | null;
@@ -325,6 +326,14 @@ export default function ProfileFormClient({ user: initialUser }: ProfileFormClie
                 <span>
                   Member ID: <strong className="text-[#d4af37] font-mono">{user.customId}</strong>
                 </span>
+                {user.username && (
+                  <>
+                    <span>&bull;</span>
+                    <span>
+                      Username: <strong className="text-[#38bdf8] font-mono">@{user.username}</strong>
+                    </span>
+                  </>
+                )}
                 <span>&bull;</span>
                 <span>Joined {new Date(user.createdAt).toLocaleDateString()}</span>
                 {user.sponsor && (
@@ -702,6 +711,13 @@ export default function ProfileFormClient({ user: initialUser }: ProfileFormClie
                   <span className="text-[#94a3b8]">Account ID:</span>
                   <span className="font-mono font-bold text-[#d4af37]">{user.customId}</span>
                 </div>
+
+                {user.username && (
+                  <div className="flex justify-between items-center py-1.5 border-b border-[#1e293b]/60">
+                    <span className="text-[#94a3b8]">Username:</span>
+                    <span className="font-mono font-bold text-[#38bdf8]">@{user.username}</span>
+                  </div>
+                )}
 
                 <div className="flex justify-between items-center py-1.5 border-b border-[#1e293b]/60">
                   <span className="text-[#94a3b8]">Current Rank:</span>

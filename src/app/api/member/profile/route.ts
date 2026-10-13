@@ -16,6 +16,7 @@ export async function GET() {
       select: {
         id: true,
         customId: true,
+        username: true,
         fullName: true,
         email: true,
         phone: true,
@@ -31,6 +32,7 @@ export async function GET() {
         sponsor: {
           select: {
             customId: true,
+            username: true,
             fullName: true,
             email: true,
           },
@@ -86,26 +88,13 @@ export async function PATCH(req: Request) {
       );
     }
 
-    // 2. Validate Email
+    // 2. Validate Email (Multiple member accounts may share the same email)
     const trimmedEmail = email ? email.trim().toLowerCase() : "";
     if (!trimmedEmail || !trimmedEmail.includes("@") || !trimmedEmail.includes(".")) {
       return NextResponse.json(
         { error: "Please enter a valid email address." },
         { status: 400 }
       );
-    }
-
-    // Check if email changed and is taken
-    if (trimmedEmail !== existingUser.email.toLowerCase()) {
-      const emailInUse = await db.user.findUnique({
-        where: { email: trimmedEmail },
-      });
-      if (emailInUse && emailInUse.id !== session.userId) {
-        return NextResponse.json(
-          { error: "This email is already registered with another account." },
-          { status: 400 }
-        );
-      }
     }
 
     // 3. Process Phone Number

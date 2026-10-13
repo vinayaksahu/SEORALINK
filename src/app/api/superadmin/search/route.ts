@@ -39,6 +39,7 @@ export async function GET(req: Request) {
         role: "USER",
         OR: [
           { customId: { contains: q, mode: "insensitive" } },
+          { username: { contains: q, mode: "insensitive" } },
           { fullName: { contains: q, mode: "insensitive" } },
           { email: { contains: q, mode: "insensitive" } },
           { phone: { contains: q, mode: "insensitive" } },

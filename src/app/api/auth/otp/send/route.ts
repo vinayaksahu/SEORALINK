@@ -5,6 +5,7 @@ import { generateAndSendOtp, OtpPurpose, isOtpFeatureEnabled } from "@/lib/otp";
 import { getClientIp, checkRateLimitAsync, rateLimitResponse } from "@/lib/rateLimit";
 import { isUserSystemExited } from "@/lib/userStatus";
 import { canUserSponsor } from "@/lib/referralPolicy";
+import { validateUsernameFormat } from "@/lib/utils";
 
 export async function POST(req: Request) {
   try {
@@ -23,11 +24,13 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json();
-    const { purpose, email, sponsorCode } = body as {
+    const { purpose, email, sponsorCode, username, identifier } = body as {
       purpose: OtpPurpose;
       email?: string;
       sponsorCode?: string;
       fullName?: string;
+      username?: string;
+      identifier?: string;
     };
 
     if (!purpose) {
@@ -45,7 +48,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Invalid OTP purpose" }, { status: 400 });
     }
 
-    // Resolve branch adminId from session, sponsor code, or target email
+    // Resolve branch adminId from session, sponsor code, identifier, or target email
     let resolvedAdminId: string | null = null;
     const session = await getSession();
     if (session) {
@@ -66,6 +69,7 @@ export async function POST(req: Request) {
           OR: [
             { customId: { equals: sponsorCode.trim(), mode: "insensitive" } },
             { referralCode: { equals: sponsorCode.trim(), mode: "insensitive" } },
+            { username: { equals: sponsorCode.trim().toLowerCase(), mode: "insensitive" } },
           ],
         },
         select: { id: true, role: true, adminId: true },
@@ -73,8 +77,22 @@ export async function POST(req: Request) {
       if (sp) {
         resolvedAdminId = (sp.role === "ADMIN" || sp.role === "SUPER_ADMIN") ? sp.id : sp.adminId;
       }
+    } else if (identifier) {
+      const cleanId = identifier.trim();
+      const u = await db.user.findFirst({
+        where: {
+          OR: [
+            { customId: { equals: cleanId, mode: "insensitive" } },
+            { username: { equals: cleanId.toLowerCase(), mode: "insensitive" } },
+          ],
+        },
+        select: { id: true, role: true, adminId: true },
+      });
+      if (u) {
+        resolvedAdminId = (u.role === "ADMIN" || u.role === "SUPER_ADMIN") ? u.id : u.adminId;
+      }
     } else if (email) {
-      const u = await db.user.findUnique({
+      const u = await db.user.findFirst({
         where: { email: email.toLowerCase().trim() },
         select: { id: true, role: true, adminId: true },
       });
@@ -126,33 +144,62 @@ export async function POST(req: Request) {
 
     // Additional validations for FORGOT_PASSWORD
     if (purpose === "FORGOT_PASSWORD") {
-      const user = await db.user.findUnique({
-        where: { email: targetEmail },
-        select: { fullName: true },
+      const cleanIdentifier = identifier ? identifier.trim() : "";
+      if (!cleanIdentifier) {
+        return NextResponse.json(
+          { error: "Member ID or Username is required to identify which account password to reset." },
+          { status: 400 }
+        );
+      }
+
+      const user = await db.user.findFirst({
+        where: {
+          email: { equals: targetEmail, mode: "insensitive" },
+          OR: [
+            { customId: { equals: cleanIdentifier, mode: "insensitive" } },
+            { username: { equals: cleanIdentifier.toLowerCase(), mode: "insensitive" } },
+          ],
+        },
+        select: { fullName: true, customId: true },
       });
 
       if (!user) {
-        // Return success message to prevent email enumeration, but don't send OTP
-        return NextResponse.json({
-          success: true,
-          message: `If an account exists for ${targetEmail}, a verification code has been dispatched.`,
-        });
+        return NextResponse.json(
+          { error: "No account found matching both this Member ID/Username and email address." },
+          { status: 404 }
+        );
       }
-      recipientName = user.fullName;
+      recipientName = `${user.fullName} (${user.customId})`;
     }
 
     // Additional validations for REGISTRATION
     if (purpose === "REGISTRATION") {
-      const existing = await db.user.findUnique({
-        where: { email: targetEmail },
-        select: { id: true },
-      });
-      if (existing) {
-        return NextResponse.json(
-          { error: "This email address is already registered in the network." },
-          { status: 400 }
-        );
+      if (username !== undefined) {
+        const usernameCheck = validateUsernameFormat(username);
+        if (!usernameCheck.valid) {
+          return NextResponse.json(
+            { error: usernameCheck.error || "Invalid username format." },
+            { status: 400 }
+          );
+        }
+        const existingUsername = await db.user.findFirst({
+          where: {
+            OR: [
+              { username: { equals: usernameCheck.normalized, mode: "insensitive" } },
+              { customId: { equals: usernameCheck.normalized, mode: "insensitive" } },
+              { referralCode: { equals: usernameCheck.normalized, mode: "insensitive" } },
+            ],
+          },
+          select: { id: true },
+        });
+        if (existingUsername) {
+          return NextResponse.json(
+            { error: `Username "${usernameCheck.normalized}" is already taken. Please choose another username.` },
+            { status: 400 }
+          );
+        }
       }
+
       if (body.fullName) {
         recipientName = body.fullName;
       }
@@ -165,7 +212,7 @@ export async function POST(req: Request) {
             OR: [
               { customId: { equals: regSponsorCode, mode: "insensitive" } },
               { referralCode: { equals: regSponsorCode, mode: "insensitive" } },
-              { email: { equals: regSponsorCode.toLowerCase(), mode: "insensitive" } },
+              { username: { equals: regSponsorCode.toLowerCase(), mode: "insensitive" } },
             ],
             NOT: [
               { role: "SUPER_ROOT_ADMIN" },

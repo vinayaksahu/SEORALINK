@@ -25,12 +25,24 @@ export async function POST(req: Request) {
 
     if (!identifier || !password) {
       return NextResponse.json(
-        { error: "Member ID/Email and password are required" },
+        { error: "Member ID or Username and password are required" },
         { status: 400 }
       );
     }
 
     const trimmed = identifier.trim();
+
+    // Disallow email login on member portal since multiple accounts can share the same email
+    const isMemberPortal = portal !== "super_root" && portal !== "admin" && !requireAdmin;
+    if (isMemberPortal && trimmed.includes("@")) {
+      return NextResponse.json(
+        {
+          error:
+            "Email login is disabled because multiple accounts can share the same email. Please sign in with your unique Member ID (e.g. SL595592) or Username (e.g. soyun123).",
+        },
+        { status: 400 }
+      );
+    }
 
     // Account + IP rate limit: max 5 attempts per 60 seconds
     const accountLimit = await checkRateLimitAsync(`login:acc:${trimmed.toLowerCase()}:${clientIp}`, {
@@ -44,12 +56,19 @@ export async function POST(req: Request) {
       );
     }
 
-    // Find user by customId or email (with alias support for superrootadmin)
+    // Find user strictly by unique customId or username (with alias support for admin / superrootadmin)
     const orConditions: any[] = [
       { customId: { equals: trimmed, mode: "insensitive" } },
-      { email: { equals: trimmed.toLowerCase(), mode: "insensitive" } },
+      { username: { equals: trimmed.toLowerCase(), mode: "insensitive" } },
       { referralCode: { equals: trimmed, mode: "insensitive" } },
     ];
+
+    if (portal === "admin" || requireAdmin) {
+      orConditions.push({
+        email: { equals: trimmed.toLowerCase(), mode: "insensitive" },
+        role: { in: ["ADMIN", "SUPER_ADMIN"] },
+      });
+    }
 
     if (portal === "super_root") {
       if (
@@ -77,7 +96,7 @@ export async function POST(req: Request) {
               ? "Invalid Super Root Identifier or password"
               : (portal === "admin" || requireAdmin)
               ? "Invalid Admin ID or password"
-              : "Invalid Member ID or password",
+              : "Invalid Member ID / Username or password",
         },
         { status: 401 }
       );
@@ -228,6 +247,7 @@ export async function POST(req: Request) {
     const token = await createSessionToken({
       userId: user.id,
       customId: user.customId,
+      username: user.username,
       role: user.role,
       email: user.email,
       fullName: user.fullName,
@@ -250,6 +270,7 @@ export async function POST(req: Request) {
       user: {
         id: user.id,
         customId: user.customId,
+        username: user.username,
         fullName: user.fullName,
         email: user.email,
         role: user.role,

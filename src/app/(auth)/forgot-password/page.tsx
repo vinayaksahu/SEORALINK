@@ -5,11 +5,12 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Logo } from "@/components/Logo";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { Mail, Lock, KeyRound, ArrowRight, AlertCircle, CheckCircle, ShieldCheck, ArrowLeft } from "lucide-react";
+import { Mail, Lock, KeyRound, ArrowRight, AlertCircle, CheckCircle, ShieldCheck, ArrowLeft, User } from "lucide-react";
 
 export default function ForgotPasswordPage() {
   const router = useRouter();
 
+  const [identifier, setIdentifier] = useState("");
   const [email, setEmail] = useState("");
   const [otpCode, setOtpCode] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -34,6 +35,11 @@ export default function ForgotPasswordPage() {
     setError("");
     setSuccess("");
 
+    if (!identifier.trim()) {
+      setError("Please enter your Member ID (e.g. SL595592) or Username (e.g. soyun123).");
+      return;
+    }
+
     if (!email || !email.includes("@")) {
       setError("Please enter a valid registered email address.");
       return;
@@ -47,6 +53,7 @@ export default function ForgotPasswordPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           purpose: "FORGOT_PASSWORD",
+          identifier: identifier.trim(),
           email: email.trim(),
         }),
       });
@@ -77,8 +84,8 @@ export default function ForgotPasswordPage() {
       return;
     }
 
-    if (!newPassword || newPassword.length < 6) {
-      setError("New password must be at least 6 characters long.");
+    if (!newPassword || newPassword.length < 8) {
+      setError("New password must be at least 8 characters long.");
       return;
     }
 
@@ -94,6 +101,7 @@ export default function ForgotPasswordPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          identifier: identifier.trim(),
           email: email.trim(),
           otpCode: otpCode.trim(),
           newPassword,
@@ -105,7 +113,7 @@ export default function ForgotPasswordPage() {
         throw new Error(data.error || "Failed to reset password.");
       }
 
-      setSuccess("Your password has been reset successfully! Redirecting to login...");
+      setSuccess(data.message || "Your password has been reset successfully! Redirecting to login...");
       setTimeout(() => {
         router.push("/login");
       }, 2000);
@@ -132,7 +140,7 @@ export default function ForgotPasswordPage() {
             Reset Your Password
           </h2>
           <p className="text-xs text-slate-600 dark:text-[#94a3b8]">
-            Authenticate using email verification to recover your member account.
+            Authenticate with your Member ID/Username and registered email to recover your account.
           </p>
         </div>
 
@@ -155,6 +163,23 @@ export default function ForgotPasswordPage() {
             <form onSubmit={handleSendCode} className="space-y-4">
               <div className="space-y-1.5">
                 <label className="text-xs font-bold text-slate-700 dark:text-[#cbd5e1] uppercase tracking-wider">
+                  Member ID or Username
+                </label>
+                <div className="relative">
+                  <User size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-[#64748b]" />
+                  <input
+                    type="text"
+                    required
+                    value={identifier}
+                    onChange={(e) => setIdentifier(e.target.value)}
+                    placeholder="e.g. SL595592 or soyun123"
+                    className="w-full bg-slate-50 dark:bg-[#0b1120] border border-slate-300 dark:border-[#d4af37]/30 text-slate-900 dark:text-white rounded-lg pl-10 pr-4 py-2.5 text-xs font-mono font-bold focus:outline-none focus:border-[#d4af37]"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-slate-700 dark:text-[#cbd5e1] uppercase tracking-wider">
                   Registered Email Address
                 </label>
                 <div className="relative">
@@ -169,7 +194,7 @@ export default function ForgotPasswordPage() {
                   />
                 </div>
                 <p className="text-[10px] text-slate-500 dark:text-[#94a3b8]">
-                  We will dispatch a one-time 6-digit recovery code via Namecheap Private Email.
+                  We will dispatch a one-time 6-digit recovery code for this specific account via Namecheap Private Email.
                 </p>
               </div>
 
@@ -185,15 +210,15 @@ export default function ForgotPasswordPage() {
           ) : (
             <form onSubmit={handleResetPassword} className="space-y-4">
               <div className="p-3 rounded-xl bg-[#0b1325] border border-[#1e293b] flex items-center justify-between text-xs">
-                <span className="text-[#94a3b8] text-[11px] truncate max-w-[200px]">
-                  Sending code to: <strong className="text-white">{email}</strong>
+                <span className="text-[#94a3b8] text-[11px] truncate max-w-[230px]">
+                  Account: <strong className="text-[#d4af37] font-mono">{identifier}</strong> ({email})
                 </span>
                 <button
                   type="button"
                   onClick={() => setStep("REQUEST_CODE")}
                   className="text-[11px] text-[#38bdf8] font-bold hover:underline"
                 >
-                  Change Email
+                  Change
                 </button>
               </div>
 

@@ -39,6 +39,7 @@ export default async function MemberProfilePage() {
   const serializedUser = {
     id: user.id,
     customId: user.customId,
+    username: user.username || null,
     fullName: user.fullName,
     email: user.email,
     phone: user.phone,

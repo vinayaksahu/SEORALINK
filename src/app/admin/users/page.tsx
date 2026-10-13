@@ -36,6 +36,7 @@ export default async function AdminUsersPage({
   if (searchQuery) {
     const searchConditions = [
       { customId: { contains: searchQuery, mode: "insensitive" } },
+      { username: { contains: searchQuery, mode: "insensitive" } },
       { fullName: { contains: searchQuery, mode: "insensitive" } },
       { email: { contains: searchQuery, mode: "insensitive" } },
       { phone: { contains: searchQuery, mode: "insensitive" } },
@@ -55,6 +56,7 @@ export default async function AdminUsersPage({
         select: {
           id: true,
           customId: true,
+          username: true,
           fullName: true,
           email: true,
           phone: true,

@@ -106,17 +106,6 @@ export async function PATCH(
       return NextResponse.json({ error: "Please provide a valid email address" }, { status: 400 });
     }
 
-
-    // Check email uniqueness if email changed
-    if (trimmedEmail !== existingUser.email.toLowerCase()) {
-      const emailInUse = await db.user.findUnique({
-        where: { email: trimmedEmail },
-      });
-      if (emailInUse && emailInUse.id !== id) {
-        return NextResponse.json({ error: "This email is already in use by another member" }, { status: 400 });
-      }
-    }
-
     const cleanAddress = usdtAddress && typeof usdtAddress === "string" ? usdtAddress.trim() : null;
     if (cleanAddress) {
       if (!cleanAddress.startsWith("0x") || cleanAddress.length !== 42) {

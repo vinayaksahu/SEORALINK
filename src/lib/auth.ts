@@ -18,6 +18,7 @@ const encodedKey = new TextEncoder().encode(secretKey);
 export interface SessionPayload {
   userId: string;
   customId: string;
+  username?: string | null;
   role: "USER" | "ADMIN" | "SUPER_ADMIN" | "SUPER_ROOT_ADMIN";
   email: string;
   fullName: string;

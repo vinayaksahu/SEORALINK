@@ -16,7 +16,7 @@ export async function GET(req: Request) {
       OR: [
         { customId: { equals: code, mode: "insensitive" } },
         { referralCode: { equals: code, mode: "insensitive" } },
-        { email: { equals: code.toLowerCase(), mode: "insensitive" } },
+        { username: { equals: code.toLowerCase(), mode: "insensitive" } },
       ],
       NOT: [
         { role: "SUPER_ROOT_ADMIN" },
@@ -26,6 +26,7 @@ export async function GET(req: Request) {
     select: {
       id: true,
       customId: true,
+      username: true,
       fullName: true,
       role: true,
       status: true,

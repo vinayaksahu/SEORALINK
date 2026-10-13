@@ -62,9 +62,10 @@ export async function resolveUser(identifier?: string) {
   return await db.user.findFirst({
     where: {
       OR: [
-        { customId: trimmed },
-        { referralCode: trimmed },
-        { email: trimmed.toLowerCase() },
+        { customId: { equals: trimmed, mode: "insensitive" } },
+        { username: { equals: trimmed.toLowerCase(), mode: "insensitive" } },
+        { referralCode: { equals: trimmed, mode: "insensitive" } },
+        { email: { equals: trimmed.toLowerCase(), mode: "insensitive" } },
       ],
     },
     include: {
