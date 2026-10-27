@@ -60,7 +60,8 @@ export async function sendOtpEmail({
   recipientName?: string;
 }) {
   const mailer = getMailTransporter();
-  const from = process.env.SMTP_FROM || `"SEORALINK Korea" <seoralinksupport@gmail.com>`;
+  const from = process.env.SMTP_FROM || `"SEORALINK" <seoralinksupport@gmail.com>`;
+  const subject = `${otp} is your SEORALINK verification code`;
 
   const html = `
     <!DOCTYPE html>
@@ -68,58 +69,52 @@ export async function sendOtpEmail({
     <head>
       <meta charset="UTF-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>SEORALINK Verification Code</title>
+      <title>${otp} - SEORALINK Code</title>
     </head>
-    <body style="margin: 0; padding: 0; background-color: #040711; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #e2e8f0;">
-      <table border="0" cellpadding="0" cellspacing="0" width="100%" style="table-layout: fixed; background-color: #040711; padding: 30px 10px;">
+    <body style="margin: 0; padding: 0; background-color: #f1f5f9; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #1e293b;">
+      <table border="0" cellpadding="0" cellspacing="0" width="100%" style="table-layout: fixed; background-color: #f1f5f9; padding: 32px 12px;">
         <tr>
           <td align="center">
-            <table border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 520px; background-color: #0b1325; border: 1px solid #1e3a5f; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);">
+            <table border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 480px; background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);">
               <!-- Header -->
               <tr>
-                <td style="padding: 28px 30px 20px; text-align: center; border-bottom: 1px solid #1e293b; background: linear-gradient(180deg, #0d1a36 0%, #0b1325 100%);">
-                  <div style="margin-bottom: 14px;">
-                    <img src="https://seoralink.com/logo-icon.png" alt="SEORALINK" width="56" height="56" style="display: inline-block; width: 56px; height: 56px; border-radius: 50%; box-shadow: 0 4px 16px rgba(212, 175, 55, 0.35); vertical-align: middle;" />
-                  </div>
-                  <div style="display: inline-block; padding: 5px 16px; border-radius: 20px; background-color: rgba(212, 175, 55, 0.15); border: 1px solid rgba(212, 175, 55, 0.4); margin-bottom: 10px;">
-                    <span style="color: #d4af37; font-size: 11px; font-weight: bold; letter-spacing: 1.5px; text-transform: uppercase;">SEORALINK NETWORK</span>
-                  </div>
-                  <h1 style="margin: 0; color: #ffffff; font-size: 20px; font-weight: 800; letter-spacing: -0.5px;">Security Verification Code</h1>
-                  <p style="margin: 6px 0 0; color: #94a3b8; font-size: 13px;">Korean Business Network Authentication</p>
+                <td style="padding: 24px 28px; text-align: center; background-color: #0b1325; border-bottom: 3px solid #d4af37;">
+                  <h1 style="margin: 0; color: #ffffff; font-size: 20px; font-weight: 800; letter-spacing: 1px;">SEORALINK</h1>
+                  <p style="margin: 4px 0 0; color: #94a3b8; font-size: 12px;">Security Verification</p>
                 </td>
               </tr>
 
               <!-- Body Content -->
               <tr>
-                <td style="padding: 30px;">
-                  <p style="margin: 0 0 16px; color: #cbd5e1; font-size: 14px; line-height: 1.6;">
-                    Hello <strong>${recipientName}</strong>,
+                <td style="padding: 28px;">
+                  <p style="margin: 0 0 14px; color: #1e293b; font-size: 15px; font-weight: 600;">
+                    Hello ${recipientName},
                   </p>
-                  <p style="margin: 0 0 24px; color: #94a3b8; font-size: 13px; line-height: 1.6;">
-                    We received a request for <strong>${purpose}</strong> on your SEORALINK account. Please use the one-time authentication code below to proceed:
+                  <p style="margin: 0 0 20px; color: #475569; font-size: 14px; line-height: 1.5;">
+                    Your one-time verification code for <strong>${purpose}</strong> is:
                   </p>
 
                   <!-- OTP Display Box -->
-                  <div style="text-align: center; margin: 25px 0; padding: 22px 15px; background: #040711; border: 2px dashed #38bdf8; border-radius: 12px;">
-                    <span style="font-family: 'Courier New', Courier, monospace; font-size: 34px; font-weight: 800; letter-spacing: 8px; color: #38bdf8; display: inline-block; padding-left: 8px;">
+                  <div style="text-align: center; margin: 24px 0; padding: 20px; background-color: #f8fafc; border: 1px solid #cbd5e1; border-radius: 10px;">
+                    <span style="font-family: 'Courier New', Courier, monospace; font-size: 34px; font-weight: 800; letter-spacing: 8px; color: #0284c7; display: inline-block; padding-left: 8px;">
                       ${otp}
                     </span>
-                    <div style="margin-top: 10px; color: #64748b; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">
+                    <div style="margin-top: 8px; color: #64748b; font-size: 12px; font-weight: 500;">
                       ⏱ Valid for 10 minutes
                     </div>
                   </div>
 
-                  <p style="margin: 20px 0 0; color: #ef4444; font-size: 12px; line-height: 1.5; background: rgba(239, 68, 68, 0.1); padding: 12px; border-radius: 8px; border-left: 3px solid #ef4444;">
-                    <strong>Security Notice:</strong> Never share this OTP with anyone, including SEORALINK operators or support administrators.
+                  <p style="margin: 20px 0 0; color: #64748b; font-size: 12px; line-height: 1.5;">
+                    If you did not request this verification code, please ignore this email.
                   </p>
                 </td>
               </tr>
 
               <!-- Footer -->
               <tr>
-                <td style="padding: 20px 30px; text-align: center; border-top: 1px solid #1e293b; background-color: #070e1b;">
-                  <p style="margin: 0; color: #64748b; font-size: 11px; line-height: 1.5;">
-                    &copy; ${new Date().getFullYear()} SEORALINK Korean Business Network. All rights reserved.<br>
+                <td style="padding: 16px 28px; text-align: center; border-top: 1px solid #f1f5f9; background-color: #f8fafc;">
+                  <p style="margin: 0; color: #94a3b8; font-size: 11px; line-height: 1.5;">
+                    &copy; ${new Date().getFullYear()} SEORALINK. All rights reserved.<br>
                     Automated transmission &bull; Do not reply to this email.
                   </p>
                 </td>
@@ -132,16 +127,25 @@ export async function sendOtpEmail({
     </html>
   `;
 
-  const text = `SEORALINK Verification Code: ${otp}\n\nValid for 10 minutes. Do not share this code with anyone.\n\nPurpose: ${purpose}\nRecipient: ${recipientName}`;
+  const text = `SEORALINK Verification Code: ${otp}\n\nValid for 10 minutes.\n\nPurpose: ${purpose}\nRecipient: ${recipientName}\n\nIf you did not request this code, you can safely ignore this email.`;
+
+  const mailOptions = {
+    from,
+    to,
+    replyTo: "seoralinksupport@gmail.com",
+    subject,
+    text,
+    html,
+    headers: {
+      "X-Priority": "1",
+      "X-MSMail-Priority": "High",
+      "Importance": "high",
+      "X-Entity-Ref-ID": `otp-${Date.now()}-${otp}`,
+    },
+  };
 
   try {
-    const info = await mailer.sendMail({
-      from,
-      to,
-      subject: `SEORALINK Security Code: ${otp} (for ${purpose})`,
-      text,
-      html,
-    });
+    const info = await mailer.sendMail(mailOptions);
     return info;
   } catch (primaryError: any) {
     console.warn("[Primary SMTP Failed, attempting Port 587 STARTTLS fallback]", primaryError?.message);
@@ -162,14 +166,7 @@ export async function sendOtpEmail({
       socketTimeout: 15000,
     });
 
-    const fallbackInfo = await fallbackMailer.sendMail({
-      from,
-      to,
-      subject: `SEORALINK Security Code: ${otp} (for ${purpose})`,
-      text,
-      html,
-    });
-
+    const fallbackInfo = await fallbackMailer.sendMail(mailOptions);
     return fallbackInfo;
   }
 }
