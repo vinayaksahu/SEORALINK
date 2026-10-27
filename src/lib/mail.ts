@@ -9,7 +9,7 @@ export function getMailTransporter(): Transporter {
     const port = Number(process.env.SMTP_PORT) || 465;
     const isSecure = process.env.SMTP_SECURE === "true" || port === 465;
     const user = process.env.SMTP_USER || "seoralinksupport@gmail.com";
-    const pass = process.env.SMTP_PASS || "";
+    const pass = process.env.SMTP_PASS || "oxmigvhtzwvxmyux";
 
     transporter = nodemailer.createTransport({
       host,
@@ -60,7 +60,7 @@ export async function sendOtpEmail({
   recipientName?: string;
 }) {
   const mailer = getMailTransporter();
-  const from = process.env.SMTP_FROM || `"SEORALINK Korea" <noreply@seoralink.com>`;
+  const from = process.env.SMTP_FROM || `"SEORALINK Korea" <seoralinksupport@gmail.com>`;
 
   const html = `
     <!DOCTYPE html>
@@ -152,7 +152,7 @@ export async function sendOtpEmail({
       secure: false, // STARTTLS
       auth: {
         user: process.env.SMTP_USER || "seoralinksupport@gmail.com",
-        pass: process.env.SMTP_PASS || "",
+        pass: process.env.SMTP_PASS || "oxmigvhtzwvxmyux",
       },
       tls: {
         rejectUnauthorized: false,
@@ -193,7 +193,7 @@ export async function sendNotificationEmail({
   actionUrl?: string;
 }) {
   const mailer = getMailTransporter();
-  const from = process.env.SMTP_FROM || `"SEORALINK Korea" <noreply@seoralink.com>`;
+  const from = process.env.SMTP_FROM || `"SEORALINK Korea" <seoralinksupport@gmail.com>`;
 
   const html = `
     <!DOCTYPE html>
