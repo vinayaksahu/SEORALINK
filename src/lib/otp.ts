@@ -78,7 +78,7 @@ export async function getAllOtpSettings(adminId?: string | null): Promise<Record
 }
 
 /**
- * Generate a 6-digit numeric OTP, save to DB, and send via Namecheap Private Email
+ * Generate a 6-digit numeric OTP, save to DB, and send via configured SMTP
  */
 export async function generateAndSendOtp({
   email,
@@ -149,7 +149,7 @@ export async function generateAndSendOtp({
     },
   });
 
-  // 6. Send email via Namecheap Private Email SMTP
+  // 6. Send email via SMTP
   try {
     await sendOtpEmail({
       to: cleanEmail,

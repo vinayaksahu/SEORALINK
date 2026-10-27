@@ -448,7 +448,7 @@ function RegisterForm() {
                   <p className="text-[11px] text-emerald-400 font-semibold">{otpSuccessMsg}</p>
                 )}
                 <p className="text-[10px] text-[#94a3b8]">
-                  Click &apos;Send OTP Code&apos; to receive your verification code via Namecheap Private Email.
+                  Click &apos;Send OTP Code&apos; to receive your verification code via email.
                 </p>
               </div>
             )}

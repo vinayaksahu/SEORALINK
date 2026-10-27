@@ -194,7 +194,7 @@ export default function ForgotPasswordPage() {
                   />
                 </div>
                 <p className="text-[10px] text-slate-500 dark:text-[#94a3b8]">
-                  We will dispatch a one-time 6-digit recovery code for this specific account via Namecheap Private Email.
+                  We will dispatch a one-time 6-digit recovery code for this specific account to your registered email.
                 </p>
               </div>
 

@@ -5,11 +5,11 @@ let transporter: Transporter | null = null;
 
 export function getMailTransporter(): Transporter {
   if (!transporter) {
-    const host = process.env.SMTP_HOST || "mail.privateemail.com";
+    const host = process.env.SMTP_HOST || "smtp.gmail.com";
     const port = Number(process.env.SMTP_PORT) || 465;
     const isSecure = process.env.SMTP_SECURE === "true" || port === 465;
-    const user = process.env.SMTP_USER || "noreply@seoralink.com";
-    const pass = process.env.SMTP_PASS || "Chicku@654321";
+    const user = process.env.SMTP_USER || "seoralinksupport@gmail.com";
+    const pass = process.env.SMTP_PASS || "";
 
     transporter = nodemailer.createTransport({
       host,
@@ -32,7 +32,7 @@ export function getMailTransporter(): Transporter {
 }
 
 /**
- * Verify SMTP connection credentials with Namecheap Private Email
+ * Verify SMTP connection credentials
  */
 export async function verifySmtpConnection(): Promise<{ success: boolean; message: string }> {
   try {
@@ -147,12 +147,12 @@ export async function sendOtpEmail({
     console.warn("[Primary SMTP Failed, attempting Port 587 STARTTLS fallback]", primaryError?.message);
 
     const fallbackMailer = nodemailer.createTransport({
-      host: process.env.SMTP_HOST || "mail.privateemail.com",
+      host: process.env.SMTP_HOST || "smtp.gmail.com",
       port: 587,
       secure: false, // STARTTLS
       auth: {
-        user: process.env.SMTP_USER || "noreply@seoralink.com",
-        pass: process.env.SMTP_PASS || "Chicku@654321",
+        user: process.env.SMTP_USER || "seoralinksupport@gmail.com",
+        pass: process.env.SMTP_PASS || "",
       },
       tls: {
         rejectUnauthorized: false,

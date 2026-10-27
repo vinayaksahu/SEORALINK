@@ -648,7 +648,7 @@ export default function SettingsFormClient({
             </p>
           </div>
           <span className="text-[10px] font-mono px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-bold self-start sm:self-auto flex items-center gap-1.5">
-            <Mail size={11} /> Namecheap Private Email Active
+            <Mail size={11} /> SMTP Email Service Active
           </span>
         </div>
 
