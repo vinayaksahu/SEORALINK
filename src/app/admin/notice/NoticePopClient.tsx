@@ -52,16 +52,64 @@ export default function NoticePopClient({
   // Determine current active preview image (local file preview takes precedence, then direct URL)
   const currentImagePreview = localPreviewUrl || popupImageUrl;
 
+  // Helper: Client-side image compression to keep payload light (<300KB) and serverless-friendly
+  const compressImageFile = async (file: File): Promise<string> => {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const rawData = e.target?.result as string;
+        const img = new Image();
+        img.onload = () => {
+          const MAX_DIM = 1200;
+          let { width, height } = img;
+
+          if (width > MAX_DIM || height > MAX_DIM) {
+            if (width > height) {
+              height = Math.round((height * MAX_DIM) / width);
+              width = MAX_DIM;
+            } else {
+              width = Math.round((width * MAX_DIM) / height);
+              height = MAX_DIM;
+            }
+          }
+
+          const canvas = document.createElement("canvas");
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext("2d");
+          if (!ctx) {
+            resolve(rawData);
+            return;
+          }
+
+          ctx.drawImage(img, 0, 0, width, height);
+          try {
+            const webp = canvas.toDataURL("image/webp", 0.85);
+            if (webp && webp.startsWith("data:image/webp")) {
+              resolve(webp);
+              return;
+            }
+          } catch {
+            // fallback
+          }
+          resolve(canvas.toDataURL("image/jpeg", 0.85));
+        };
+        img.onerror = () => resolve(rawData);
+        img.src = rawData;
+      };
+      reader.onerror = () => resolve("");
+      reader.readAsDataURL(file);
+    });
+  };
+
   // Handle local file selection
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       setSelectedFile(file);
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        setLocalPreviewUrl(event.target?.result as string);
-      };
-      reader.readAsDataURL(file);
+      const optimizedUrl = await compressImageFile(file);
+      setLocalPreviewUrl(optimizedUrl);
+      setPopupImageUrl(optimizedUrl);
     }
   };
 
@@ -106,27 +154,33 @@ export default function NoticePopClient({
     setPopupMessage(null);
 
     try {
-      let finalImageUrl = popupImageUrl;
+      let finalImageUrl = popupImageUrl || localPreviewUrl;
 
-      // If user selected a local file, upload it first
+      // If user selected a local file, try to upload it; otherwise fall back safely to local data URL
       if (selectedFile) {
-        const formData = new FormData();
-        formData.append("file", selectedFile);
+        try {
+          const formData = new FormData();
+          formData.append("file", selectedFile);
 
-        const uploadRes = await fetch("/api/admin/notice/upload", {
-          method: "POST",
-          body: formData,
-        });
+          const uploadRes = await fetch("/api/admin/notice/upload", {
+            method: "POST",
+            body: formData,
+          });
 
-        const uploadData = await uploadRes.json();
-        if (!uploadRes.ok || !uploadData.success) {
-          throw new Error(uploadData.error || "Failed to upload image file.");
+          const uploadData = await uploadRes.json();
+          if (uploadRes.ok && uploadData.success && uploadData.url) {
+            finalImageUrl = uploadData.url;
+            setPopupImageUrl(uploadData.url);
+          } else {
+            // Serverless fallback: use local optimized base64 data URL
+            finalImageUrl = localPreviewUrl || finalImageUrl;
+          }
+        } catch {
+          // Network or server error fallback: use local optimized data URL
+          finalImageUrl = localPreviewUrl || finalImageUrl;
         }
 
-        finalImageUrl = uploadData.url;
-        setPopupImageUrl(uploadData.url);
         setSelectedFile(null);
-        setLocalPreviewUrl(null);
       }
 
       // Save popup configurations
