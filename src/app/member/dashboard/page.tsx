@@ -7,6 +7,9 @@ import { TIER_NAMES, TIER_VALUES, REQUIRED_DIRECTS, NET_CASHOUT_VALUES } from "@
 import { checkPendingRankPromotions } from "@/lib/queueEngine";
 import { ReferralShareCard } from "@/components/ReferralShareCard";
 import { isRequireActiveSponsorEnabled } from "@/lib/referralPolicy";
+import { getBranchSystemConfig } from "@/lib/adminBranchConfig";
+import { MemberNoticeTicker } from "@/components/MemberNoticeTicker";
+import { MemberLoginPopup } from "@/components/MemberLoginPopup";
 import {
   Wallet,
   ArrowUpRight,
@@ -53,6 +56,24 @@ export default async function MemberDashboardPage() {
 
   if (!user) redirect("/login");
 
+  // Fetch notice ticker & pop announcement configs concurrently
+  const [
+    scrollingConfig,
+    popupEnabledConfig,
+    popupTitleConfig,
+    popupImageUrlConfig,
+  ] = await Promise.all([
+    getBranchSystemConfig("SCROLLING_NOTICE_TEXT", user.adminId),
+    getBranchSystemConfig("POPUP_IMAGE_ENABLED", user.adminId),
+    getBranchSystemConfig("POPUP_IMAGE_TITLE", user.adminId),
+    getBranchSystemConfig("POPUP_IMAGE_URL", user.adminId),
+  ]);
+
+  const scrollingNotice = scrollingConfig.value;
+  const popupEnabled = popupEnabledConfig.value === "true";
+  const popupTitle = popupTitleConfig.value || "Official Announcement";
+  const popupImageUrl = popupImageUrlConfig.value;
+
   // Non-blocking promotion check: only evaluate if user is active with eligible directs
   if (user.status === "ACTIVE" && user.directCount >= 2 && !existingRankWithdrawal) {
     checkPendingRankPromotions(session.userId).catch(() => {});
@@ -75,6 +96,20 @@ export default async function MemberDashboardPage() {
 
   return (
     <div className="space-y-8">
+      {/* Real-time Scrolling Announcement Ticker Capsule */}
+      {scrollingNotice && (
+        <MemberNoticeTicker text={scrollingNotice} />
+      )}
+
+      {/* Member Login Pop Image Modal */}
+      {popupEnabled && popupImageUrl && (
+        <MemberLoginPopup
+          title={popupTitle}
+          imageUrl={popupImageUrl}
+          userId={session.userId}
+        />
+      )}
+
       {/* Single-Exit Settlement Notice */}
       {hasWithdrawnRankPool && (
         <div className="p-5 rounded-xl border-2 border-purple-500/60 bg-purple-500/10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-lg">

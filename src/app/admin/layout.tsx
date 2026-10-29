@@ -20,6 +20,7 @@ import {
   Database,
   GitBranch,
   UserCheck,
+  Megaphone,
 } from "lucide-react";
 import { AdminMobileNav } from "@/components/AdminMobileNav";
 import { LanguageSelector } from "@/components/LanguageSelector";
@@ -39,6 +40,7 @@ export default async function AdminLayout({
 
   const adminNav = [
     { href: "/admin", label: "Executive Overview", icon: LayoutDashboard },
+    { href: "/admin/notice", label: "Notice & Pop Image", icon: Megaphone },
     { href: "/admin/deposits", label: "Deposit Requests", icon: Wallet },
     { href: "/admin/withdrawals", label: "Withdrawal Requests", icon: ArrowUpRight },
     { href: "/admin/tickets", label: "Support Tickets", icon: LifeBuoy },

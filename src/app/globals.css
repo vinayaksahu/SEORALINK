@@ -247,3 +247,24 @@ html:not(.dark) .blur-\[140px\],
 html:not(.dark) .blur-\[120px\] {
   opacity: 0.15;
 }
+
+/* Continuous Marquee Animation for Notice Ticker */
+@keyframes ticker-marquee {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  100% {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+.animate-ticker-marquee {
+  display: inline-flex;
+  white-space: nowrap;
+  animation: ticker-marquee 30s linear infinite;
+  will-change: transform;
+}
+
+.animate-ticker-marquee:hover {
+  animation-play-state: paused;
+}

@@ -104,7 +104,7 @@ export async function GET(
     });
     const sourceUserMap = new Map(sourceUsers.map((u) => [u.id, u]));
 
-    // 3. Collect all child indices across all queues this user has
+    // 3. Collect all child and parent indices across all queues this user has
     const childQueries = user.queueEntries.map((q) => {
       const child1Index = 2 * q.queueIndex + 1;
       const child2Index = 2 * q.queueIndex + 2;
@@ -115,23 +115,53 @@ export async function GET(
       };
     });
 
-    const matchingChildren = childQueries.length > 0
-      ? await db.queueEntry.findMany({
-          where: { OR: childQueries },
-          include: {
-            user: {
-              select: {
-                id: true,
-                customId: true,
-                fullName: true,
-                status: true,
-                currentTier: true,
+    const parentQueries = user.queueEntries
+      .filter((q) => q.queueIndex > 0)
+      .map((q) => {
+        const parentIndex = Math.floor((q.queueIndex - 1) / 2);
+        return {
+          tier: q.tier,
+          queueIndex: parentIndex,
+          ...(q.adminId ? { adminId: q.adminId } : {}),
+        };
+      });
+
+    const [matchingChildren, matchingParents] = await Promise.all([
+      childQueries.length > 0
+        ? db.queueEntry.findMany({
+            where: { OR: childQueries },
+            include: {
+              user: {
+                select: {
+                  id: true,
+                  customId: true,
+                  fullName: true,
+                  status: true,
+                  currentTier: true,
+                },
               },
             },
-          },
-          orderBy: { queueIndex: "asc" },
-        })
-      : [];
+            orderBy: { queueIndex: "asc" },
+          })
+        : Promise.resolve([]),
+      parentQueries.length > 0
+        ? db.queueEntry.findMany({
+            where: { OR: parentQueries },
+            include: {
+              user: {
+                select: {
+                  id: true,
+                  customId: true,
+                  fullName: true,
+                  status: true,
+                  currentTier: true,
+                },
+              },
+            },
+            orderBy: { queueIndex: "asc" },
+          })
+        : Promise.resolve([]),
+    ]);
 
     // Also get total queue count per tier for branch to calculate waiting queue distances
     const tierQueueCounts = await Promise.all(
@@ -154,6 +184,7 @@ export async function GET(
 
       let childrenPlacedInfo: any[] = [];
       let waitingDetails: any = null;
+      let matrixParent: any = null;
 
       if (userQueue) {
         const child1Index = 2 * userQueue.queueIndex + 1;
@@ -189,6 +220,29 @@ export async function GET(
             : null,
         ].filter(Boolean);
 
+        if (userQueue.queueIndex === 0) {
+          matrixParent = {
+            isRoot: true,
+            queueIndex: 0,
+            position: "Genesis Root",
+            customId: user.customId,
+            fullName: user.fullName,
+          };
+        } else {
+          const parentIndex = Math.floor((userQueue.queueIndex - 1) / 2);
+          const isLeft = userQueue.queueIndex % 2 === 1;
+          const parentEntry = matchingParents.find(
+            (p) => p.tier === t && p.queueIndex === parentIndex
+          );
+          matrixParent = {
+            isRoot: false,
+            queueIndex: parentIndex,
+            position: isLeft ? "Left Child (Unit 1)" : "Right Child (Unit 2)",
+            customId: parentEntry?.user?.customId || `Queue #${parentIndex}`,
+            fullName: parentEntry?.user?.fullName || "Genesis Node",
+          };
+        }
+
         if (userQueue.status === "WAITING") {
           const requiredTotalForMatch = 2 * userQueue.queueIndex + 3;
           const entriesNeeded = Math.max(0, requiredTotalForMatch - totalInTier);
@@ -221,6 +275,7 @@ export async function GET(
               childrenPlaced: userQueue.childrenPlaced,
               createdAt: userQueue.createdAt.toISOString(),
               matchedAt: userQueue.matchedAt ? userQueue.matchedAt.toISOString() : null,
+              matrixParent: matrixParent,
               children: childrenPlacedInfo,
               waitingDetails,
             }

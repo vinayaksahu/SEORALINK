@@ -486,7 +486,45 @@ export default function MemberAuditModal({
 
                             {/* Autopool Queue Placements Breakdown */}
                             {tp.queueEntry && (
-                              <div className="mt-3 pt-3 border-t border-[#1e293b] space-y-2">
+                              <div className="mt-3 pt-3 border-t border-[#1e293b] space-y-2.5">
+                                {/* Matrix Placement Upline (Placed Under) */}
+                                {tp.queueEntry.matrixParent && (
+                                  <div className="p-3 rounded-lg bg-gradient-to-r from-red-950/40 to-slate-900 border border-red-500/30 text-xs">
+                                    <div className="text-[10px] text-red-400 uppercase font-extrabold flex items-center justify-between">
+                                      <span className="flex items-center gap-1.5">
+                                        <GitBranch size={12} className="text-red-400" />
+                                        Matrix Placement Upline (Placed Under)
+                                      </span>
+                                      <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-red-500/20 text-red-300 border border-red-500/30">
+                                        {tp.queueEntry.matrixParent.position}
+                                      </span>
+                                    </div>
+                                    <div className="mt-1.5 flex items-center justify-between flex-wrap gap-2">
+                                      {tp.queueEntry.matrixParent.isRoot ? (
+                                        <div className="font-bold text-emerald-400 flex items-center gap-1.5">
+                                          <span>👑 Genesis Root Node (Queue #0)</span>
+                                        </div>
+                                      ) : (
+                                        <div>
+                                          <span className="text-slate-400">Placed under Parent: </span>
+                                          <span className="font-bold text-white">
+                                            {tp.queueEntry.matrixParent.fullName}{" "}
+                                          </span>
+                                          <span className="font-mono text-red-400 font-extrabold">
+                                            ({tp.queueEntry.matrixParent.customId})
+                                          </span>
+                                          <span className="text-slate-400 text-[11px] ml-1.5">
+                                            • Parent Queue #{tp.queueEntry.matrixParent.queueIndex}
+                                          </span>
+                                        </div>
+                                      )}
+                                      <span className="text-[11px] font-mono font-bold text-amber-300 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">
+                                        This ID Queue #{tp.queueEntry.queueIndex}
+                                      </span>
+                                    </div>
+                                  </div>
+                                )}
+
                                 <div className="text-xs text-[#94a3b8] flex items-center justify-between">
                                   <span>
                                     <strong>2:1 Autopool Placements:</strong> {tp.queueEntry.childrenPlaced} / 2 Children Matched

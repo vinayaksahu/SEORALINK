@@ -23,6 +23,7 @@ import {
   Database,
   GitBranch,
   UserCheck,
+  Megaphone,
 } from "lucide-react";
 
 interface AdminMobileNavProps {
@@ -57,6 +58,7 @@ export function AdminMobileNav({ fullName }: AdminMobileNavProps) {
 
   const adminNav = [
     { href: "/admin", label: "Executive Overview", icon: LayoutDashboard },
+    { href: "/admin/notice", label: "Notice & Pop Image", icon: Megaphone },
     { href: "/admin/deposits", label: "Deposit Requests", icon: Wallet },
     { href: "/admin/withdrawals", label: "Withdrawal Requests", icon: ArrowUpRight },
     { href: "/admin/tickets", label: "Support Tickets", icon: LifeBuoy },
